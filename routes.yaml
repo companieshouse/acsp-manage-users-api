@@ -1,0 +1,7 @@
+app_name: acsp-manage-users-api
+group: api
+
+weight: 100
+# TODO: check this
+routes:
+  1: ^/acsp-associations/*
