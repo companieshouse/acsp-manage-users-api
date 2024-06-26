@@ -114,9 +114,9 @@ variable "log_level" {
   description = "The log level for services to use: trace, debug, info or error"
 }
 
-variable "accounts_association_api_version" {
+variable "acsp-manage-users-api_version" {
   type        = string
-  description = "The version of the accounts-association-api container to run."
+  description = "The version of the acsp-manage-users-api container to run."
 }
 
 # ------------------------------------------------------------------------------
