@@ -8,7 +8,7 @@ locals {
   docker_repo                = "acsp-manage-users-api"
   lb_listener_rule_priority  = 20
   lb_listener_paths          = ["/acsp-manage-users-api/healthcheck", "/acsp-members/*", "/internal/acsp-members/*"]
-  healthcheck_path           = "/aacsp-manage-users-api/healthcheck" #healthcheck path for acsp-manage-users-api service
+  healthcheck_path           = "/acsp-manage-users-api/healthcheck" #healthcheck path for acsp-manage-users-api service
   healthcheck_matcher        = "200"
   application_subnet_ids     = data.aws_subnets.application.ids
   kms_alias                  = "alias/${var.aws_profile}/environment-services-kms"
