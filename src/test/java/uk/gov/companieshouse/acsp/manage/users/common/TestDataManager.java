@@ -59,6 +59,35 @@ public class TestDataManager {
             return acspMembersDao;
         };
         acspMembersDaoSuppliers.put( "TS002", ToyStoryWoodyAcspMembersDao );
+
+        final Supplier<AcspMembersDao> NetflixBuzzAcspMembersDao = () -> {
+            final var acspMembersDao = new AcspMembersDao();
+            acspMembersDao.setId( "NF001" );
+            acspMembersDao.setAcspNumber( "NFA001" );
+            acspMembersDao.setUserId( "TSU001" );
+            acspMembersDao.setUserRole( UserRoleEnum.ADMIN );
+            acspMembersDao.setCreatedAt( LocalDateTime.now().minusMonths( 5 ) );
+            acspMembersDao.setAddedAt( LocalDateTime.now().minusMonths( 5 ) );
+            acspMembersDao.setAddedBy( "TSU002" );
+            acspMembersDao.setRemovedAt( LocalDateTime.now().minusMonths( 4 ) );
+            acspMembersDao.setRemovedBy( "TSU002" );
+            acspMembersDao.setEtag( generateEtag() );
+            return acspMembersDao;
+        };
+        acspMembersDaoSuppliers.put( "NF001", NetflixBuzzAcspMembersDao );
+
+        final Supplier<AcspMembersDao> NetflixWoodyAcspMembersDao = () -> {
+            final var acspMembersDao = new AcspMembersDao();
+            acspMembersDao.setId( "NF002" );
+            acspMembersDao.setAcspNumber( "NFA001" );
+            acspMembersDao.setUserId( "TSU002" );
+            acspMembersDao.setUserRole( UserRoleEnum.OWNER );
+            acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 2 ) );
+            acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 2 ) );
+            acspMembersDao.setEtag( generateEtag() );
+            return acspMembersDao;
+        };
+        acspMembersDaoSuppliers.put( "NF002", NetflixWoodyAcspMembersDao );
     }
 
     private void instantiateUserDtoSuppliers(){
@@ -88,8 +117,16 @@ public class TestDataManager {
             acspDataDao.setAcspStatus( "active" );
             return acspDataDao;
         };
-
         acspDataDaoSuppliers.put( "TSA001", ToyStoryAcspDataDao );
+
+        final Supplier<AcspDataDao> NetflixAcspDataDao = () -> {
+            final var acspDataDao = new AcspDataDao();
+            acspDataDao.setId("NFA001");
+            acspDataDao.setAcspName( "Netflix" );
+            acspDataDao.setAcspStatus( "active" );
+            return acspDataDao;
+        };
+        acspDataDaoSuppliers.put( "NFA001", NetflixAcspDataDao );
     }
 
     private TestDataManager(){
