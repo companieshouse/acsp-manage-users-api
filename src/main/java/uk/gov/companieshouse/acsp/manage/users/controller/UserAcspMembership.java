@@ -3,8 +3,12 @@ package uk.gov.companieshouse.acsp.manage.users.controller;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
+import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipListMapper;
+import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.api.acsp_manage_users.api.UserAcspMembershipInterface;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch;
@@ -16,7 +20,16 @@ import java.util.List;
 @RestController
 public class UserAcspMembership implements UserAcspMembershipInterface {
 
-    public UserAcspMembership() {}
+    private final AcspMembershipListMapper acspMembershipListMapper;
+    private final AcspMembersService acspMembersService;
+
+    public UserAcspMembership(
+            final AcspMembershipListMapper acspMembershipListMapper,
+            final AcspMembersService acspMembersService
+    ) {
+        this.acspMembershipListMapper = acspMembershipListMapper;
+        this.acspMembersService = acspMembersService;
+    }
 
     @Override
     public ResponseEntity<ResponseBodyPost> addAcspMember(
@@ -37,11 +50,20 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
 
     @Override
     public ResponseEntity<List<AcspMembership>> getAcspMembershipForUserId(
-            @NotNull String xRequestId,
-            @NotNull String ericIdentity,
-            @Valid Boolean includeRemoved
+            final String xRequestId,
+            final String ericIdentity,
+            final Boolean includeRemoved
     ) {
-        return null; // TODO(https://companieshouse.atlassian.net/browse/IDVA6-1145)
+        final boolean excludeRemoved = includeRemoved == null || !includeRemoved;
+
+        final List<AcspMembership> memberships = acspMembershipListMapper.daoToDto(
+                acspMembersService.fetchAcspMembers(ericIdentity).filter(
+                        acspMembersDao -> !excludeRemoved || !acspMembersDao.hasBeenRemoved()
+                ).toList(),
+                UserContext.getLoggedUser()
+        );
+
+        return new ResponseEntity<>(memberships, HttpStatus.OK);
     }
 
     @Override
