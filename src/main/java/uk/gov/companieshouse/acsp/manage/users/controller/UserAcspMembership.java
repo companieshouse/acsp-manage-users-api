@@ -6,9 +6,7 @@ import jakarta.validation.constraints.Pattern;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipListMapper;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
-import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.UserRoleMapperUtil;
@@ -19,21 +17,19 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPost;
 import uk.gov.companieshouse.api.acsp_manage_users.model.ResponseBodyPost;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
 public class UserAcspMembership implements UserAcspMembershipInterface {
 
-    private final AcspMembershipListMapper acspMembershipListMapper;
     private final UsersService usersService;
     private final AcspMembersService acspMembersService;
 
     public UserAcspMembership(
-            final AcspMembershipListMapper acspMembershipListMapper,
             final UsersService usersService,
             final AcspMembersService acspMembersService
     ) {
-        this.acspMembershipListMapper = acspMembershipListMapper;
         this.usersService = usersService;
         this.acspMembersService = acspMembersService;
     }
@@ -90,16 +86,12 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
             final String ericIdentity,
             final Boolean includeRemoved
     ) {
-        final boolean excludeRemoved = includeRemoved == null || !includeRemoved;
+        final boolean excludeRemoved = Objects.isNull(includeRemoved) || !includeRemoved;
 
-        final List<AcspMembership> memberships = acspMembershipListMapper.daoToDto(
-                acspMembersService.fetchAcspMembers(ericIdentity).filter(
-                        acspMembersDao -> !excludeRemoved || !acspMembersDao.hasBeenRemoved()
-                ).toList(),
-                UserContext.getLoggedUser()
+        return new ResponseEntity<>(
+                acspMembersService.fetchAcspMemberships(ericIdentity, excludeRemoved),
+                HttpStatus.OK
         );
-
-        return new ResponseEntity<>(memberships, HttpStatus.OK);
     }
 
     @Override

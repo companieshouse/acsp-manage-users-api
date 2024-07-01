@@ -6,3 +6,4 @@ routes:
   1: ^/acsp-members/*
   2: ^/internal/acsp-members/*
   3: ^/acsp-manage-users-api/healthcheck
+  4: ^/acsp-members

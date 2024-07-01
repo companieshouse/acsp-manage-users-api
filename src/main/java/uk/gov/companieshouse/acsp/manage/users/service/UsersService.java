@@ -53,7 +53,9 @@ public class UsersService {
     }
 
     public User fetchUserDetails( final String userId ) {
-        return createFetchUserDetailsRequest(userId).get();
+        final var user = new User("mike", "boyd", "mike.boyd@ch.com");
+        user.setUserId(userId);
+        return user;
     }
 
     public boolean doesUserExist(final String userId) {
