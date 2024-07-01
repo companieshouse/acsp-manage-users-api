@@ -21,6 +21,10 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 
+import java.time.LocalDateTime;
+
+import static uk.gov.companieshouse.GenerateEtagUtil.generateEtag;
+
 @Service
 public class AcspMembersService {
 
@@ -74,6 +78,16 @@ public class AcspMembersService {
         }
 
         return acspMembersMapper.daoToDto( acspMembers, acspData );
+    }
+
+    public AcspMembersDao createAcspMembersWithOwnerRole(String acspNumber, String userId) {
+        AcspMembersDao acspMembersDao = new AcspMembersDao();
+        acspMembersDao.setAcspNumber(acspNumber);
+        acspMembersDao.setUserId(userId);
+        acspMembersDao.setUserRole(AcspMembership.UserRoleEnum.OWNER);
+        acspMembersDao.setAddedAt(LocalDateTime.now());
+        acspMembersDao.setEtag(generateEtag());
+        return acspMembersRepository.save(acspMembersDao);
     }
 
 }
