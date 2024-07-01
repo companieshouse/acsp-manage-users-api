@@ -7,8 +7,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipListMapper;
+import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
+import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
+import uk.gov.companieshouse.acsp.manage.users.utils.UserRoleMapperUtil;
 import uk.gov.companieshouse.api.acsp_manage_users.api.UserAcspMembershipInterface;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch;
@@ -16,29 +19,62 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPost;
 import uk.gov.companieshouse.api.acsp_manage_users.model.ResponseBodyPost;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 public class UserAcspMembership implements UserAcspMembershipInterface {
 
     private final AcspMembershipListMapper acspMembershipListMapper;
+    private final UsersService usersService;
     private final AcspMembersService acspMembersService;
 
     public UserAcspMembership(
             final AcspMembershipListMapper acspMembershipListMapper,
+            final UsersService usersService,
             final AcspMembersService acspMembersService
     ) {
         this.acspMembershipListMapper = acspMembershipListMapper;
+        this.usersService = usersService;
         this.acspMembersService = acspMembersService;
     }
 
     @Override
     public ResponseEntity<ResponseBodyPost> addAcspMember(
-            @NotNull String xRequestId,
-            @NotNull String ericIdentity,
-            @Valid RequestBodyPost requestBodyPost
+            String xRequestId,
+            String inviteeUserId,
+            RequestBodyPost requestBodyPost
     ) {
-        return null; // TODO(https://companieshouse.atlassian.net/browse/IDVA6-1149)
+        final String userId = requestBodyPost.getUserId();
+        final AcspMembership.UserRoleEnum requestingRole = UserRoleMapperUtil.mapToUserRoleEnum(requestBodyPost.getUserRole());
+
+        if (!usersService.doesUserExist(userId)) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        if (acspMembersService.fetchAcspMember(userId).isPresent()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        Optional<AcspMembersDao> inviteeMembership = acspMembersService.fetchAcspMemberByUserIdAndAcspNumber(
+                inviteeUserId, requestBodyPost.getAcspNumber()
+        );
+
+        if (inviteeMembership.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+
+        final AcspMembership.UserRoleEnum inviteeRole = inviteeMembership.get().getUserRole();
+        if (!UserRoleMapperUtil.hasPermissionToAddUser(requestingRole, inviteeRole)) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+
+        AcspMembersDao addedAcspMembership = acspMembersService.addAcspMember(requestBodyPost, inviteeUserId);
+        ResponseBodyPost responseBodyPost = new ResponseBodyPost();
+        responseBodyPost.setAcspMembershipId(addedAcspMembership.getId());
+
+        return new ResponseEntity<>(responseBodyPost, HttpStatus.CREATED);
     }
+
 
     @Override
     public ResponseEntity<AcspMembership> getAcspMembershipForAcspId(
