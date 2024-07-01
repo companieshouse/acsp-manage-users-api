@@ -56,6 +56,15 @@ public class UsersService {
         return createFetchUserDetailsRequest(userId).get();
     }
 
+    public boolean doesUserExist(final String userId) {
+        try {
+            final User user = fetchUserDetails(userId);
+            return user != null;
+        } catch (Exception exception) {
+            return false;
+        }
+    }
+
     public UsersList searchUserDetails( final List<String> emails ){
 
         try {
