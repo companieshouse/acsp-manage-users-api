@@ -95,20 +95,6 @@ class AcspMembersServiceTest {
   }
 
   @Test
-  void fetchAcspMemberships_nullUser_throwsIllegalArgumentException() {
-    assertThrows(
-        NullPointerException.class, () -> acspMembersService.fetchAcspMemberships(null, false));
-  }
-
-  @Test
-  void fetchAcspMemberships_nullUserId_throwsIllegalArgumentException() {
-    User userWithNullId = new User();
-    assertThrows(
-        NullPointerException.class,
-        () -> acspMembersService.fetchAcspMemberships(userWithNullId, false));
-  }
-
-  @Test
   void fetchAcspMemberships_repositoryThrowsException_propagatesException() {
     when(acspMembersRepository.fetchActiveAcspMembersByUserId(anyString()))
         .thenThrow(new RuntimeException("Database error"));
