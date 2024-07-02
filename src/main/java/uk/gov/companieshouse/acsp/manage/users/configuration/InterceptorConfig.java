@@ -20,7 +20,7 @@ public class InterceptorConfig implements WebMvcConfigurer {
     private final String KEY_PROTECTED_ENDPOINTS = "/internal/acsp-members/*";
     private final String HEALTH_CHECK_ENDPOINT = "/*/healthcheck";
 
-    @Autowired
+
     public InterceptorConfig(final LoggingInterceptor loggingInterceptor, AuthorizationInterceptor authorizationInterceptor) {
         this.loggingInterceptor = loggingInterceptor;
         this.authorizationInterceptor = authorizationInterceptor;
