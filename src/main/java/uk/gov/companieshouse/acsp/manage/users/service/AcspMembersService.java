@@ -22,6 +22,7 @@ import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import static uk.gov.companieshouse.GenerateEtagUtil.generateEtag;
 
@@ -81,6 +82,14 @@ public class AcspMembersService {
     }
 
     public AcspMembersDao createAcspMembersWithOwnerRole(String acspNumber, String userId) {
+        if (Objects.isNull(acspNumber)) {
+            throw new NullPointerException("AcspNumber should be provided");
+        }
+
+        if (Objects.isNull(userId)) {
+            throw new NullPointerException("UserId should be provided");
+        }
+
         AcspMembersDao acspMembersDao = new AcspMembersDao();
         acspMembersDao.setAcspNumber(acspNumber);
         acspMembersDao.setUserId(userId);
