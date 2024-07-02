@@ -2,6 +2,7 @@ package uk.gov.companieshouse.acsp.manage.users.model;
 
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
@@ -141,8 +142,8 @@ public class AcspMembersDao {
     this.version = version;
   }
 
-  public boolean hasBeenRemoved() {
-    return this.removedBy != null;
+  public boolean beenRemoved() {
+    return Objects.isNull(this.removedBy);
   }
 
   @Override

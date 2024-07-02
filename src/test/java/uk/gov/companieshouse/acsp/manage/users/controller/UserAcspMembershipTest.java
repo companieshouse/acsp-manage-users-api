@@ -10,20 +10,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import uk.gov.companieshouse.acsp.manage.users.configuration.InterceptorConfig;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipListMapper;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
+import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 
 @WebMvcTest(UserAcspMembership.class)
@@ -37,8 +39,6 @@ class UserAcspMembershipTest {
 
   @MockBean private UsersService usersService;
 
-  @MockBean private InterceptorConfig interceptorConfig;
-
   @MockBean private StaticPropertyUtil staticPropertyUtil;
 
   private AcspMembersDao activeMember;
@@ -46,8 +46,13 @@ class UserAcspMembershipTest {
   private AcspMembership activeMembership;
   private AcspMembership removedMembership;
 
+  private User user1 = new User();
+
   @BeforeEach
   void setUp() {
+    user1.setUserId("user1");
+    Mockito.doReturn(user1).when(usersService).fetchUserDetails(user1.getUserId());
+
     activeMember = new AcspMembersDao();
     activeMember.setId("active1");
     activeMember.setAcspNumber("ACSP123");
@@ -83,17 +88,16 @@ class UserAcspMembershipTest {
 
   @Test
   void testGetAcspMembershipForUserIdExcludeRemoved() throws Exception {
-    String ericIdentity = "user1";
-    List<AcspMembership> acspMembershipList = Arrays.asList(activeMembership);
+    List<AcspMembership> acspMembershipList = Collections.singletonList(activeMembership);
 
-    when(acspMembersService.fetchAcspMemberships(ericIdentity, true))
-        .thenReturn(acspMembershipList);
+    when(acspMembersService.fetchAcspMemberships(user1, false)).thenReturn(acspMembershipList);
 
     mockMvc
         .perform(
             get("/acsp-members")
                 .header("X-Request-Id", "test-request-id")
-                .header("ERIC-Identity", ericIdentity)
+                .header("ERIC-Identity", "user1")
+                .header("ERIC-Identity-Type", "oauth2")
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -102,22 +106,21 @@ class UserAcspMembershipTest {
         .andExpect(jsonPath("$[0].id").value("active1"))
         .andExpect(jsonPath("$[0].acsp_number").value("ACSP123"));
 
-    verify(acspMembersService).fetchAcspMemberships(ericIdentity, true);
+    verify(acspMembersService).fetchAcspMemberships(user1, false);
   }
 
   @Test
   void testGetAcspMembershipForUserIdIncludeRemoved() throws Exception {
-    String ericIdentity = "user1";
     List<AcspMembership> acspMembershipList = Arrays.asList(activeMembership, removedMembership);
 
-    when(acspMembersService.fetchAcspMemberships(ericIdentity, false))
-        .thenReturn(acspMembershipList);
+    when(acspMembersService.fetchAcspMemberships(user1, true)).thenReturn(acspMembershipList);
 
     mockMvc
         .perform(
             get("/acsp-members")
                 .header("X-Request-Id", "test-request-id")
-                .header("ERIC-Identity", ericIdentity)
+                .header("ERIC-Identity", "user1")
+                .header("ERIC-Identity-Type", "oauth2")
                 .param("include_removed", "true")
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
@@ -128,6 +131,6 @@ class UserAcspMembershipTest {
         .andExpect(jsonPath("$[1].id").value("removed1"))
         .andExpect(jsonPath("$[1].removed_at").exists());
 
-    verify(acspMembersService).fetchAcspMemberships(ericIdentity, false);
+    verify(acspMembersService).fetchAcspMemberships(user1, true);
   }
 }

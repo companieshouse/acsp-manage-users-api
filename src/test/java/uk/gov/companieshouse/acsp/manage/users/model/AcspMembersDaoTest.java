@@ -10,9 +10,9 @@ public class AcspMembersDaoTest {
   @Test
   public void testHasBeenRemoved() {
     AcspMembersDao dao = new AcspMembersDao();
-    assertFalse(dao.hasBeenRemoved());
+    assertFalse(dao.beenRemoved());
 
     dao.setRemovedBy("user123");
-    assertTrue(dao.hasBeenRemoved());
+    assertTrue(dao.beenRemoved());
   }
 }
