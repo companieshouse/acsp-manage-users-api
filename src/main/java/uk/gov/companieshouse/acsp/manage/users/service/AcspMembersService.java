@@ -1,10 +1,10 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipListMapper;
+import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.accounts.user.model.User;
@@ -34,11 +34,14 @@ public class AcspMembersService {
         String.format(
             "Fetching ACSP memberships from the repository for user ID: %s, include removed: %b",
             user.getUserId(), includeRemoved));
-    return acspMembershipListMapper.daoToDto(
-        acspMembersRepository
-            .fetchAcspMembersByUserId(user.getUserId())
-            .filter(acspMembersDao -> includeRemoved || !acspMembersDao.beenRemoved())
-            .collect(Collectors.toList()),
-        user);
+
+    List<AcspMembersDao> acspMembers;
+    if (includeRemoved) {
+      acspMembers = acspMembersRepository.fetchAllAcspMembersByUserId(user.getUserId());
+    } else {
+      acspMembers = acspMembersRepository.fetchActiveAcspMembersByUserId(user.getUserId());
+    }
+
+    return acspMembershipListMapper.daoToDto(acspMembers, user);
   }
 }

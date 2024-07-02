@@ -106,6 +106,23 @@ class AcspMembersServiceIntegrationTest {
     assertTrue(result.isEmpty());
   }
 
+  @Test
+  void fetchAcspMemberships_nullUser_throwsIllegalArgumentException() {
+    assertThrows(
+        NullPointerException.class, () -> acspMembersService.fetchAcspMemberships(null, true));
+  }
+
+  @Test
+  void fetchAcspMemberships_userWithNoMemberships_returnsEmptyList() {
+    User userWithNoMemberships = new User();
+    userWithNoMemberships.setUserId("noMembershipsUser");
+
+    List<AcspMembership> result =
+        acspMembersService.fetchAcspMemberships(userWithNoMemberships, true);
+
+    assertTrue(result.isEmpty());
+  }
+
   private AcspMembersDao createAcspMembersDao(
       String id, String acspNumber, String userId, UserRoleEnum userRole, boolean removed) {
     AcspMembersDao dao = new AcspMembersDao();

@@ -1,11 +1,8 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -13,13 +10,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipListMapper;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
@@ -29,6 +27,7 @@ import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 
 @WebMvcTest(UserAcspMembership.class)
+@Tag("unit-test")
 class UserAcspMembershipTest {
 
   @Autowired private MockMvc mockMvc;
@@ -51,7 +50,7 @@ class UserAcspMembershipTest {
   @BeforeEach
   void setUp() {
     user1.setUserId("user1");
-    Mockito.doReturn(user1).when(usersService).fetchUserDetails(user1.getUserId());
+    when(usersService.fetchUserDetails(user1.getUserId())).thenReturn(user1);
 
     activeMember = new AcspMembersDao();
     activeMember.setId("active1");
@@ -132,5 +131,108 @@ class UserAcspMembershipTest {
         .andExpect(jsonPath("$[1].removed_at").exists());
 
     verify(acspMembersService).fetchAcspMemberships(user1, true);
+  }
+
+  @Test
+  void testGetAcspMembershipForUserIdNoMemberships() throws Exception {
+    when(acspMembersService.fetchAcspMemberships(user1, false)).thenReturn(Collections.emptyList());
+
+    mockMvc
+        .perform(
+            get("/acsp-members")
+                .header("X-Request-Id", "test-request-id")
+                .header("ERIC-Identity", "user1")
+                .header("ERIC-Identity-Type", "oauth2")
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$").isArray())
+        .andExpect(jsonPath("$.length()").value(0));
+
+    verify(acspMembersService).fetchAcspMemberships(user1, false);
+  }
+
+  @Test
+  void testGetAcspMembershipForUserIdMissingHeaders() throws Exception {
+    mockMvc
+        .perform(get("/acsp-members").contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void testGetAcspMembershipForUserIdInvalidIncludeRemovedParam() throws Exception {
+    mockMvc
+        .perform(
+            get("/acsp-members")
+                .header("X-Request-Id", "test-request-id")
+                .header("ERIC-Identity", "user1")
+                .header("ERIC-Identity-Type", "oauth2")
+                .param("include_removed", "invalid")
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void testGetAcspMembershipForUserIdServiceException() throws Exception {
+    when(acspMembersService.fetchAcspMemberships(user1, false))
+        .thenThrow(new RuntimeException("Service error"));
+
+    mockMvc
+        .perform(
+            get("/acsp-members")
+                .header("X-Request-Id", "test-request-id")
+                .header("ERIC-Identity", "user1")
+                .header("ERIC-Identity-Type", "oauth2")
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isInternalServerError());
+  }
+
+  @Test
+  void testGetAcspMembershipForUserIdMissingEricIdentity() throws Exception {
+    mockMvc
+        .perform(
+            get("/acsp-members")
+                .header("X-Request-Id", "test-request-id")
+                .header("ERIC-Identity-Type", "oauth2")
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void testGetAcspMembershipForUserIdMissingEricIdentityType() throws Exception {
+    mockMvc
+        .perform(
+            get("/acsp-members")
+                .header("X-Request-Id", "test-request-id")
+                .header("ERIC-Identity", "user1")
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void testGetAcspMembershipForUserIdNonOauth2User() throws Exception {
+    mockMvc
+        .perform(
+            get("/acsp-members")
+                .header("X-Request-Id", "test-request-id")
+                .header("ERIC-Identity", "user1")
+                .header("ERIC-Identity-Type", "key")
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void testGetAcspMembershipForUserIdUserNotFound() throws Exception {
+    when(usersService.fetchUserDetails("user1"))
+        .thenThrow(new InternalServerErrorRuntimeException("User not found"));
+
+    mockMvc
+        .perform(
+            get("/acsp-members")
+                .header("X-Request-Id", "test-request-id")
+                .header("ERIC-Identity", "user1")
+                .header("ERIC-Identity-Type", "oauth2")
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isInternalServerError());
   }
 }

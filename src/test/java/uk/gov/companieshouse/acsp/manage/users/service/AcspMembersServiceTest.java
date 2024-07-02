@@ -5,8 +5,8 @@ import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,6 +19,7 @@ import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 
 @ExtendWith(MockitoExtension.class)
+@Tag("unit-test")
 class AcspMembersServiceTest {
 
   @Mock private AcspMembersRepository acspMembersRepository;
@@ -28,7 +29,8 @@ class AcspMembersServiceTest {
   @InjectMocks private AcspMembersService acspMembersService;
 
   private User testUser;
-  private List<AcspMembersDao> testAcspMembersDaos;
+  private List<AcspMembersDao> testActiveAcspMembersDaos;
+  private List<AcspMembersDao> testAllAcspMembersDaos;
   private List<AcspMembership> testAcspMemberships;
 
   @BeforeEach
@@ -36,7 +38,8 @@ class AcspMembersServiceTest {
     testUser = new User();
     testUser.setUserId("user123");
 
-    testAcspMembersDaos =
+    testActiveAcspMembersDaos = Arrays.asList(createAcspMembersDao("1", false));
+    testAllAcspMembersDaos =
         Arrays.asList(createAcspMembersDao("1", false), createAcspMembersDao("2", true));
 
     testAcspMemberships = Arrays.asList(new AcspMembership(), new AcspMembership());
@@ -44,43 +47,46 @@ class AcspMembersServiceTest {
 
   @Test
   void fetchAcspMemberships_includeRemoved_returnsAllMemberships() {
-    when(acspMembersRepository.fetchAcspMembersByUserId(testUser.getUserId()))
-        .thenReturn(Stream.of(testAcspMembersDaos.get(0), testAcspMembersDaos.get(1)));
-    when(acspMembershipListMapper.daoToDto(anyList(), eq(testUser)))
+    when(acspMembersRepository.fetchAllAcspMembersByUserId(testUser.getUserId()))
+        .thenReturn(testAllAcspMembersDaos);
+    when(acspMembershipListMapper.daoToDto(testAllAcspMembersDaos, testUser))
         .thenReturn(testAcspMemberships);
 
     List<AcspMembership> result = acspMembersService.fetchAcspMemberships(testUser, true);
 
     assertEquals(2, result.size());
-    verify(acspMembersRepository).fetchAcspMembersByUserId(testUser.getUserId());
-    verify(acspMembershipListMapper).daoToDto(anyList(), eq(testUser));
+    verify(acspMembersRepository).fetchAllAcspMembersByUserId(testUser.getUserId());
+    verify(acspMembershipListMapper).daoToDto(testAllAcspMembersDaos, testUser);
+    verifyNoMoreInteractions(acspMembersRepository, acspMembershipListMapper);
   }
 
   @Test
   void fetchAcspMemberships_excludeRemoved_returnsOnlyActiveMemberships() {
-    when(acspMembersRepository.fetchAcspMembersByUserId(testUser.getUserId()))
-        .thenReturn(Stream.of(testAcspMembersDaos.get(0), testAcspMembersDaos.get(1)));
-    when(acspMembershipListMapper.daoToDto(anyList(), eq(testUser)))
+    when(acspMembersRepository.fetchActiveAcspMembersByUserId(testUser.getUserId()))
+        .thenReturn(testActiveAcspMembersDaos);
+    when(acspMembershipListMapper.daoToDto(testActiveAcspMembersDaos, testUser))
         .thenReturn(Arrays.asList(testAcspMemberships.get(0)));
 
     List<AcspMembership> result = acspMembersService.fetchAcspMemberships(testUser, false);
 
     assertEquals(1, result.size());
-    verify(acspMembersRepository).fetchAcspMembersByUserId(testUser.getUserId());
-    verify(acspMembershipListMapper).daoToDto(anyList(), eq(testUser));
+    verify(acspMembersRepository).fetchActiveAcspMembersByUserId(testUser.getUserId());
+    verify(acspMembershipListMapper).daoToDto(testActiveAcspMembersDaos, testUser);
+    verifyNoMoreInteractions(acspMembersRepository, acspMembershipListMapper);
   }
 
   @Test
   void fetchAcspMemberships_noMemberships_returnsEmptyList() {
-    when(acspMembersRepository.fetchAcspMembersByUserId(testUser.getUserId()))
-        .thenReturn(Stream.empty());
-    when(acspMembershipListMapper.daoToDto(anyList(), eq(testUser))).thenReturn(Arrays.asList());
+    when(acspMembersRepository.fetchActiveAcspMembersByUserId(testUser.getUserId()))
+        .thenReturn(Arrays.asList());
+    when(acspMembershipListMapper.daoToDto(Arrays.asList(), testUser)).thenReturn(Arrays.asList());
 
-    List<AcspMembership> result = acspMembersService.fetchAcspMemberships(testUser, true);
+    List<AcspMembership> result = acspMembersService.fetchAcspMemberships(testUser, false);
 
     assertTrue(result.isEmpty());
-    verify(acspMembersRepository).fetchAcspMembersByUserId(testUser.getUserId());
-    verify(acspMembershipListMapper).daoToDto(anyList(), eq(testUser));
+    verify(acspMembersRepository).fetchActiveAcspMembersByUserId(testUser.getUserId());
+    verify(acspMembershipListMapper).daoToDto(Arrays.asList(), testUser);
+    verifyNoMoreInteractions(acspMembersRepository, acspMembershipListMapper);
   }
 
   private AcspMembersDao createAcspMembersDao(String id, boolean removed) {
