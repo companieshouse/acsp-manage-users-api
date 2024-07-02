@@ -288,24 +288,27 @@ class AcspMembersServiceTest {
 
     @Test
     void createAcspMembersWithOwnerRoleWithNullInputsThrowsNullPointerException() {
-        Assertions.assertThrows(NullPointerException.class,
-                () -> acspMembersService.createAcspMembersWithOwnerRole(null, "12345")
-        );
-        Assertions.assertThrows(NullPointerException.class,
-                () -> acspMembersService.createAcspMembersWithOwnerRole("1122334455", null)
-        );
+        Assertions.assertThrows(
+                NullPointerException.class,
+                () -> acspMembersService.createAcspMembersWithOwnerRole(null, "12345"));
+        Assertions.assertThrows(
+                NullPointerException.class,
+                () -> acspMembersService.createAcspMembersWithOwnerRole("1122334455", null));
     }
 
-    private ArgumentMatcher<AcspMembersDao> createAcspMembersDaoMatches(final String acspNumber,
-                                                                        final String userId,
-                                                                        final AcspMembership.UserRoleEnum userRole) {
+    private ArgumentMatcher<AcspMembersDao> createAcspMembersDaoMatches(
+            final String acspNumber, final String userId, final AcspMembership.UserRoleEnum userRole) {
         return acspMembersDao -> {
             final var acspNumberIsCorrect = acspMembersDao.getAcspNumber().equals(acspNumber);
             final var userIdIsCorrect = acspMembersDao.getUserId().equals(userId);
             final var userRoleIsCorrect = acspMembersDao.getUserRole().equals(userRole);
             final var addedAtIsSet = acspMembersDao.getAddedAt() != null;
             final var etagIsSet = !acspMembersDao.getEtag().isBlank();
-            return acspNumberIsCorrect && userIdIsCorrect && userRoleIsCorrect && addedAtIsSet && etagIsSet;
+            return acspNumberIsCorrect
+                    && userIdIsCorrect
+                    && userRoleIsCorrect
+                    && addedAtIsSet
+                    && etagIsSet;
         };
     }
 
@@ -320,7 +323,7 @@ class AcspMembersServiceTest {
         acspMembersService.createAcspMembersWithOwnerRole(acspNumber, userId);
 
         // Then
-        Mockito.verify(acspMembersRepository).save(argThat(createAcspMembersDaoMatches(acspNumber, userId, userRole)));
+        Mockito.verify(acspMembersRepository)
+                .save(argThat(createAcspMembersDaoMatches(acspNumber, userId, userRole)));
     }
-
 }
