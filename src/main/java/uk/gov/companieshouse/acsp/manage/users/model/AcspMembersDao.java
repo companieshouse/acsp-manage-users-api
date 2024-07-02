@@ -143,7 +143,7 @@ public class AcspMembersDao {
   }
 
   public boolean beenRemoved() {
-    return Objects.isNull(this.removedBy);
+    return Objects.nonNull(this.removedBy);
   }
 
   @Override
