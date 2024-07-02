@@ -1,6 +1,7 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
 import java.util.List;
+import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipListMapper;
@@ -30,6 +31,9 @@ public class AcspMembersService {
 
   @Transactional(readOnly = true)
   public List<AcspMembership> fetchAcspMemberships(final User user, final boolean includeRemoved) {
+    Objects.requireNonNull(user);
+    Objects.requireNonNull(user.getUserId());
+
     LOG.debug(
         String.format(
             "Fetching ACSP memberships from the repository for user ID: %s, include removed: %b",

@@ -1,9 +1,11 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -47,46 +49,72 @@ class AcspMembersServiceTest {
 
   @Test
   void fetchAcspMemberships_includeRemoved_returnsAllMemberships() {
-    when(acspMembersRepository.fetchAllAcspMembersByUserId(testUser.getUserId()))
+    when(acspMembersRepository.fetchAllAcspMembersByUserId(eq(testUser.getUserId())))
         .thenReturn(testAllAcspMembersDaos);
-    when(acspMembershipListMapper.daoToDto(testAllAcspMembersDaos, testUser))
+    when(acspMembershipListMapper.daoToDto(eq(testAllAcspMembersDaos), eq(testUser)))
         .thenReturn(testAcspMemberships);
 
     List<AcspMembership> result = acspMembersService.fetchAcspMemberships(testUser, true);
 
     assertEquals(2, result.size());
-    verify(acspMembersRepository).fetchAllAcspMembersByUserId(testUser.getUserId());
-    verify(acspMembershipListMapper).daoToDto(testAllAcspMembersDaos, testUser);
+    assertSame(testAcspMemberships, result);
+    verify(acspMembersRepository).fetchAllAcspMembersByUserId(eq(testUser.getUserId()));
+    verify(acspMembershipListMapper).daoToDto(eq(testAllAcspMembersDaos), eq(testUser));
     verifyNoMoreInteractions(acspMembersRepository, acspMembershipListMapper);
   }
 
   @Test
   void fetchAcspMemberships_excludeRemoved_returnsOnlyActiveMemberships() {
-    when(acspMembersRepository.fetchActiveAcspMembersByUserId(testUser.getUserId()))
+    when(acspMembersRepository.fetchActiveAcspMembersByUserId(eq(testUser.getUserId())))
         .thenReturn(testActiveAcspMembersDaos);
-    when(acspMembershipListMapper.daoToDto(testActiveAcspMembersDaos, testUser))
-        .thenReturn(Arrays.asList(testAcspMemberships.get(0)));
+    when(acspMembershipListMapper.daoToDto(eq(testActiveAcspMembersDaos), eq(testUser)))
+        .thenReturn(Collections.singletonList(testAcspMemberships.get(0)));
 
     List<AcspMembership> result = acspMembersService.fetchAcspMemberships(testUser, false);
 
     assertEquals(1, result.size());
-    verify(acspMembersRepository).fetchActiveAcspMembersByUserId(testUser.getUserId());
-    verify(acspMembershipListMapper).daoToDto(testActiveAcspMembersDaos, testUser);
+    assertSame(testAcspMemberships.get(0), result.get(0));
+    verify(acspMembersRepository).fetchActiveAcspMembersByUserId(eq(testUser.getUserId()));
+    verify(acspMembershipListMapper).daoToDto(eq(testActiveAcspMembersDaos), eq(testUser));
     verifyNoMoreInteractions(acspMembersRepository, acspMembershipListMapper);
   }
 
   @Test
   void fetchAcspMemberships_noMemberships_returnsEmptyList() {
-    when(acspMembersRepository.fetchActiveAcspMembersByUserId(testUser.getUserId()))
-        .thenReturn(Arrays.asList());
-    when(acspMembershipListMapper.daoToDto(Arrays.asList(), testUser)).thenReturn(Arrays.asList());
+    when(acspMembersRepository.fetchActiveAcspMembersByUserId(eq(testUser.getUserId())))
+        .thenReturn(Collections.emptyList());
+    when(acspMembershipListMapper.daoToDto(eq(Collections.emptyList()), eq(testUser)))
+        .thenReturn(Collections.emptyList());
 
     List<AcspMembership> result = acspMembersService.fetchAcspMemberships(testUser, false);
 
     assertTrue(result.isEmpty());
-    verify(acspMembersRepository).fetchActiveAcspMembersByUserId(testUser.getUserId());
-    verify(acspMembershipListMapper).daoToDto(Arrays.asList(), testUser);
+    verify(acspMembersRepository).fetchActiveAcspMembersByUserId(eq(testUser.getUserId()));
+    verify(acspMembershipListMapper).daoToDto(eq(Collections.emptyList()), eq(testUser));
     verifyNoMoreInteractions(acspMembersRepository, acspMembershipListMapper);
+  }
+
+  @Test
+  void fetchAcspMemberships_nullUser_throwsIllegalArgumentException() {
+    assertThrows(
+        NullPointerException.class, () -> acspMembersService.fetchAcspMemberships(null, false));
+  }
+
+  @Test
+  void fetchAcspMemberships_nullUserId_throwsIllegalArgumentException() {
+    User userWithNullId = new User();
+    assertThrows(
+        NullPointerException.class,
+        () -> acspMembersService.fetchAcspMemberships(userWithNullId, false));
+  }
+
+  @Test
+  void fetchAcspMemberships_repositoryThrowsException_propagatesException() {
+    when(acspMembersRepository.fetchActiveAcspMembersByUserId(anyString()))
+        .thenThrow(new RuntimeException("Database error"));
+
+    assertThrows(
+        RuntimeException.class, () -> acspMembersService.fetchAcspMemberships(testUser, false));
   }
 
   private AcspMembersDao createAcspMembersDao(String id, boolean removed) {
