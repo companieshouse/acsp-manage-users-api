@@ -1,55 +1,121 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.ResponseEntity;
-import uk.gov.companieshouse.api.acsp_manage_users.model.InternalRequestBodyPatch;
-import uk.gov.companieshouse.api.acsp_manage_users.model.InternalRequestBodyPost;
-import uk.gov.companieshouse.api.acsp_manage_users.model.ResponseBodyPost;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
+import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
+import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
+import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
+import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
+import uk.gov.companieshouse.api.accounts.user.model.User;
+import uk.gov.companieshouse.api.accounts.user.model.UsersList;
 
-class UserAcspMembershipInternalTest {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
-  private UserAcspMembershipInternal controller;
+@WebMvcTest(UserAcspMembershipInternal.class)
+@Tag("unit-test")
+public class UserAcspMembershipInternalTest {
+    @Autowired
+    public MockMvc mockMvc;
+    @MockBean
+    StaticPropertyUtil staticPropertyUtil;
+    @MockBean
+    AcspDataService acspDataService;
+    @MockBean
+    UsersService usersService;
+    @MockBean
+    AcspMembersRepository acspMembersRepository;
+    @MockBean
+    AcspMembersService acspMembersService;
 
-  @BeforeEach
-  void setUp() {
-    controller = new UserAcspMembershipInternal();
-  }
+    private UsersList users;
 
-  @Test
-  void testAddAcspOwner() {
-    String xRequestId = "testRequestId";
-    String acspNumber = "ACSP123";
-    InternalRequestBodyPost requestBody = new InternalRequestBodyPost();
+    @Test
+    void addAcspOwnerWithoutXRequestIdReturnsBadRequest() throws Exception {
+        // Given
+        String acspNumber = "1122334455";
+        String ownerEmail = "j.smith@test.com";
+        String payload = String.format("{\"owner_email\":\"%s\"}", ownerEmail);
+        String url = String.format("/internal/acsp-members/acsp/%s", acspNumber);
 
-    ResponseEntity<ResponseBodyPost> response =
-        controller.addAcspOwner(xRequestId, acspNumber, requestBody);
+        // When
+        var response = mockMvc.perform(post(url).contentType(MediaType.APPLICATION_JSON).content(payload)).andReturn();
 
-    assertNull(response, "Response should be null as the method is not yet implemented");
-  }
+        // Then
+        assertEquals(400, response.getResponse().getStatus());
+    }
 
-  @Test
-  void testIsActiveMember() {
-    String xRequestId = "testRequestId";
-    String acspNumber = "ACSP123";
-    String userEmail = "test@example.com";
+    @Test
+    void addAcspOwnerReturnsNotFoundIfNoUsersListReturnedFromUsersService() throws Exception {
+        // Given
+        Mockito.when(acspDataService.fetchAcspData(Mockito.any())).thenReturn(new AcspDataDao());
+        String acspNumber = "1122334455";
+        String ownerEmail = "j.smith@test.com";
+        Mockito.when(usersService.searchUserDetails(Mockito.any())).thenReturn(null);
+        String payload = String.format("{\"owner_email\":\"%s\"}", ownerEmail);
+        String url = String.format("/internal/acsp-members/acsp/%s", acspNumber);
 
-    ResponseEntity<Boolean> response = controller.isActiveMember(xRequestId, acspNumber, userEmail);
+        // When
+        var response = mockMvc.perform(post(url)
+                        .header("X-Request-Id", "theId123")
+                        .contentType(MediaType.APPLICATION_JSON).content(payload))
+                .andReturn();
 
-    assertNull(response, "Response should be null as the method is not yet implemented");
-  }
+        // Then
+        assertEquals(404, response.getResponse().getStatus());
+    }
 
-  @Test
-  void testPerformActionOnAcsp() {
-    String xRequestId = "testRequestId";
-    String acspNumber = "ACSP123";
-    InternalRequestBodyPatch requestBody = new InternalRequestBodyPatch();
+    @Test
+    void addAcspOwnerReturnsNotFoundIfNoUserWithProvidedUserEmailFound() throws Exception {
+        // Given
+        Mockito.when(acspDataService.fetchAcspData(Mockito.any())).thenReturn(new AcspDataDao());
+        String acspNumber = "1122334455";
+        String ownerEmail = "j.smith@test.com";
+        users = new UsersList();
+        Mockito.when(usersService.searchUserDetails(Mockito.any())).thenReturn(users);
+        String payload = String.format("{\"owner_email\":\"%s\"}", ownerEmail);
+        String url = String.format("/internal/acsp-members/acsp/%s", acspNumber);
 
-    ResponseEntity<Void> response =
-        controller.performActionOnAcsp(xRequestId, acspNumber, requestBody);
+        // When
+        var response = mockMvc.perform(post(url)
+                        .header("X-Request-Id", "theId123")
+                        .contentType(MediaType.APPLICATION_JSON).content(payload))
+                .andReturn();
 
-    assertNull(response, "Response should be null as the method is not yet implemented");
-  }
+        // Then
+        assertEquals(404, response.getResponse().getStatus());
+    }
+
+    @Test
+    void addAcspOwnerAddsAcspOwnerToAcspAndReturnsAcspMembersIdAndCreatedStatus() throws Exception {
+        // Given
+        Mockito.when(acspDataService.fetchAcspData(Mockito.any())).thenReturn(new AcspDataDao());
+        String acspNumber = "1122334455";
+        String ownerEmail = "j.smith@test.com";
+        users = new UsersList();
+        users.add(new User());
+        Mockito.when(usersService.searchUserDetails(Mockito.any())).thenReturn(users);
+        Mockito.when(acspMembersRepository.save(Mockito.any())).thenReturn(new AcspMembersDao());
+        String payload = String.format("{\"owner_email\":\"%s\"}", ownerEmail);
+        String url = String.format("/internal/acsp-members/acsp/%s", acspNumber);
+
+        // When
+        var response = mockMvc.perform(post(url)
+                        .header("X-Request-Id", "theId123")
+                        .contentType(MediaType.APPLICATION_JSON).content(payload))
+                .andReturn();
+
+        // Then
+        assertEquals(201, response.getResponse().getStatus());
+        assertTrue(response.getResponse().getContentAsString().contains("acsp_membership_id"));
+    }
 }

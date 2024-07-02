@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,6 +42,8 @@ import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
+
+import static org.mockito.ArgumentMatchers.argThat;
 
 @ExtendWith(MockitoExtension.class)
 @Tag("unit-test")
@@ -281,6 +284,43 @@ class AcspMembersServiceTest {
 
         acspMembersService.fetchAcspMembers( acspData, true, null, null, 1, 3 );
         Mockito.verify( acspMembersMapper ).daoToDto( argThat( acspMembersDaoPageMatcher( 1, 3, 16, 6, Set.of( "COM004", "COM005", "COM006" ) ) ), eq( acspData ) );
+    }
+
+    @Test
+    void createAcspMembersWithOwnerRoleWithNullInputsThrowsNullPointerException() {
+        Assertions.assertThrows(NullPointerException.class,
+                () -> acspMembersService.createAcspMembersWithOwnerRole(null, "12345")
+        );
+        Assertions.assertThrows(NullPointerException.class,
+                () -> acspMembersService.createAcspMembersWithOwnerRole("1122334455", null)
+        );
+    }
+
+    private ArgumentMatcher<AcspMembersDao> createAcspMembersDaoMatches(final String acspNumber,
+                                                                        final String userId,
+                                                                        final AcspMembership.UserRoleEnum userRole) {
+        return acspMembersDao -> {
+            final var acspNumberIsCorrect = acspMembersDao.getAcspNumber().equals(acspNumber);
+            final var userIdIsCorrect = acspMembersDao.getUserId().equals(userId);
+            final var userRoleIsCorrect = acspMembersDao.getUserRole().equals(userRole);
+            final var addedAtIsSet = acspMembersDao.getAddedAt() != null;
+            final var etagIsSet = !acspMembersDao.getEtag().isBlank();
+            return acspNumberIsCorrect && userIdIsCorrect && userRoleIsCorrect && addedAtIsSet && etagIsSet;
+        };
+    }
+
+    @Test
+    void createAcspMembersWithOwnerRoleWithInputsProvidedSuccessfullyCreatesAcspMembers() {
+        // Given
+        String acspNumber = "1122334455";
+        String userId = "12345";
+        AcspMembership.UserRoleEnum userRole = AcspMembership.UserRoleEnum.OWNER;
+
+        // When
+        acspMembersService.createAcspMembersWithOwnerRole(acspNumber, userId);
+
+        // Then
+        Mockito.verify(acspMembersRepository).save(argThat(createAcspMembersDaoMatches(acspNumber, userId, userRole)));
     }
 
 }
