@@ -13,7 +13,9 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.ResponseBodyPost;
 @RestController
 public class UserAcspMembershipInternal implements UserAcspMembershipInternalInterface {
 
-    public UserAcspMembershipInternal() {}
+  public UserAcspMembershipInternal() {
+    // Empty constructor as yet to inject any dependencies
+  }
 
     @Override
     public ResponseEntity<ResponseBodyPost> addAcspOwner(
