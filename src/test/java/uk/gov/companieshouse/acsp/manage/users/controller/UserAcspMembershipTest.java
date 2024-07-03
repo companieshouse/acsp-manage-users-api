@@ -293,7 +293,7 @@ class UserAcspMembershipTest {
   @Test
   void getAcspMembershipForNonExistingMemberIdShouldNotReturnData() throws Exception {
 
-    Mockito.doReturn(Optional.of(acspMembership1)).when(acspMembershipService).fetchAcspMembership("acsp2");
+    Mockito.doReturn(Optional.of(acspMembership1)).when(acspMembershipService).fetchAcspMembership("acsp3");
 
     final var responseJson = mockMvc.perform(
                     get("/acsp-members/{id}","acsp2")
