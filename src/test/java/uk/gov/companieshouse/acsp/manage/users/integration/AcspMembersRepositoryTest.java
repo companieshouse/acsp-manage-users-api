@@ -30,7 +30,7 @@ public class AcspMembersRepositoryTest {
 
     @Container
     @ServiceConnection
-    private static MongoDBContainer container = new MongoDBContainer("mongo:6");
+    private static MongoDBContainer container = new MongoDBContainer("mongo:5");
 
     @Autowired
     private MongoTemplate mongoTemplate;

@@ -48,7 +48,7 @@ public class AcspMembershipListForAcspTest {
 
     @Container
     @ServiceConnection
-    static MongoDBContainer container = new MongoDBContainer("mongo:6");
+    static MongoDBContainer container = new MongoDBContainer("mongo:5");
 
     @Autowired
     MongoTemplate mongoTemplate;

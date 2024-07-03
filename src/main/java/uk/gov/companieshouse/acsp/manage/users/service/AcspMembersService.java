@@ -34,7 +34,7 @@ public class AcspMembersService {
   public AcspMembersService( final AcspMembersRepository acspMembersRepository, final AcspMembershipListMapper acspMembershipListMapper, final AcspMembersMapper acspMembersMapper ) {
       this.acspMembersRepository = acspMembersRepository;
       this.acspMembershipListMapper = acspMembershipListMapper;
-      this.acspMembersMapper = acspMembersMapper
+      this.acspMembersMapper = acspMembersMapper;
   }
 
   @Transactional(readOnly = true)
