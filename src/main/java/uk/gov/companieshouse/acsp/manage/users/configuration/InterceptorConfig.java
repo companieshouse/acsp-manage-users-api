@@ -16,9 +16,10 @@ public class InterceptorConfig implements WebMvcConfigurer {
     private final LoggingInterceptor loggingInterceptor;
     private final AuthorizationInterceptor authorizationInterceptor;
 
-    private final String OAUTH_PROTECTED_ENDPOINTS = "/acsp-members/*";
-    private final String KEY_PROTECTED_ENDPOINTS = "/internal/acsp-members/*";
-    private final String HEALTH_CHECK_ENDPOINT = "/*/healthcheck";
+    private static final String OAUTH_PROTECTED_ENDPOINTS = "/acsp-members/**";
+    private static final String OAUTH_PROTECTED_ENDPOINTS_BASE = "/acsp-members";
+    private static final String KEY_PROTECTED_ENDPOINTS = "/internal/acsp-members/**";
+    private static final String HEALTH_CHECK_ENDPOINT = "/*/healthcheck";
 
 
     public InterceptorConfig(final LoggingInterceptor loggingInterceptor, AuthorizationInterceptor authorizationInterceptor) {
@@ -37,9 +38,10 @@ public class InterceptorConfig implements WebMvcConfigurer {
     }
 
     private void addEricInterceptors(final InterceptorRegistry registry) {
-        registry.addInterceptor( authorizationInterceptor )
-                .addPathPatterns( OAUTH_PROTECTED_ENDPOINTS )
-                .excludePathPatterns( HEALTH_CHECK_ENDPOINT, KEY_PROTECTED_ENDPOINTS );
+        registry
+                .addInterceptor(authorizationInterceptor)
+                .addPathPatterns(OAUTH_PROTECTED_ENDPOINTS, OAUTH_PROTECTED_ENDPOINTS_BASE)
+                .excludePathPatterns(HEALTH_CHECK_ENDPOINT, KEY_PROTECTED_ENDPOINTS);
 
         registry.addInterceptor( new InternalUserInterceptor( StaticPropertyUtil.APPLICATION_NAMESPACE ) )
                 .addPathPatterns( KEY_PROTECTED_ENDPOINTS )

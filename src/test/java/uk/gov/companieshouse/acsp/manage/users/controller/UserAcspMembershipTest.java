@@ -1,24 +1,26 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembershipService;
+import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -32,57 +34,78 @@ class UserAcspMembershipTest {
     AcspMembershipService acspMembershipService;
 
     @MockBean
+    private UsersService usersService;
+    @MockBean
     StaticPropertyUtil staticPropertyUtil;
-    private AcspMembersDao acspMember1;
 
     private AcspMembership acspMembership1;
     @BeforeEach
     void setUp() {
-        acspMember1 = new AcspMembersDao();
-        acspMember1.setId("acsp1");
-        acspMember1.setAcspNumber("ACSP123");
-        acspMember1.setUserId("user1");
-        acspMember1.setUserRole(AcspMembership.UserRoleEnum.ADMIN);
-        acspMember1.setAddedAt(LocalDateTime.now().minusDays(30));
-        acspMember1.setRemovedBy("Test1");
-        acspMember1.setRemovedAt(LocalDateTime.now().minusDays(10));
-
         acspMembership1 = new AcspMembership();
-        acspMembership1.setId("acspMembership1");
+        acspMembership1.setId("acsp1");
         acspMembership1.setAcspNumber("ACSP123");
         acspMembership1.setUserId("user1");
         acspMembership1.setUserRole(AcspMembership.UserRoleEnum.ADMIN);
         acspMembership1.setAddedAt(OffsetDateTime.now().minusDays(30));
     }
     @Test
-    void getAcspMembershipForAcspIdTestShouldThrow401ErrorRequestWhenIdNotProvided() throws Exception {
-        var response = mockMvc.perform(get("/acsp-members").header("X-Request-Id", "theId")).andReturn();
-        assertEquals(401, response.getResponse().getStatus());
+    void getAcspMembershipForAcspIdTestShouldThrow400ErrorRequestWhenRequestIdNotProvided() throws Exception {
+        var response = mockMvc.perform(get("/acsp-members/{id}","acsp1")
+                        .header("ERIC-Identity", "user1")
+                        .header("ERIC-Identity-Type", "oauth2")
+                ).andReturn();
+        assertEquals(400, response.getResponse().getStatus());
     }
 
     @Test
-    void getAcspMembershipForAcspIdTestShouldThrow404ErrorRequestWhenIdDoesntExist() throws Exception {
-        var response = mockMvc.perform(get("/acsp-members")
-                .header("X-Request-Id", "theId")
-                .header("Id", "apsc123"))
+    void getAcspMembershipForAcspIdTestShouldThrow404ErrorRequestWhenRequestIdMalformed() throws Exception {
+        var response = mockMvc.perform(get("/acsp-members/{id}","acsp1")
+                        .header("X-Request-Id", "&&&&")
+                        .header("ERIC-Identity", "user1")
+                        .header("ERIC-Identity-Type", "oauth2"))
                 .andReturn();
         assertEquals(404, response.getResponse().getStatus());
     }
 
     @Test
-    void testGetAcspMembershipForIdReturnsData() throws Exception {
+    void getAcspMembershipForExistingMemberIdShouldReturnData() throws Exception {
+        Mockito.doReturn(true).when(acspMembershipService).memberIdExists("acsp1");
+        Mockito.doReturn(Optional.of(acspMembership1)).when(acspMembershipService).fetchAcspMembership("acsp1");
 
-        when(acspMembershipService.fetchAcspMembership("acsp1")).thenReturn(Optional.ofNullable(acspMembership1));
+        final var responseJson = mockMvc.perform(
+                get("/acsp-members/{id}","acsp1")
+                        .header("X-Request-Id", "theId")
+                        .header("ERIC-Identity", "user1")
+                        .header("ERIC-Identity-Type", "oauth2")
+                        .contentType(MediaType.APPLICATION_JSON))
 
-        final var response = mockMvc.perform(
-                get("/acsp-members")
-                        .header("X-Request-Id", "test123")
-                        .header("id", "acsp1"))
+                .andExpect(status().isOk())
                 .andReturn()
                 .getResponse();
 
-        //verify().fetchAcspMemberships();
+        final var objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        final var response  = objectMapper.readValue(responseJson.getContentAsByteArray(), AcspMembership.class);
+
+        Assertions.assertEquals("acsp1", response.getId());
     }
 
+    @Test
+    void getAcspMembershipForNonExistingMemberIdShouldReturnData() throws Exception {
+        Mockito.doReturn(false).when(acspMembershipService).memberIdExists("acsp2");
+        Mockito.doReturn(Optional.of(acspMembership1)).when(acspMembershipService).fetchAcspMembership("acsp2");
+
+        final var responseJson = mockMvc.perform(
+                        get("/acsp-members/{id}","acsp2")
+                                .header("X-Request-Id", "theId")
+                                .header("ERIC-Identity", "user1")
+                                .header("ERIC-Identity-Type", "oauth2")
+                                .contentType(MediaType.APPLICATION_JSON))
+
+                .andExpect(status().isNotFound())
+                .andReturn()
+                .getResponse();
+
+    }
 
 }

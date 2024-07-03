@@ -26,7 +26,7 @@ public class AcspMembershipService {
     }
 
     public Optional<AcspMembership> fetchAcspMembership(String id) {
-        return acspMembersRepository.fetchAcspMemberById(id)
+        return acspMembersRepository.findById(id)
                 .map(acspMembershipMapper::daoToDto);
     }
 }
