@@ -13,33 +13,32 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.ResponseBodyPost;
 @RestController
 public class UserAcspMembershipInternal implements UserAcspMembershipInternalInterface {
 
-    public UserAcspMembershipInternal() {}
+  public UserAcspMembershipInternal() {
+    // Empty constructor as yet to inject any dependencies
+  }
 
-    @Override
-    public ResponseEntity<ResponseBodyPost> addAcspOwner(
-            @NotNull String xRequestId,
-            @Pattern(regexp = "^[0-9A-Za-z-_]{0,32}$") String acspNumber,
-            @Valid InternalRequestBodyPost internalRequestBodyPost) {
-        return null; // TODO(https://companieshouse.atlassian.net/browse/IDVA6-1238)
-    }
+  @Override
+  public ResponseEntity<ResponseBodyPost> addAcspOwner(
+      @NotNull String xRequestId,
+      @Pattern(regexp = "^[0-9A-Za-z-_]{0,32}$") String acspNumber,
+      @Valid InternalRequestBodyPost internalRequestBodyPost) {
+    return null; // TODO(https://companieshouse.atlassian.net/browse/IDVA6-1238)
+  }
 
-    @Override
-    public ResponseEntity<Boolean> isActiveMember(
-            @NotNull String xRequestId,
-            @Pattern(regexp = "^[0-9A-Za-z-_]{0,32}$") String acspNumber,
-            @NotNull @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$") String userEmail
-    ) {
-        return null; // TODO(https://companieshouse.atlassian.net/browse/IDVA6-1212)
-    }
+  @Override
+  public ResponseEntity<Boolean> isActiveMember(
+      @NotNull String xRequestId,
+      @Pattern(regexp = "^[0-9A-Za-z-_]{0,32}$") String acspNumber,
+      @NotNull @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
+          String userEmail) {
+    return null; // TODO(https://companieshouse.atlassian.net/browse/IDVA6-1212)
+  }
 
-    @Override
-    public ResponseEntity<Void> performActionOnAcsp(
-            @NotNull String xRequestId,
-            @Pattern(regexp = "^[0-9A-Za-z-_]{0,32}$") String acspNumber,
-            @Valid InternalRequestBodyPatch internalRequestBodyPatch
-    ) {
-        return null;
-    }
-
+  @Override
+  public ResponseEntity<Void> performActionOnAcsp(
+      @NotNull String xRequestId,
+      @Pattern(regexp = "^[0-9A-Za-z-_]{0,32}$") String acspNumber,
+      @Valid InternalRequestBodyPatch internalRequestBodyPatch) {
+    return null;
+  }
 }
-

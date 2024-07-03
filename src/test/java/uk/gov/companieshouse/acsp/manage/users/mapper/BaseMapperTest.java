@@ -15,9 +15,9 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipLinks;
 
-@ExtendWith( MockitoExtension.class )
-@Tag( "unit-test" )
-public class BaseMapperTest {
+@ExtendWith(MockitoExtension.class)
+@Tag("unit-test")
+class BaseMapperTest {
 
     private final TestDataManager testDataManager = TestDataManager.getInstance();
 

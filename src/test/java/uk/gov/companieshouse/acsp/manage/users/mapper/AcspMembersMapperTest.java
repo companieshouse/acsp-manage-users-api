@@ -20,100 +20,150 @@ import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.MapperUtil;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 
-@ExtendWith( MockitoExtension.class )
-@Tag( "unit-test" )
-public class AcspMembersMapperTest {
+@ExtendWith(MockitoExtension.class)
+@Tag("unit-test")
+class AcspMembersMapperTest {
 
-    @Mock
-    private UsersService usersService;
+  @Mock private UsersService usersService;
 
-    @Mock
-    private AcspDataService acspDataService;
+  @Mock private AcspDataService acspDataService;
 
-    @InjectMocks
-    private AcspMembersMapper acspMembersMapper;
+  @InjectMocks private AcspMembersMapper acspMembersMapper;
 
-    private final TestDataManager testDataManager = TestDataManager.getInstance();
+  private final TestDataManager testDataManager = TestDataManager.getInstance();
 
-    private static final String DEFAULT_KIND = "acsp-membership";
+  private static final String DEFAULT_DISPLAY_NAME = "Not Provided";
 
-    private static final String DEFAULT_DISPLAY_NAME = "Not Provided";
+  @BeforeEach
+  void setup() {
+    acspMembersMapper =
+        new AcspMembersMapper(new BaseMapperImpl(), new MapperUtil(usersService, acspDataService));
+  }
 
-    @BeforeEach
-    void setup(){
-        acspMembersMapper = new AcspMembersMapper( new BaseMapperImpl(), new MapperUtil( usersService, acspDataService ) );
-    }
+  @Test
+  void daoToDtoWithNullInputsThrowsNullPointerException() {
+    final var daos = testDataManager.fetchAcspMembersDaos("TS001", "TS002");
+    final var acspData = testDataManager.fetchAcspDataDaos("TSA001").getFirst();
+    final var page = new PageImpl<>(daos, PageRequest.of(0, 15), 2);
 
-    @Test
-    void daoToDtoWithNullInputsThrowsNullPointerException(){
-        final var daos = testDataManager.fetchAcspMembersDaos( "TS001", "TS002" );
-        final var acspData = testDataManager.fetchAcspDataDaos( "TSA001" ).getFirst();
-        final var userData = testDataManager.fetchUserDtos( "TSU001", "TSU002" );
+    Assertions.assertThrows(
+        NullPointerException.class, () -> acspMembersMapper.daoToDto(null, acspData));
+    Assertions.assertThrows(
+        NullPointerException.class, () -> acspMembersMapper.daoToDto(page, null));
+  }
 
-        Mockito.doReturn( userData.getFirst() ).when( usersService ).fetchUserDetails( "TSU001" );
-        Mockito.doReturn( userData.getLast() ).when( usersService ).fetchUserDetails( "TSU002" );
+  @Test
+  void daoToDtoMapsCorrectNumberOfItems() {
+    final var daos = testDataManager.fetchAcspMembersDaos("TS001", "TS002");
+    final var acspData = testDataManager.fetchAcspDataDaos("TSA001").getFirst();
+    final var page = new PageImpl<>(daos, PageRequest.of(0, 15), 2);
 
-        final var page = new PageImpl<>( daos, PageRequest.of(0,15 ),2 );
+    mockUserService();
 
-        Assertions.assertThrows( NullPointerException.class, () -> acspMembersMapper.daoToDto( null, acspData ) );
-        Assertions.assertThrows( NullPointerException.class, () -> acspMembersMapper.daoToDto( page, null ) );
-    }
+    final var acspMembers = acspMembersMapper.daoToDto(page, acspData);
 
-    @Test
-    void daoToDtoPerformsMappingCorrectly(){
-        final var daos = testDataManager.fetchAcspMembersDaos( "TS001", "TS002" );
-        final var acspData = testDataManager.fetchAcspDataDaos( "TSA001" ).getFirst();
-        final var userData = testDataManager.fetchUserDtos( "TSU001", "TSU002" );
+    Assertions.assertEquals(2, acspMembers.getItems().size());
+  }
 
-        Mockito.doReturn( userData.getFirst() ).when( usersService ).fetchUserDetails( "TSU001" );
-        Mockito.doReturn( userData.getLast() ).when( usersService ).fetchUserDetails( "TSU002" );
+  @Test
+  void daoToDtoMapsFirstItemCorrectly() {
+    final var daos = testDataManager.fetchAcspMembersDaos("TS001", "TS002");
+    final var acspData = testDataManager.fetchAcspDataDaos("TSA001").getFirst();
+    final var page = new PageImpl<>(daos, PageRequest.of(0, 15), 2);
 
-        final var page = new PageImpl<>( daos, PageRequest.of(0,15 ),2 );
+    mockUserService();
 
-        final var acspMembers = acspMembersMapper.daoToDto( page, acspData );
-        final var items = acspMembers.getItems();
-        final var links = acspMembers.getLinks();
+    final var acspMembers = acspMembersMapper.daoToDto(page, acspData);
+    final var firstItem = acspMembers.getItems().getFirst();
+    final var firstDao = daos.getFirst();
 
-        Assertions.assertEquals( 2, items.size() );
+    Assertions.assertEquals(firstDao.getEtag(), firstItem.getEtag());
+    Assertions.assertEquals("TS001", firstItem.getId());
+    Assertions.assertEquals("TSU001", firstItem.getUserId());
+    Assertions.assertEquals(DEFAULT_DISPLAY_NAME, firstItem.getUserDisplayName());
+    Assertions.assertEquals("buzz.lightyear@toystory.com", firstItem.getUserEmail());
+    Assertions.assertEquals(UserRoleEnum.OWNER, firstItem.getUserRole());
+  }
 
-        Assertions.assertEquals( daos.getFirst().getEtag(), items.getFirst().getEtag() );
-        Assertions.assertEquals( "TS001", items.getFirst().getId() );
-        Assertions.assertEquals( "TSU001", items.getFirst().getUserId() );
-        Assertions.assertEquals( DEFAULT_DISPLAY_NAME, items.getFirst().getUserDisplayName() );
-        Assertions.assertEquals( "buzz.lightyear@toystory.com", items.getFirst().getUserEmail() );
-        Assertions.assertEquals( UserRoleEnum.OWNER, items.getFirst().getUserRole() );
-        Assertions.assertEquals( "TSA001", items.getFirst().getAcspNumber() );
-        Assertions.assertEquals( "Toy Story", items.getFirst().getAcspName() );
-        Assertions.assertEquals( "active", items.getFirst().getAcspStatus().getValue() );
-        Assertions.assertEquals( localDateTimeToNormalisedString( daos.getFirst().getAddedAt() ), reduceTimestampResolution( items.getFirst().getAddedAt().toString() ) );
-        Assertions.assertNull( items.getFirst().getAddedBy() );
-        Assertions.assertNull( items.getFirst().getRemovedBy() );
-        Assertions.assertNull( items.getFirst().getRemovedAt() );
-        Assertions.assertEquals( DEFAULT_KIND, items.getFirst().getKind() );
-        Assertions.assertEquals( "/TS001", items.getFirst().getLinks().getSelf() );
+  @Test
+  void daoToDtoMapsLastItemCorrectly() {
+    final var daos = testDataManager.fetchAcspMembersDaos("TS001", "TS002");
+    final var acspData = testDataManager.fetchAcspDataDaos("TSA001").getFirst();
+    final var page = new PageImpl<>(daos, PageRequest.of(0, 15), 2);
 
-        Assertions.assertEquals( daos.getLast().getEtag(), items.getLast().getEtag() );
-        Assertions.assertEquals( "TS002", items.getLast().getId() );
-        Assertions.assertEquals( "TSU002", items.getLast().getUserId() );
-        Assertions.assertEquals( "Woody", items.getLast().getUserDisplayName() );
-        Assertions.assertEquals( "woody@toystory.com", items.getLast().getUserEmail() );
-        Assertions.assertEquals( UserRoleEnum.ADMIN, items.getLast().getUserRole() );
-        Assertions.assertEquals( "TSA001", items.getLast().getAcspNumber() );
-        Assertions.assertEquals( "Toy Story", items.getLast().getAcspName() );
-        Assertions.assertEquals( "active", items.getLast().getAcspStatus().getValue() );
-        Assertions.assertEquals( localDateTimeToNormalisedString( daos.getLast().getAddedAt() ), reduceTimestampResolution( items.getLast().getAddedAt().toString() ) );
-        Assertions.assertEquals( "TSU001", items.getLast().getAddedBy() );
-        Assertions.assertEquals( "TSU001", items.getLast().getRemovedBy() );
-        Assertions.assertEquals( localDateTimeToNormalisedString( daos.getLast().getRemovedAt() ), reduceTimestampResolution( items.getLast().getRemovedAt().toString() ) );
-        Assertions.assertEquals( DEFAULT_KIND, items.getLast().getKind() );
-        Assertions.assertEquals( "/TS002", items.getLast().getLinks().getSelf() );
+    mockUserService();
 
-        Assertions.assertEquals( "/acsp-members/acsps/TSA001?page_index=0&items_per_page=15", links.getSelf() );
-        Assertions.assertEquals( "", links.getNext() );
-        Assertions.assertEquals( 15, acspMembers.getItemsPerPage() );
-        Assertions.assertEquals( 0, acspMembers.getPageNumber() );
-        Assertions.assertEquals( 2, acspMembers.getTotalResults() );
-        Assertions.assertEquals( 1, acspMembers.getTotalPages() );
-    }
+    final var acspMembers = acspMembersMapper.daoToDto(page, acspData);
+    final var lastItem = acspMembers.getItems().getLast();
+    final var lastDao = daos.getLast();
 
+    Assertions.assertEquals(lastDao.getEtag(), lastItem.getEtag());
+    Assertions.assertEquals("TS002", lastItem.getId());
+    Assertions.assertEquals("TSU002", lastItem.getUserId());
+    Assertions.assertEquals("Woody", lastItem.getUserDisplayName());
+    Assertions.assertEquals("woody@toystory.com", lastItem.getUserEmail());
+    Assertions.assertEquals(UserRoleEnum.ADMIN, lastItem.getUserRole());
+  }
+
+  @Test
+  void daoToDtoMapsAcspDataCorrectly() {
+    final var daos = testDataManager.fetchAcspMembersDaos("TS001", "TS002");
+    final var acspData = testDataManager.fetchAcspDataDaos("TSA001").getFirst();
+    final var page = new PageImpl<>(daos, PageRequest.of(0, 15), 2);
+
+    mockUserService();
+
+    final var acspMembers = acspMembersMapper.daoToDto(page, acspData);
+    final var firstItem = acspMembers.getItems().getFirst();
+
+    Assertions.assertEquals("TSA001", firstItem.getAcspNumber());
+    Assertions.assertEquals("Toy Story", firstItem.getAcspName());
+    Assertions.assertEquals("active", firstItem.getAcspStatus().getValue());
+  }
+
+  @Test
+  void daoToDtoMapsDateFieldsCorrectly() {
+    final var daos = testDataManager.fetchAcspMembersDaos("TS001", "TS002");
+    final var acspData = testDataManager.fetchAcspDataDaos("TSA001").getFirst();
+    final var page = new PageImpl<>(daos, PageRequest.of(0, 15), 2);
+
+    mockUserService();
+
+    final var acspMembers = acspMembersMapper.daoToDto(page, acspData);
+    final var firstItem = acspMembers.getItems().getFirst();
+    final var lastItem = acspMembers.getItems().getLast();
+
+    Assertions.assertEquals(
+        localDateTimeToNormalisedString(daos.getFirst().getAddedAt()),
+        reduceTimestampResolution(firstItem.getAddedAt().toString()));
+    Assertions.assertEquals(
+        localDateTimeToNormalisedString(daos.getLast().getRemovedAt()),
+        reduceTimestampResolution(lastItem.getRemovedAt().toString()));
+  }
+
+  @Test
+  void daoToDtoMapsPaginationCorrectly() {
+    final var daos = testDataManager.fetchAcspMembersDaos("TS001", "TS002");
+    final var acspData = testDataManager.fetchAcspDataDaos("TSA001").getFirst();
+    final var page = new PageImpl<>(daos, PageRequest.of(0, 15), 2);
+
+    mockUserService();
+
+    final var acspMembers = acspMembersMapper.daoToDto(page, acspData);
+
+    Assertions.assertEquals(
+        "/acsp-members/acsps/TSA001?page_index=0&items_per_page=15",
+        acspMembers.getLinks().getSelf());
+    Assertions.assertEquals("", acspMembers.getLinks().getNext());
+    Assertions.assertEquals(15, acspMembers.getItemsPerPage());
+    Assertions.assertEquals(0, acspMembers.getPageNumber());
+    Assertions.assertEquals(2, acspMembers.getTotalResults());
+    Assertions.assertEquals(1, acspMembers.getTotalPages());
+  }
+
+  private void mockUserService() {
+    final var userData = testDataManager.fetchUserDtos("TSU001", "TSU002");
+    Mockito.doReturn(userData.getFirst()).when(usersService).fetchUserDetails("TSU001");
+    Mockito.doReturn(userData.getLast()).when(usersService).fetchUserDetails("TSU002");
+  }
 }

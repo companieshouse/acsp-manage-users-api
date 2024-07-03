@@ -16,9 +16,9 @@ import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 
-@ExtendWith( MockitoExtension.class )
-@Tag( "unit-test" )
-public class MapperUtilTest {
+@ExtendWith(MockitoExtension.class)
+@Tag("unit-test")
+class MapperUtilTest {
 
     @Mock
     private UsersService usersService;

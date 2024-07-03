@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.util.List;
 import java.util.Objects;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -73,8 +72,9 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
         String.format(
             "Received request for GET `/acsp-members` with X-Request-Id: %s, ERIC-Identity: %s, includeRemoved: %s",
             xRequestId, ericIdentity, includeRemoved));
-    List<AcspMembership> memberships =
-        acspMembersService.fetchAcspMemberships(UserContext.getLoggedUser(), includeRemoved);
+    final List<AcspMembership> memberships =
+        acspMembersService.fetchAcspMemberships(
+            Objects.requireNonNull(UserContext.getLoggedUser()), includeRemoved);
     LOG.info(
         String.format(
             "X-Request-Id: %s, Fetched %d memberships for user ID: %s",
