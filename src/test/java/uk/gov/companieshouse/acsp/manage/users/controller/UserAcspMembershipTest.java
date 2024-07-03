@@ -105,18 +105,18 @@ class UserAcspMembershipTest {
     when(acspMembersService.fetchAcspMemberships(user1, false)).thenReturn(acspMembershipList);
 
     mockMvc
-        .perform(
-            get("/acsp-members")
-                .header("X-Request-Id", "test-request-id")
-                .header("ERIC-Identity", "user1")
-                .header("ERIC-Identity-Type", "oauth2")
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$").isArray())
-        .andExpect(jsonPath("$.length()").value(1))
-        .andExpect(jsonPath("$[0].id").value("active1"))
-        .andExpect(jsonPath("$[0].acsp_number").value("ACSP123"));
+            .perform(
+                    get("/acsp-members")
+                            .header("X-Request-Id", "test-request-id")
+                            .header("ERIC-Identity", "user1")
+                            .header("ERIC-Identity-Type", "oauth2")
+                            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].id").value("active1"))
+            .andExpect(jsonPath("$[0].acsp_number").value("ACSP123"));
 
     verify(acspMembersService).fetchAcspMemberships(user1, false);
   }
@@ -128,20 +128,20 @@ class UserAcspMembershipTest {
     when(acspMembersService.fetchAcspMemberships(user1, true)).thenReturn(acspMembershipList);
 
     mockMvc
-        .perform(
-            get("/acsp-members")
-                .header("X-Request-Id", "test-request-id")
-                .header("ERIC-Identity", "user1")
-                .header("ERIC-Identity-Type", "oauth2")
-                .param("include_removed", "true")
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$").isArray())
-        .andExpect(jsonPath("$.length()").value(2))
-        .andExpect(jsonPath("$[0].id").value("active1"))
-        .andExpect(jsonPath("$[1].id").value("removed1"))
-        .andExpect(jsonPath("$[1].removed_at").exists());
+            .perform(
+                    get("/acsp-members")
+                            .header("X-Request-Id", "test-request-id")
+                            .header("ERIC-Identity", "user1")
+                            .header("ERIC-Identity-Type", "oauth2")
+                            .param("include_removed", "true")
+                            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].id").value("active1"))
+            .andExpect(jsonPath("$[1].id").value("removed1"))
+            .andExpect(jsonPath("$[1].removed_at").exists());
 
     verify(acspMembersService).fetchAcspMemberships(user1, true);
   }
@@ -151,16 +151,16 @@ class UserAcspMembershipTest {
     when(acspMembersService.fetchAcspMemberships(user1, false)).thenReturn(Collections.emptyList());
 
     mockMvc
-        .perform(
-            get("/acsp-members")
-                .header("X-Request-Id", "test-request-id")
-                .header("ERIC-Identity", "user1")
-                .header("ERIC-Identity-Type", "oauth2")
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$").isArray())
-        .andExpect(jsonPath("$.length()").value(0));
+            .perform(
+                    get("/acsp-members")
+                            .header("X-Request-Id", "test-request-id")
+                            .header("ERIC-Identity", "user1")
+                            .header("ERIC-Identity-Type", "oauth2")
+                            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$.length()").value(0));
 
     verify(acspMembersService).fetchAcspMemberships(user1, false);
   }
@@ -168,85 +168,85 @@ class UserAcspMembershipTest {
   @Test
   void testGetAcspMembershipForUserIdMissingHeaders() throws Exception {
     mockMvc
-        .perform(get("/acsp-members").contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isUnauthorized());
+            .perform(get("/acsp-members").contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isUnauthorized());
   }
 
   @Test
   void testGetAcspMembershipForUserIdInvalidIncludeRemovedParam() throws Exception {
     mockMvc
-        .perform(
-            get("/acsp-members")
-                .header("X-Request-Id", "test-request-id")
-                .header("ERIC-Identity", "user1")
-                .header("ERIC-Identity-Type", "oauth2")
-                .param("include_removed", "invalid")
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isBadRequest());
+            .perform(
+                    get("/acsp-members")
+                            .header("X-Request-Id", "test-request-id")
+                            .header("ERIC-Identity", "user1")
+                            .header("ERIC-Identity-Type", "oauth2")
+                            .param("include_removed", "invalid")
+                            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
   }
 
   @Test
   void testGetAcspMembershipForUserIdServiceException() throws Exception {
     when(acspMembersService.fetchAcspMemberships(user1, false))
-        .thenThrow(new RuntimeException("Service error"));
+            .thenThrow(new RuntimeException("Service error"));
 
     mockMvc
-        .perform(
-            get("/acsp-members")
-                .header("X-Request-Id", "test-request-id")
-                .header("ERIC-Identity", "user1")
-                .header("ERIC-Identity-Type", "oauth2")
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isInternalServerError());
+            .perform(
+                    get("/acsp-members")
+                            .header("X-Request-Id", "test-request-id")
+                            .header("ERIC-Identity", "user1")
+                            .header("ERIC-Identity-Type", "oauth2")
+                            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isInternalServerError());
   }
 
   @Test
   void testGetAcspMembershipForUserIdMissingEricIdentity() throws Exception {
     mockMvc
-        .perform(
-            get("/acsp-members")
-                .header("X-Request-Id", "test-request-id")
-                .header("ERIC-Identity-Type", "oauth2")
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isUnauthorized());
+            .perform(
+                    get("/acsp-members")
+                            .header("X-Request-Id", "test-request-id")
+                            .header("ERIC-Identity-Type", "oauth2")
+                            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isUnauthorized());
   }
 
   @Test
   void testGetAcspMembershipForUserIdMissingEricIdentityType() throws Exception {
     mockMvc
-        .perform(
-            get("/acsp-members")
-                .header("X-Request-Id", "test-request-id")
-                .header("ERIC-Identity", "user1")
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isUnauthorized());
+            .perform(
+                    get("/acsp-members")
+                            .header("X-Request-Id", "test-request-id")
+                            .header("ERIC-Identity", "user1")
+                            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isUnauthorized());
   }
 
   @Test
   void testGetAcspMembershipForUserIdNonOauth2User() throws Exception {
     mockMvc
-        .perform(
-            get("/acsp-members")
-                .header("X-Request-Id", "test-request-id")
-                .header("ERIC-Identity", "user1")
-                .header("ERIC-Identity-Type", "key")
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isUnauthorized());
+            .perform(
+                    get("/acsp-members")
+                            .header("X-Request-Id", "test-request-id")
+                            .header("ERIC-Identity", "user1")
+                            .header("ERIC-Identity-Type", "key")
+                            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isUnauthorized());
   }
 
   @Test
   void testGetAcspMembershipForUserIdUserNotFound() throws Exception {
     when(usersService.fetchUserDetails("user1"))
-        .thenThrow(new InternalServerErrorRuntimeException("User not found"));
+            .thenThrow(new InternalServerErrorRuntimeException("User not found"));
 
     mockMvc
-        .perform(
-            get("/acsp-members")
-                .header("X-Request-Id", "test-request-id")
-                .header("ERIC-Identity", "user1")
-                .header("ERIC-Identity-Type", "oauth2")
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isInternalServerError());
+            .perform(
+                    get("/acsp-members")
+                            .header("X-Request-Id", "test-request-id")
+                            .header("ERIC-Identity", "user1")
+                            .header("ERIC-Identity-Type", "oauth2")
+                            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isInternalServerError());
   }
   @Test
   void getAcspMembershipForAcspIdTestShouldThrow400ErrorRequestWhenRequestIdNotProvided() throws Exception {
@@ -307,3 +307,4 @@ class UserAcspMembershipTest {
 
   }
 }
+
