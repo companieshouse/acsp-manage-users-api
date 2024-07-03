@@ -58,7 +58,7 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
 
       final var association = acspMembershipService.fetchAcspMembership(id);
       if (association.isEmpty()) {
-        var errorMessage = String.format("Cannot find Association for the Id: %s", id);
+        final var errorMessage = String.format("Cannot find Association for the Id: %s", id);
         LOG.error(errorMessage);
         throw new NotFoundRuntimeException(StaticPropertyUtil.APPLICATION_NAMESPACE, errorMessage);
       }
