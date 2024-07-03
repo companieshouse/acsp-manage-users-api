@@ -25,13 +25,13 @@ import uk.gov.companieshouse.logging.LoggerFactory;
 @RestController
 public class UserAcspMembership implements UserAcspMembershipInterface {
 
-  public static final String PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN = "Please check the request and try again";
+  private static final String PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN = "Please check the request and try again";
   private static final Logger LOG =
       LoggerFactory.getLogger(StaticPropertyUtil.APPLICATION_NAMESPACE);
   private final AcspMembersService acspMembersService;
   private final AcspMembershipService acspMembershipService;
 
-  public UserAcspMembership(final AcspMembersService acspMembersService, AcspMembershipService acspMembershipService) {
+  public UserAcspMembership(final AcspMembersService acspMembersService, final AcspMembershipService acspMembershipService) {
     this.acspMembersService = acspMembersService;
     this.acspMembershipService = acspMembershipService;
   }
@@ -50,7 +50,7 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
             final String xRequestId,
             final String id
     ) {
-      LOG.debug(String.format("%s: Retrieving RequestId and membership id (%s) ...", xRequestId, id));
+      LOG.info(String.format("Received request for GET `/acsp-members` with X-Request-Id: %s and membership id %s", xRequestId, id));
       if (Objects.isNull(id)){
         LOG.error(String.format("%s: No membership id was provided.", xRequestId));
         throw new BadRequestRuntimeException(PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN);

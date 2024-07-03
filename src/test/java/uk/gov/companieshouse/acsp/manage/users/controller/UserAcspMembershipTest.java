@@ -37,8 +37,7 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 @Tag("unit-test")
 class UserAcspMembershipTest {
 
-  @MockBean
-  AcspMembershipService acspMembershipService;
+  @MockBean private AcspMembershipService acspMembershipService;
   @Autowired private MockMvc mockMvc;
   @MockBean private AcspMembershipListMapper acspMembershipListMapper;
   @MockBean private AcspMembersService acspMembersService;

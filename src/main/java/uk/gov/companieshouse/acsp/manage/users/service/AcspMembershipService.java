@@ -12,7 +12,7 @@ public class AcspMembershipService {
   private final AcspMembersRepository acspMembersRepository;
   private final AcspMembershipMapper acspMembershipMapper;
 
-  public AcspMembershipService(AcspMembersRepository acspMembersRepository, AcspMembershipMapper acspMembershipMapper) {
+  public AcspMembershipService(final AcspMembersRepository acspMembersRepository, final AcspMembershipMapper acspMembershipMapper) {
     this.acspMembersRepository = acspMembersRepository;
     this.acspMembershipMapper = acspMembershipMapper;
   }
