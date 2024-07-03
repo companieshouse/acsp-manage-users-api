@@ -1,12 +1,20 @@
 package uk.gov.companieshouse.acsp.manage.users.integration;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,12 +32,16 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembersMapper;
+import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipListMapper;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.InternalApiClient;
+import uk.gov.companieshouse.api.accounts.user.model.User;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.sdk.ApiClientService;
 
 @SpringBootTest
@@ -64,6 +76,42 @@ public class AcspMembersServiceTest {
 
     @MockBean
     private AcspMembersMapper acspMembersMapper;
+
+    @MockBean
+    private AcspMembershipListMapper acspMembershipListMapper;
+
+    private User testUser;
+
+    @BeforeEach
+    void setUp() {
+        testUser = new User();
+        testUser.setUserId("testUser123");
+
+        acspMembersRepository.deleteAll();
+
+        AcspMembersDao activeMember =
+                createAcspMembersDao("1", "ACSP001", testUser.getUserId(), UserRoleEnum.ADMIN, false);
+        AcspMembersDao removedMember =
+                createAcspMembersDao("2", "ACSP002", testUser.getUserId(), UserRoleEnum.STANDARD, true);
+
+        acspMembersRepository.save(activeMember);
+        acspMembersRepository.save(removedMember);
+
+        when(acspMembershipListMapper.daoToDto(anyList(), eq(testUser)))
+                .thenAnswer(
+                        invocation -> {
+                            List<AcspMembersDao> daos = invocation.getArgument(0);
+                            return daos.stream()
+                                    .map(
+                                            dao -> {
+                                                AcspMembership membership = new AcspMembership();
+                                                membership.setAcspNumber(dao.getAcspNumber());
+                                                membership.setUserRole(dao.getUserRole());
+                                                return membership;
+                                            })
+                                    .toList();
+                        });
+    }
 
     private ArgumentMatcher<Page<AcspMembersDao>> acspMembersDaoPageMatcher( int pageNumber, int itemsPerPage, int totalElements, int totalPages, Set<String> expectedAcspIds ){
         return page -> {
@@ -200,4 +248,70 @@ public class AcspMembersServiceTest {
         mongoTemplate.dropCollection( AcspMembersDao.class );
     }
 
+
+
+
+
+
+    @Test
+    void fetchAcspMemberships_includeRemoved_returnsAllMemberships() {
+        List<AcspMembership> result = acspMembersService.fetchAcspMemberships(testUser, true);
+
+        assertEquals(2, result.size());
+        assertTrue(result.stream().anyMatch(m -> m.getAcspNumber().equals("ACSP001")));
+        assertTrue(result.stream().anyMatch(m -> m.getAcspNumber().equals("ACSP002")));
+    }
+
+    @Test
+    void fetchAcspMemberships_excludeRemoved_returnsOnlyActiveMemberships() {
+        List<AcspMembership> result = acspMembersService.fetchAcspMemberships(testUser, false);
+
+        assertEquals(1, result.size());
+        assertEquals("ACSP001", result.getFirst().getAcspNumber());
+    }
+
+    @Test
+    void fetchAcspMemberships_noMemberships_returnsEmptyList() {
+        User newUser = new User();
+        newUser.setUserId("newUser456");
+
+        List<AcspMembership> result = acspMembersService.fetchAcspMemberships(newUser, true);
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void fetchAcspMemberships_nullUser_throwsIllegalArgumentException() {
+        assertThrows(
+                NullPointerException.class, () -> acspMembersService.fetchAcspMemberships(null, true));
+    }
+
+    @Test
+    void fetchAcspMemberships_userWithNoMemberships_returnsEmptyList() {
+        User userWithNoMemberships = new User();
+        userWithNoMemberships.setUserId("noMembershipsUser");
+
+        List<AcspMembership> result =
+                acspMembersService.fetchAcspMemberships(userWithNoMemberships, true);
+
+        assertTrue(result.isEmpty());
+    }
+
+    private AcspMembersDao createAcspMembersDao(
+            String id, String acspNumber, String userId, UserRoleEnum userRole, boolean removed) {
+        AcspMembersDao dao = new AcspMembersDao();
+        dao.setId(id);
+        dao.setAcspNumber(acspNumber);
+        dao.setUserId(userId);
+        dao.setUserRole(userRole);
+        dao.setCreatedAt(LocalDateTime.now());
+        dao.setAddedAt(LocalDateTime.now());
+        dao.setAddedBy("testAdder");
+        if (removed) {
+            dao.setRemovedAt(LocalDateTime.now());
+            dao.setRemovedBy("testRemover");
+        }
+        dao.setEtag("testEtag");
+        return dao;
+    }
 }
