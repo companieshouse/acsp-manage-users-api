@@ -1,5 +1,8 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Supplier;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
@@ -12,9 +15,6 @@ import uk.gov.companieshouse.api.handler.accountsuser.request.PrivateAccountsUse
 import uk.gov.companieshouse.api.handler.exception.URIValidationException;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
-
-import java.util.List;
-import java.util.function.Supplier;
 
 @Service
 public class UsersService {
@@ -55,6 +55,19 @@ public class UsersService {
     public User fetchUserDetails( final String userId ) {
         return createFetchUserDetailsRequest(userId).get();
     }
+
+  public boolean doesUserExist(final String userId) {
+    try {
+      final User user = fetchUserDetails(userId);
+      return Objects.nonNull(user);
+    } catch (NotFoundRuntimeException e) {
+      LOG.info(String.format("User %s does not exist", userId));
+      return false;
+    } catch (Exception e) {
+      LOG.error(String.format("Unexpected error while checking if user %s exists", userId), e);
+      throw e;
+    }
+  }
 
     public UsersList searchUserDetails( final List<String> emails ){
 

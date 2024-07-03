@@ -1,7 +1,9 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
-import java.util.Objects;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.Objects;
 import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -13,11 +15,12 @@ import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembers;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
-import java.util.List;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipListMapper;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
+import uk.gov.companieshouse.acsp.manage.users.utils.UserRoleMapperUtil;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
+import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPost;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 
@@ -52,6 +55,32 @@ public class AcspMembersService {
     }
 
     return acspMembershipListMapper.daoToDto(acspMembers, user);
+  }
+
+  @Transactional(readOnly = true)
+  public Optional<AcspMembersDao> fetchAcspMember(final String userId) {
+    return acspMembersRepository.fetchAcspMemberByUserId(userId);
+  }
+
+  @Transactional(readOnly = true)
+  public Optional<AcspMembersDao> fetchAcspMemberByUserIdAndAcspNumber(
+      final String userId, final String acspNumber) {
+    return acspMembersRepository.fetchAcspMemberByUserIdAndAcspNumber(userId, acspNumber);
+  }
+
+  public AcspMembersDao addAcspMember(
+      final RequestBodyPost requestBodyPost, final String addedByUserId) {
+    final var now = LocalDateTime.now();
+    AcspMembersDao newMembership = new AcspMembersDao();
+    newMembership.setUserId(requestBodyPost.getUserId());
+    newMembership.setAcspNumber(requestBodyPost.getAcspNumber());
+    newMembership.setUserRole(UserRoleMapperUtil.mapToUserRoleEnum(requestBodyPost.getUserRole()));
+    newMembership.setCreatedAt(now);
+    newMembership.setAddedAt(now);
+    newMembership.setAddedBy(addedByUserId);
+    newMembership.setRemovedBy(null);
+    newMembership.setRemovedAt(null);
+    return acspMembersRepository.insert(newMembership);
   }
 
     @Transactional( readOnly = true )
