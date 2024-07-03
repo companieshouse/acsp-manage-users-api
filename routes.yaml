@@ -3,6 +3,7 @@ group: api
 
 weight: 100
 routes:
-  1: ^/acsp-members/*
-  2: ^/internal/acsp-members/*
-  3: ^/acsp-manage-users-api/healthcheck
+  1: ^/acsp-members
+  2: ^/acsp-members/*
+  3: ^/internal/acsp-members/*
+  4: ^/acsp-manage-users-api/healthcheck
