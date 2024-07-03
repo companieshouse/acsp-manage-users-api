@@ -33,7 +33,7 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRole
 class AcspMembersServiceIntegrationTest {
 
   @Container @ServiceConnection
-  static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6");
+  static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:5");
 
   @DynamicPropertySource
   static void setProperties(DynamicPropertyRegistry registry) {
