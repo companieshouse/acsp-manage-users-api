@@ -1,5 +1,13 @@
 package uk.gov.companieshouse.acsp.manage.users.integration;
 
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -13,7 +21,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipListMapper;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspDataRepository;
@@ -22,13 +29,6 @@ import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
-
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @AutoConfigureMockMvc
 @SpringBootTest
@@ -39,19 +39,13 @@ class UserAcspMembershipIntegrationTest {
 
   @Container @ServiceConnection
   static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6");
-
-  @Autowired MongoTemplate mongoTemplate;
-
-  @Autowired MockMvc mockMvc;
-
-  @Autowired AcspMembersRepository acspMembersRepository;
-
-  @Autowired AcspDataRepository acspDataRepository;
-
-  @MockBean UsersService usersService;
-
   private final LocalDateTime now = LocalDateTime.now();
   private final String userId = "user1";
+  @Autowired MongoTemplate mongoTemplate;
+  @Autowired MockMvc mockMvc;
+  @Autowired AcspMembersRepository acspMembersRepository;
+  @Autowired AcspDataRepository acspDataRepository;
+  @MockBean UsersService usersService;
 
   @BeforeEach
   void setup() {
@@ -60,6 +54,12 @@ class UserAcspMembershipIntegrationTest {
     user.setEmail("user1@example.com");
     user.setDisplayName("Test User");
     when(usersService.fetchUserDetails(userId)).thenReturn(user);
+
+    User user123 = new User();
+    user123.setUserId("user123");
+    user123.setEmail("user123@test.com");
+    user123.setDisplayName("Test User");
+    when(usersService.fetchUserDetails("user123")).thenReturn(user123);
 
     AcspMembersDao activeMembership = new AcspMembersDao();
     activeMembership.setId("1");
@@ -83,7 +83,22 @@ class UserAcspMembershipIntegrationTest {
     removedMembership.setRemovedBy("admin3");
     removedMembership.setEtag("etag2");
 
-    acspMembersRepository.saveAll(List.of(activeMembership, removedMembership));
+    AcspMembersDao acspMembersDao = new AcspMembersDao();
+    acspMembersDao.setId("acsp1");
+    acspMembersDao.setUserId("user123");
+    acspMembersDao.setAcspNumber("ACSP123");
+    acspMembersDao.setUserRole(AcspMembership.UserRoleEnum.ADMIN);
+    acspMembersDao.setCreatedAt(LocalDateTime.now().minusDays(10));
+    acspMembersDao.setAddedAt(LocalDateTime.now().minusDays(10));
+    acspMembersDao.setAddedBy("admin1");
+    acspMembersDao.setEtag("etag");
+
+    AcspDataDao acspData3 = new AcspDataDao();
+    acspData3.setId("ACSP123");
+    acspData3.setAcspName("ACSP123");
+    acspData3.setAcspStatus("active");
+
+    acspMembersRepository.saveAll(List.of(activeMembership, removedMembership, acspMembersDao));
 
     AcspDataDao acspData1 = new AcspDataDao();
     acspData1.setId("ACSP001");
@@ -95,7 +110,9 @@ class UserAcspMembershipIntegrationTest {
     acspData2.setAcspName("ACSP 2 Ltd");
     acspData2.setAcspStatus("suspended");
 
-    acspDataRepository.saveAll(List.of(acspData1, acspData2));
+    acspDataRepository.saveAll(List.of(acspData1, acspData2, acspData3));
+
+
   }
 
   @Test
@@ -191,6 +208,69 @@ class UserAcspMembershipIntegrationTest {
                 .header("ERIC-Identity-Type", "oauth2")
                 .header("ERIC-Identity", userId))
         .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void getAcspMembershipForAcspIdWithoutXRequestIdReturnsBadRequest() throws Exception {
+    mockMvc.perform( get( "/acsp-members" )
+                    .header("ERIC-Identity", "user1")
+                    .header("ERIC-Identity-Type", "oauth2"))
+            .andExpect( status().isBadRequest() );
+  }
+
+  @Test
+  void getAcspMembershipForAcspIdWithoutRequiredHeadersReturnsBadRequest() throws Exception {
+    mockMvc.perform( get( "/acsp-members" ))
+            .andExpect( status().isUnauthorized() );
+  }
+
+  @Test
+  void getAcspMembershipForAcspIdWithNonExistentIdReturnsBadRequest() throws Exception {
+    mockMvc.perform( get( "/acsp-members/{id}","neId" )
+                    .header("X-Request-Id", "theId123")
+                    .header("ERIC-Identity", "user123")
+                    .header("ERIC-Identity-Type", "oauth2"))
+            .andExpect( status().isNotFound() );
+  }
+
+  @Test
+  void getAcspMembershipForExistingMemberIdShouldReturnData() throws Exception {
+    final var response = mockMvc.perform( get( "/acsp-members/{id}","acsp1" )
+                    .header("X-Request-Id", "theId123")
+                    .header("ERIC-Identity", "user123")
+                    .header("ERIC-Identity-Type", "oauth2"))
+            .andExpect( status().isOk() )
+            .andReturn()
+            .getResponse();
+
+    final var objectMapper = new ObjectMapper();
+    objectMapper.registerModule(new JavaTimeModule());
+    final var responseMembership  = objectMapper.readValue(response.getContentAsByteArray(), AcspMembership.class);
+
+    Assertions.assertEquals("acsp1", responseMembership.getId());
+    Assertions.assertEquals("user123", responseMembership.getUserId());
+    Assertions.assertEquals("ACSP123", responseMembership.getAcspNumber());
+    Assertions.assertEquals("admin1", responseMembership.getAddedBy());
+  }
+  @Test
+  void getAcspMembershipForNonExistingMemberIdShouldNotReturnData() throws Exception {
+    final var response = mockMvc.perform(get("/acsp-members/{id}", "acsp2")
+                    .header("X-Request-Id", "theId123")
+                    .header("ERIC-Identity", "user123")
+                    .header("ERIC-Identity-Type", "oauth2"))
+            .andExpect(status().isNotFound())
+            .andReturn()
+            .getResponse();
+  }
+  @Test
+  void getAcspMembershipForNonExistingMemberIdShouldReturnData() throws Exception {
+    final var response = mockMvc.perform(get("/acsp-members/{id}", "null")
+                    .header("X-Request-Id", "theId123")
+                    .header("ERIC-Identity", "user123")
+                    .header("ERIC-Identity-Type", "oauth2"))
+            .andExpect(status().isNotFound())
+            .andReturn()
+            .getResponse();
   }
 
   @AfterEach

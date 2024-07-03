@@ -4,11 +4,16 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.util.List;
+import java.util.Objects;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
+import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
+import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspMembershipService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.acsp_manage_users.api.UserAcspMembershipInterface;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
@@ -21,13 +26,15 @@ import uk.gov.companieshouse.logging.LoggerFactory;
 @RestController
 public class UserAcspMembership implements UserAcspMembershipInterface {
 
-  private final AcspMembersService acspMembersService;
-
+  public static final String PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN = "Please check the request and try again";
   private static final Logger LOG =
       LoggerFactory.getLogger(StaticPropertyUtil.APPLICATION_NAMESPACE);
+  private final AcspMembersService acspMembersService;
+  private final AcspMembershipService acspMembershipService;
 
-  public UserAcspMembership(final AcspMembersService acspMembersService) {
+  public UserAcspMembership(final AcspMembersService acspMembersService, AcspMembershipService acspMembershipService) {
     this.acspMembersService = acspMembersService;
+    this.acspMembershipService = acspMembershipService;
   }
 
     @Override
@@ -41,10 +48,22 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
 
     @Override
     public ResponseEntity<AcspMembership> getAcspMembershipForAcspId(
-            @NotNull String xRequestId,
-            @Pattern(regexp = "^[a-zA-Z0-9]*$") String id
+            final String xRequestId,
+            final String id
     ) {
-        return null; // TODO(https://companieshouse.atlassian.net/browse/IDVA6-1146)
+      LOG.debug(String.format("%s: Retrieving RequestId and membership id (%s) ...", xRequestId, id));
+      if (Objects.isNull(id)){
+        LOG.error(String.format("%s: No membership id was provided.", xRequestId));
+        throw new BadRequestRuntimeException(PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN);
+      }
+
+      final var association = acspMembershipService.fetchAcspMembership(id);
+      if (association.isEmpty()) {
+        var errorMessage = String.format("Cannot find Association for the Id: %s", id);
+        LOG.error(errorMessage);
+        throw new NotFoundRuntimeException(StaticPropertyUtil.APPLICATION_NAMESPACE, errorMessage);
+      }
+      return new ResponseEntity<>(association.get(), HttpStatus.OK);
     }
 
   @Override
