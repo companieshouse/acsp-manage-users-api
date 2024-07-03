@@ -21,7 +21,7 @@
         <sonar-maven-plugin.version>4.0.0.4121</sonar-maven-plugin.version>
         <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
         <rest-service-common-library-version>2.0.2</rest-service-common-library-version>
-        <private-api-sdk-java.version>4.0.156</private-api-sdk-java.version>
+        <private-api-sdk-java.version>4.0.161</private-api-sdk-java.version>
         <api-sdk-manager-java-library.version>3.0.5</api-sdk-manager-java-library.version>
         <api-security-java-version>2.0.4</api-security-java-version>
         <org.mapstruct.version>1.6.0.Beta2</org.mapstruct.version>
