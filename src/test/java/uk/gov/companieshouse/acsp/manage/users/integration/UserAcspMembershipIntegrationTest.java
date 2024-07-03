@@ -27,7 +27,6 @@ import uk.gov.companieshouse.acsp.manage.users.repositories.AcspDataRepository;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.api.accounts.user.model.User;
-import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 
 @AutoConfigureMockMvc
@@ -38,9 +37,13 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRole
 class UserAcspMembershipIntegrationTest {
 
   @Container @ServiceConnection
-  static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6");
+  
   private final LocalDateTime now = LocalDateTime.now();
   private final String userId = "user1";
+
+  static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:5");
+
+
   @Autowired MongoTemplate mongoTemplate;
   @Autowired MockMvc mockMvc;
   @Autowired AcspMembersRepository acspMembersRepository;
