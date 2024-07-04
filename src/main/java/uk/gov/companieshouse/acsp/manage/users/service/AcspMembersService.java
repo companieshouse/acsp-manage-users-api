@@ -21,6 +21,10 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 
+import java.time.LocalDateTime;
+
+import static uk.gov.companieshouse.GenerateEtagUtil.generateEtag;
+
 @Service
 public class AcspMembersService {
 
@@ -31,10 +35,13 @@ public class AcspMembersService {
   private static final Logger LOG =
       LoggerFactory.getLogger(StaticPropertyUtil.APPLICATION_NAMESPACE);
 
-  public AcspMembersService( final AcspMembersRepository acspMembersRepository, final AcspMembershipListMapper acspMembershipListMapper, final AcspMembersMapper acspMembersMapper ) {
-      this.acspMembersRepository = acspMembersRepository;
-      this.acspMembershipListMapper = acspMembershipListMapper;
-      this.acspMembersMapper = acspMembersMapper;
+  public AcspMembersService(
+      final AcspMembersRepository acspMembersRepository,
+      final AcspMembershipListMapper acspMembershipListMapper,
+      final AcspMembersMapper acspMembersMapper) {
+    this.acspMembersRepository = acspMembersRepository;
+    this.acspMembershipListMapper = acspMembershipListMapper;
+    this.acspMembersMapper = acspMembersMapper;
   }
 
   @Transactional(readOnly = true)
@@ -54,26 +61,56 @@ public class AcspMembersService {
     return acspMembershipListMapper.daoToDto(acspMembers, user);
   }
 
-    @Transactional( readOnly = true )
-    public AcspMembers fetchAcspMembers( final AcspDataDao acspData, final boolean includeRemoved, final String userId, final String role, final int pageIndex, final int itemsPerPage ) {
-        final var acspNumber = acspData.getId();
+  @Transactional(readOnly = true)
+  public AcspMembers fetchAcspMembers(
+      final AcspDataDao acspData,
+      final boolean includeRemoved,
+      final String userId,
+      final String role,
+      final int pageIndex,
+      final int itemsPerPage) {
+    final var acspNumber = acspData.getId();
 
-        if ( Objects.isNull( acspNumber ) ){
-            throw new IllegalArgumentException( "acspNumber is null." );
-        }
-
-        final var userRoles = Objects.nonNull( role ) ? Set.of( UserRoleEnum.fromValue( role ) ) : Set.of( UserRoleEnum.OWNER, UserRoleEnum.ADMIN, UserRoleEnum.STANDARD );
-        final var userIdRegex = Optional.ofNullable( userId ).orElse( "" );
-        final var pageable = PageRequest.of( pageIndex, itemsPerPage );
-
-        Page<AcspMembersDao> acspMembers;
-        if ( includeRemoved ) {
-            acspMembers = acspMembersRepository.findAllByAcspNumberUserRolesAndUserIdLike( acspNumber, userRoles, userIdRegex, pageable );
-        } else {
-            acspMembers = acspMembersRepository.findAllByAcspNumberUserRolesAndUserIdLike( acspNumber, userRoles, userIdRegex, null, pageable );
-        }
-
-        return acspMembersMapper.daoToDto( acspMembers, acspData );
+    if (Objects.isNull(acspNumber)) {
+      throw new IllegalArgumentException("acspNumber is null.");
     }
 
+    final var userRoles =
+        Objects.nonNull(role)
+            ? Set.of(UserRoleEnum.fromValue(role))
+            : Set.of(UserRoleEnum.OWNER, UserRoleEnum.ADMIN, UserRoleEnum.STANDARD);
+    final var userIdRegex = Optional.ofNullable(userId).orElse("");
+    final var pageable = PageRequest.of(pageIndex, itemsPerPage);
+
+    Page<AcspMembersDao> acspMembers;
+    if (includeRemoved) {
+      acspMembers =
+          acspMembersRepository.findAllByAcspNumberUserRolesAndUserIdLike(
+              acspNumber, userRoles, userIdRegex, pageable);
+    } else {
+      acspMembers =
+          acspMembersRepository.findAllByAcspNumberUserRolesAndUserIdLike(
+              acspNumber, userRoles, userIdRegex, null, pageable);
+    }
+
+    return acspMembersMapper.daoToDto(acspMembers, acspData);
+  }
+
+  public AcspMembersDao createAcspMembersWithOwnerRole(String acspNumber, String userId) {
+    if (Objects.isNull(acspNumber)) {
+      throw new NullPointerException("AcspNumber should be provided");
+    }
+
+    if (Objects.isNull(userId)) {
+      throw new NullPointerException("UserId should be provided");
+    }
+
+    final var acspMembersDao = new AcspMembersDao();
+    acspMembersDao.setAcspNumber(acspNumber);
+    acspMembersDao.setUserId(userId);
+    acspMembersDao.setUserRole(AcspMembership.UserRoleEnum.OWNER);
+    acspMembersDao.setAddedAt(LocalDateTime.now());
+    acspMembersDao.setEtag(generateEtag());
+    return acspMembersRepository.save(acspMembersDao);
+  }
 }
