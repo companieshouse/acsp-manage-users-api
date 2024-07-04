@@ -68,7 +68,7 @@ public class UserAcspMembershipInternal implements UserAcspMembershipInternalInt
     final var acspMembers =
         acspMembersService.fetchAcspMembersForAcspNumberAndUserId(acspNumber, userId);
     if (acspMembers.isPresent() && StringUtils.isBlank(acspMembers.get().getRemovedBy())) {
-      final String errorMessage =
+      final var errorMessage =
           String.format("ACSP for acspNumber %s and userId %s already exists.", acspNumber, userId);
       LOG.error(errorMessage);
       throw new BadRequestRuntimeException(errorMessage);
