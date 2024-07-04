@@ -1,5 +1,7 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
+import static uk.gov.companieshouse.GenerateEtagUtil.generateEtag;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -69,18 +71,31 @@ public class AcspMembersService {
   }
 
   public AcspMembersDao addAcspMember(
-      final RequestBodyPost requestBodyPost, final String addedByUserId) {
+      final String userId,
+      final String acspNumber,
+      final AcspMembership.UserRoleEnum userRole,
+      final String addedByUserId) {
     final var now = LocalDateTime.now();
-    AcspMembersDao newMembership = new AcspMembersDao();
-    newMembership.setUserId(requestBodyPost.getUserId());
-    newMembership.setAcspNumber(requestBodyPost.getAcspNumber());
-    newMembership.setUserRole(UserRoleMapperUtil.mapToUserRoleEnum(requestBodyPost.getUserRole()));
+    var newMembership = new AcspMembersDao();
+    newMembership.setUserId(userId);
+    newMembership.setAcspNumber(acspNumber);
+    newMembership.setUserRole(userRole);
     newMembership.setCreatedAt(now);
     newMembership.setAddedAt(now);
     newMembership.setAddedBy(addedByUserId);
     newMembership.setRemovedBy(null);
     newMembership.setRemovedAt(null);
+    newMembership.setEtag(generateEtag());
     return acspMembersRepository.insert(newMembership);
+  }
+
+  public AcspMembersDao addAcspMember(
+      final RequestBodyPost requestBodyPost, final String addedByUserId) {
+    return addAcspMember(
+        requestBodyPost.getUserId(),
+        requestBodyPost.getAcspNumber(),
+        UserRoleMapperUtil.mapToUserRoleEnum(requestBodyPost.getUserRole()),
+        addedByUserId);
   }
 
     @Transactional( readOnly = true )

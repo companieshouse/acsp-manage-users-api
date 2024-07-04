@@ -4,8 +4,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.util.List;
-import java.util.Optional;
 import java.util.Objects;
+import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,35 +40,35 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
 
   @Override
   public ResponseEntity<ResponseBodyPost> addAcspMember(
-      String xRequestId, String inviteeUserId, RequestBodyPost requestBodyPost) {
-    final String userId = requestBodyPost.getUserId();
-    final AcspMembership.UserRoleEnum requestingRole =
-        UserRoleMapperUtil.mapToUserRoleEnum(requestBodyPost.getUserRole());
-
-    if (!usersService.doesUserExist(userId)) {
-      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-    }
-
-    if (acspMembersService.fetchAcspMember(userId).isPresent()) {
-      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-    }
-
-    Optional<AcspMembersDao> inviteeMembership =
+      final String xRequestId,
+      final String requestingUserId,
+      final RequestBodyPost requestBodyPost) {
+    Optional<AcspMembersDao> requestingUserMembership =
         acspMembersService.fetchAcspMemberByUserIdAndAcspNumber(
-            inviteeUserId, requestBodyPost.getAcspNumber());
-
-    if (inviteeMembership.isEmpty()) {
+            requestingUserId, requestBodyPost.getAcspNumber());
+    if (requestingUserMembership.isEmpty()) {
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
-    final AcspMembership.UserRoleEnum inviteeRole = inviteeMembership.get().getUserRole();
-    if (!UserRoleMapperUtil.hasPermissionToAddUser(requestingRole, inviteeRole)) {
+    final var inviteeUserId = requestBodyPost.getUserId();
+    final var inviteeUserRole = UserRoleMapperUtil.mapToUserRoleEnum(requestBodyPost.getUserRole());
+
+    if (!usersService.doesUserExist(inviteeUserId)) {
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+
+    if (acspMembersService.fetchAcspMember(inviteeUserId).isPresent()) {
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+
+    final var requestingUserRole = requestingUserMembership.get().getUserRole();
+    if (!UserRoleMapperUtil.hasPermissionToAddUser(requestingUserRole, inviteeUserRole)) {
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
-    AcspMembersDao addedAcspMembership =
+    final AcspMembersDao addedAcspMembership =
         acspMembersService.addAcspMember(requestBodyPost, inviteeUserId);
-    ResponseBodyPost responseBodyPost = new ResponseBodyPost();
+    var responseBodyPost = new ResponseBodyPost();
     responseBodyPost.setAcspMembershipId(addedAcspMembership.getId());
 
     return new ResponseEntity<>(responseBodyPost, HttpStatus.CREATED);

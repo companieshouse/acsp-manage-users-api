@@ -58,7 +58,7 @@ public class UsersService {
 
   public boolean doesUserExist(final String userId) {
     try {
-      final User user = fetchUserDetails(userId);
+      final var user = fetchUserDetails(userId);
       return Objects.nonNull(user);
     } catch (NotFoundRuntimeException e) {
       LOG.info(String.format("User %s does not exist", userId));

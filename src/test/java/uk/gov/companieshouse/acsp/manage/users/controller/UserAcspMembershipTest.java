@@ -2,6 +2,7 @@ package uk.gov.companieshouse.acsp.manage.users.controller;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDateTime;
@@ -9,7 +10,10 @@ import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +29,7 @@ import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
+import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPost;
 
 @WebMvcTest(UserAcspMembership.class)
 @Tag("unit-test")
@@ -40,199 +45,456 @@ class UserAcspMembershipTest {
 
   @MockBean private StaticPropertyUtil staticPropertyUtil;
 
-  private AcspMembersDao activeMember;
-  private AcspMembersDao removedMember;
-  private AcspMembership activeMembership;
-  private AcspMembership removedMembership;
+  @Nested
+  @DisplayName("GET /acsp-members Tests")
+  class GetAcspMembershipTests {
+    private User existingUser;
+    private AcspMembersDao activeMember;
+    private AcspMembersDao removedMember;
+    private AcspMembership activeMembership;
+    private AcspMembership removedMembership;
 
-  private User user1 = new User();
+    @BeforeEach
+    void setUp() {
+      existingUser = new User();
+      existingUser.setUserId("existingUser");
+      when(usersService.fetchUserDetails(existingUser.getUserId())).thenReturn(existingUser);
+      when(usersService.doesUserExist(anyString())).thenReturn(true);
 
-  @BeforeEach
-  void setUp() {
-    user1.setUserId("user1");
-    when(usersService.fetchUserDetails(user1.getUserId())).thenReturn(user1);
+      activeMember = new AcspMembersDao();
+      activeMember.setId("active1");
+      activeMember.setAcspNumber("ACSP123");
+      activeMember.setUserId("existingUser");
+      activeMember.setUserRole(AcspMembership.UserRoleEnum.ADMIN);
+      activeMember.setAddedAt(LocalDateTime.now().minusDays(30));
 
-    activeMember = new AcspMembersDao();
-    activeMember.setId("active1");
-    activeMember.setAcspNumber("ACSP123");
-    activeMember.setUserId("user1");
-    activeMember.setUserRole(AcspMembership.UserRoleEnum.ADMIN);
-    activeMember.setAddedAt(LocalDateTime.now().minusDays(30));
+      removedMember = new AcspMembersDao();
+      removedMember.setId("removed1");
+      removedMember.setAcspNumber("ACSP456");
+      removedMember.setUserId("existingUser");
+      removedMember.setUserRole(AcspMembership.UserRoleEnum.STANDARD);
+      removedMember.setAddedAt(LocalDateTime.now().minusDays(60));
+      removedMember.setRemovedBy("removedBy1");
+      removedMember.setRemovedAt(LocalDateTime.now().minusDays(10));
 
-    removedMember = new AcspMembersDao();
-    removedMember.setId("removed1");
-    removedMember.setAcspNumber("ACSP456");
-    removedMember.setUserId("user1");
-    removedMember.setUserRole(AcspMembership.UserRoleEnum.STANDARD);
-    removedMember.setAddedAt(LocalDateTime.now().minusDays(60));
-    removedMember.setRemovedBy("removed_by_1");
-    removedMember.setRemovedAt(LocalDateTime.now().minusDays(10));
+      activeMembership = new AcspMembership();
+      activeMembership.setId("active1");
+      activeMembership.setAcspNumber("ACSP123");
+      activeMembership.setUserId("existingUser");
+      activeMembership.setUserRole(AcspMembership.UserRoleEnum.ADMIN);
+      activeMembership.setAddedAt(OffsetDateTime.now().minusDays(30));
 
-    activeMembership = new AcspMembership();
-    activeMembership.setId("active1");
-    activeMembership.setAcspNumber("ACSP123");
-    activeMembership.setUserId("user1");
-    activeMembership.setUserRole(AcspMembership.UserRoleEnum.ADMIN);
-    activeMembership.setAddedAt(OffsetDateTime.now().minusDays(30));
+      removedMembership = new AcspMembership();
+      removedMembership.setId("removed1");
+      removedMembership.setAcspNumber("ACSP456");
+      removedMembership.setUserId("existingUser");
+      removedMembership.setUserRole(AcspMembership.UserRoleEnum.STANDARD);
+      removedMembership.setAddedAt(OffsetDateTime.now().minusDays(60));
+      removedMembership.setRemovedBy("removedBy1");
+      removedMembership.setRemovedAt(OffsetDateTime.now().minusDays(10));
+    }
 
-    removedMembership = new AcspMembership();
-    removedMembership.setId("removed1");
-    removedMembership.setAcspNumber("ACSP456");
-    removedMembership.setUserId("user1");
-    removedMembership.setUserRole(AcspMembership.UserRoleEnum.STANDARD);
-    removedMembership.setAddedAt(OffsetDateTime.now().minusDays(60));
-    removedMembership.setRemovedBy("removed_by_1");
-    removedMembership.setRemovedAt(OffsetDateTime.now().minusDays(10));
+    @Test
+    void testGetAcspMembershipForUserIdExcludeRemoved() throws Exception {
+      List<AcspMembership> acspMembershipList = Collections.singletonList(activeMembership);
+
+      when(acspMembersService.fetchAcspMemberships(existingUser, false))
+          .thenReturn(acspMembershipList);
+
+      mockMvc
+          .perform(
+              get("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", "existingUser")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .contentType(MediaType.APPLICATION_JSON))
+          .andExpect(status().isOk())
+          .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+          .andExpect(jsonPath("$").isArray())
+          .andExpect(jsonPath("$.length()").value(1))
+          .andExpect(jsonPath("$[0].id").value("active1"))
+          .andExpect(jsonPath("$[0].acsp_number").value("ACSP123"));
+
+      verify(acspMembersService).fetchAcspMemberships(existingUser, false);
+    }
+
+    @Test
+    void testGetAcspMembershipForUserIdIncludeRemoved() throws Exception {
+      List<AcspMembership> acspMembershipList = Arrays.asList(activeMembership, removedMembership);
+
+      when(acspMembersService.fetchAcspMemberships(existingUser, true))
+          .thenReturn(acspMembershipList);
+
+      mockMvc
+          .perform(
+              get("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", "existingUser")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .param("include_removed", "true")
+                  .contentType(MediaType.APPLICATION_JSON))
+          .andExpect(status().isOk())
+          .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+          .andExpect(jsonPath("$").isArray())
+          .andExpect(jsonPath("$.length()").value(2))
+          .andExpect(jsonPath("$[0].id").value("active1"))
+          .andExpect(jsonPath("$[1].id").value("removed1"))
+          .andExpect(jsonPath("$[1].removed_at").exists());
+
+      verify(acspMembersService).fetchAcspMemberships(existingUser, true);
+    }
+
+    @Test
+    void testGetAcspMembershipForUserIdNoMemberships() throws Exception {
+      when(acspMembersService.fetchAcspMemberships(existingUser, false))
+          .thenReturn(Collections.emptyList());
+
+      mockMvc
+          .perform(
+              get("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", "existingUser")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .contentType(MediaType.APPLICATION_JSON))
+          .andExpect(status().isOk())
+          .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+          .andExpect(jsonPath("$").isArray())
+          .andExpect(jsonPath("$.length()").value(0));
+
+      verify(acspMembersService).fetchAcspMemberships(existingUser, false);
+    }
+
+    @Test
+    void testGetAcspMembershipForUserIdMissingHeaders() throws Exception {
+      mockMvc
+          .perform(get("/acsp-members").contentType(MediaType.APPLICATION_JSON))
+          .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void testGetAcspMembershipForUserIdInvalidIncludeRemovedParam() throws Exception {
+      mockMvc
+          .perform(
+              get("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", "existingUser")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .param("include_removed", "invalid")
+                  .contentType(MediaType.APPLICATION_JSON))
+          .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testGetAcspMembershipForUserIdServiceException() throws Exception {
+      when(acspMembersService.fetchAcspMemberships(existingUser, false))
+          .thenThrow(new RuntimeException("Service error"));
+
+      mockMvc
+          .perform(
+              get("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", "existingUser")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .contentType(MediaType.APPLICATION_JSON))
+          .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void testGetAcspMembershipForUserIdMissingEricIdentity() throws Exception {
+      mockMvc
+          .perform(
+              get("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .contentType(MediaType.APPLICATION_JSON))
+          .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void testGetAcspMembershipForUserIdMissingEricIdentityType() throws Exception {
+      mockMvc
+          .perform(
+              get("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", "existingUser")
+                  .contentType(MediaType.APPLICATION_JSON))
+          .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void testGetAcspMembershipForUserIdNonOauth2User() throws Exception {
+      mockMvc
+          .perform(
+              get("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", "existingUser")
+                  .header("ERIC-Identity-Type", "key")
+                  .contentType(MediaType.APPLICATION_JSON))
+          .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void testGetAcspMembershipForUserIdUserNotFound() throws Exception {
+      when(usersService.fetchUserDetails("existingUser"))
+          .thenThrow(new InternalServerErrorRuntimeException("User not found"));
+
+      mockMvc
+          .perform(
+              get("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", "existingUser")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .contentType(MediaType.APPLICATION_JSON))
+          .andExpect(status().isInternalServerError());
+    }
   }
 
-  @Test
-  void testGetAcspMembershipForUserIdExcludeRemoved() throws Exception {
-    List<AcspMembership> acspMembershipList = Collections.singletonList(activeMembership);
+  @Nested
+  @DisplayName("POST /acsp-members Tests")
+  class AddAcspMembershipTests {
+    private static final String ACSP_NUMBER = "ACSP789";
+    private static final String ADMIN_USER_ID = "adminUser";
+    private static final String OWNER_USER_ID = "ownerUser";
+    private static final String STANDARD_USER_ID = "standardUser";
+    private static final String NEW_USER_ID = "newUser";
 
-    when(acspMembersService.fetchAcspMemberships(user1, false)).thenReturn(acspMembershipList);
+    @BeforeEach
+    void setUp() {
+      when(usersService.doesUserExist(NEW_USER_ID)).thenReturn(true);
+    }
 
-    mockMvc
-        .perform(
-            get("/acsp-members")
-                .header("X-Request-Id", "test-request-id")
-                .header("ERIC-Identity", "user1")
-                .header("ERIC-Identity-Type", "oauth2")
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$").isArray())
-        .andExpect(jsonPath("$.length()").value(1))
-        .andExpect(jsonPath("$[0].id").value("active1"))
-        .andExpect(jsonPath("$[0].acsp_number").value("ACSP123"));
+    @Test
+    void testAddAcspMemberSuccessAdminAddsStandard() throws Exception {
+      RequestBodyPost requestBodyPost =
+          new RequestBodyPost()
+              .userId(NEW_USER_ID)
+              .acspNumber(ACSP_NUMBER)
+              .userRole(RequestBodyPost.UserRoleEnum.STANDARD);
 
-    verify(acspMembersService).fetchAcspMemberships(user1, false);
-  }
+      AcspMembersDao adminMember =
+          createMemberDao(ADMIN_USER_ID, AcspMembership.UserRoleEnum.ADMIN);
+      AcspMembersDao addedMember =
+          createMemberDao(NEW_USER_ID, AcspMembership.UserRoleEnum.STANDARD);
 
-  @Test
-  void testGetAcspMembershipForUserIdIncludeRemoved() throws Exception {
-    List<AcspMembership> acspMembershipList = Arrays.asList(activeMembership, removedMembership);
+      when(acspMembersService.fetchAcspMemberByUserIdAndAcspNumber(ADMIN_USER_ID, ACSP_NUMBER))
+          .thenReturn(Optional.of(adminMember));
+      when(acspMembersService.fetchAcspMember(NEW_USER_ID)).thenReturn(Optional.empty());
+      when(acspMembersService.addAcspMember(requestBodyPost, NEW_USER_ID)).thenReturn(addedMember);
 
-    when(acspMembersService.fetchAcspMemberships(user1, true)).thenReturn(acspMembershipList);
+      mockMvc
+          .perform(
+              post("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", ADMIN_USER_ID)
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(
+                      String.format(
+                          "{\"user_id\":\"%s\",\"acsp_number\":\"%s\",\"user_role\":\"standard\"}",
+                          NEW_USER_ID, ACSP_NUMBER)))
+          .andExpect(status().isCreated())
+          .andExpect(jsonPath("$.acsp_membership_id").value(addedMember.getId()));
 
-    mockMvc
-        .perform(
-            get("/acsp-members")
-                .header("X-Request-Id", "test-request-id")
-                .header("ERIC-Identity", "user1")
-                .header("ERIC-Identity-Type", "oauth2")
-                .param("include_removed", "true")
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$").isArray())
-        .andExpect(jsonPath("$.length()").value(2))
-        .andExpect(jsonPath("$[0].id").value("active1"))
-        .andExpect(jsonPath("$[1].id").value("removed1"))
-        .andExpect(jsonPath("$[1].removed_at").exists());
+      verify(acspMembersService).addAcspMember(requestBodyPost, NEW_USER_ID);
+    }
 
-    verify(acspMembersService).fetchAcspMemberships(user1, true);
-  }
+    @Test
+    void testAddAcspMemberSuccessOwnerAddsAdmin() throws Exception {
+      RequestBodyPost requestBodyPost =
+          new RequestBodyPost()
+              .userId(NEW_USER_ID)
+              .acspNumber(ACSP_NUMBER)
+              .userRole(RequestBodyPost.UserRoleEnum.ADMIN);
 
-  @Test
-  void testGetAcspMembershipForUserIdNoMemberships() throws Exception {
-    when(acspMembersService.fetchAcspMemberships(user1, false)).thenReturn(Collections.emptyList());
+      AcspMembersDao ownerMember =
+          createMemberDao(OWNER_USER_ID, AcspMembership.UserRoleEnum.OWNER);
+      AcspMembersDao addedMember = createMemberDao(NEW_USER_ID, AcspMembership.UserRoleEnum.ADMIN);
 
-    mockMvc
-        .perform(
-            get("/acsp-members")
-                .header("X-Request-Id", "test-request-id")
-                .header("ERIC-Identity", "user1")
-                .header("ERIC-Identity-Type", "oauth2")
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$").isArray())
-        .andExpect(jsonPath("$.length()").value(0));
+      when(acspMembersService.fetchAcspMemberByUserIdAndAcspNumber(OWNER_USER_ID, ACSP_NUMBER))
+          .thenReturn(Optional.of(ownerMember));
+      when(acspMembersService.fetchAcspMember(NEW_USER_ID)).thenReturn(Optional.empty());
+      when(acspMembersService.addAcspMember(requestBodyPost, NEW_USER_ID)).thenReturn(addedMember);
 
-    verify(acspMembersService).fetchAcspMemberships(user1, false);
-  }
+      mockMvc
+          .perform(
+              post("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", OWNER_USER_ID)
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(
+                      String.format(
+                          "{\"user_id\":\"%s\",\"acsp_number\":\"%s\",\"user_role\":\"admin\"}",
+                          NEW_USER_ID, ACSP_NUMBER)))
+          .andExpect(status().isCreated())
+          .andExpect(jsonPath("$.acsp_membership_id").value(addedMember.getId()));
 
-  @Test
-  void testGetAcspMembershipForUserIdMissingHeaders() throws Exception {
-    mockMvc
-        .perform(get("/acsp-members").contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isUnauthorized());
-  }
+      verify(acspMembersService).addAcspMember(requestBodyPost, NEW_USER_ID);
+    }
 
-  @Test
-  void testGetAcspMembershipForUserIdInvalidIncludeRemovedParam() throws Exception {
-    mockMvc
-        .perform(
-            get("/acsp-members")
-                .header("X-Request-Id", "test-request-id")
-                .header("ERIC-Identity", "user1")
-                .header("ERIC-Identity-Type", "oauth2")
-                .param("include_removed", "invalid")
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isBadRequest());
-  }
+    @Test
+    void testAddAcspMemberForbiddenWhenRequestingUserNotMember() throws Exception {
+      RequestBodyPost requestBodyPost =
+          new RequestBodyPost()
+              .userId(NEW_USER_ID)
+              .acspNumber(ACSP_NUMBER)
+              .userRole(RequestBodyPost.UserRoleEnum.STANDARD);
 
-  @Test
-  void testGetAcspMembershipForUserIdServiceException() throws Exception {
-    when(acspMembersService.fetchAcspMemberships(user1, false))
-        .thenThrow(new RuntimeException("Service error"));
+      when(acspMembersService.fetchAcspMemberByUserIdAndAcspNumber(ADMIN_USER_ID, ACSP_NUMBER))
+          .thenReturn(Optional.empty());
 
-    mockMvc
-        .perform(
-            get("/acsp-members")
-                .header("X-Request-Id", "test-request-id")
-                .header("ERIC-Identity", "user1")
-                .header("ERIC-Identity-Type", "oauth2")
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isInternalServerError());
-  }
+      mockMvc
+          .perform(
+              post("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", ADMIN_USER_ID)
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(
+                      String.format(
+                          "{\"user_id\":\"%s\",\"acsp_number\":\"%s\",\"user_role\":\"standard\"}",
+                          NEW_USER_ID, ACSP_NUMBER)))
+          .andExpect(status().isForbidden());
 
-  @Test
-  void testGetAcspMembershipForUserIdMissingEricIdentity() throws Exception {
-    mockMvc
-        .perform(
-            get("/acsp-members")
-                .header("X-Request-Id", "test-request-id")
-                .header("ERIC-Identity-Type", "oauth2")
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isUnauthorized());
-  }
+      verify(acspMembersService, never()).addAcspMember(eq(requestBodyPost), eq(NEW_USER_ID));
+    }
 
-  @Test
-  void testGetAcspMembershipForUserIdMissingEricIdentityType() throws Exception {
-    mockMvc
-        .perform(
-            get("/acsp-members")
-                .header("X-Request-Id", "test-request-id")
-                .header("ERIC-Identity", "user1")
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isUnauthorized());
-  }
+    @Test
+    void testAddAcspMemberBadRequestWhenInviteeUserDoesNotExist() throws Exception {
+      RequestBodyPost requestBodyPost =
+          new RequestBodyPost()
+              .userId(NEW_USER_ID)
+              .acspNumber(ACSP_NUMBER)
+              .userRole(RequestBodyPost.UserRoleEnum.STANDARD);
 
-  @Test
-  void testGetAcspMembershipForUserIdNonOauth2User() throws Exception {
-    mockMvc
-        .perform(
-            get("/acsp-members")
-                .header("X-Request-Id", "test-request-id")
-                .header("ERIC-Identity", "user1")
-                .header("ERIC-Identity-Type", "key")
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isUnauthorized());
-  }
+      AcspMembersDao adminMember =
+          createMemberDao(ADMIN_USER_ID, AcspMembership.UserRoleEnum.ADMIN);
 
-  @Test
-  void testGetAcspMembershipForUserIdUserNotFound() throws Exception {
-    when(usersService.fetchUserDetails("user1"))
-        .thenThrow(new InternalServerErrorRuntimeException("User not found"));
+      when(acspMembersService.fetchAcspMemberByUserIdAndAcspNumber(ADMIN_USER_ID, ACSP_NUMBER))
+          .thenReturn(Optional.of(adminMember));
+      when(usersService.doesUserExist(NEW_USER_ID)).thenReturn(false);
 
-    mockMvc
-        .perform(
-            get("/acsp-members")
-                .header("X-Request-Id", "test-request-id")
-                .header("ERIC-Identity", "user1")
-                .header("ERIC-Identity-Type", "oauth2")
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isInternalServerError());
+      mockMvc
+          .perform(
+              post("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", ADMIN_USER_ID)
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(
+                      String.format(
+                          "{\"user_id\":\"%s\",\"acsp_number\":\"%s\",\"user_role\":\"standard\"}",
+                          NEW_USER_ID, ACSP_NUMBER)))
+          .andExpect(status().isBadRequest());
+
+      verify(acspMembersService, never()).addAcspMember(eq(requestBodyPost), eq(NEW_USER_ID));
+    }
+
+    @Test
+    void testAddAcspMemberBadRequestWhenInviteeAlreadyMember() throws Exception {
+      RequestBodyPost requestBodyPost =
+          new RequestBodyPost()
+              .userId(NEW_USER_ID)
+              .acspNumber(ACSP_NUMBER)
+              .userRole(RequestBodyPost.UserRoleEnum.STANDARD);
+
+      AcspMembersDao adminMember =
+          createMemberDao(ADMIN_USER_ID, AcspMembership.UserRoleEnum.ADMIN);
+      AcspMembersDao existingMember =
+          createMemberDao(NEW_USER_ID, AcspMembership.UserRoleEnum.STANDARD);
+
+      when(acspMembersService.fetchAcspMemberByUserIdAndAcspNumber(ADMIN_USER_ID, ACSP_NUMBER))
+          .thenReturn(Optional.of(adminMember));
+      when(usersService.doesUserExist(NEW_USER_ID)).thenReturn(true);
+      when(acspMembersService.fetchAcspMember(NEW_USER_ID)).thenReturn(Optional.of(existingMember));
+
+      mockMvc
+          .perform(
+              post("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", ADMIN_USER_ID)
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(
+                      String.format(
+                          "{\"user_id\":\"%s\",\"acsp_number\":\"%s\",\"user_role\":\"standard\"}",
+                          NEW_USER_ID, ACSP_NUMBER)))
+          .andExpect(status().isBadRequest());
+
+      verify(acspMembersService, never()).addAcspMember(eq(requestBodyPost), eq(NEW_USER_ID));
+    }
+
+    @Test
+    void testAddAcspMemberForbiddenWhenStandardUserAddsAdmin() throws Exception {
+      RequestBodyPost requestBodyPost =
+          new RequestBodyPost()
+              .userId(NEW_USER_ID)
+              .acspNumber(ACSP_NUMBER)
+              .userRole(RequestBodyPost.UserRoleEnum.ADMIN);
+
+      AcspMembersDao standardMember =
+          createMemberDao(STANDARD_USER_ID, AcspMembership.UserRoleEnum.STANDARD);
+
+      when(acspMembersService.fetchAcspMemberByUserIdAndAcspNumber(STANDARD_USER_ID, ACSP_NUMBER))
+          .thenReturn(Optional.of(standardMember));
+      when(usersService.doesUserExist(NEW_USER_ID)).thenReturn(true);
+      when(acspMembersService.fetchAcspMember(NEW_USER_ID)).thenReturn(Optional.empty());
+
+      mockMvc
+          .perform(
+              post("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", STANDARD_USER_ID)
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(
+                      String.format(
+                          "{\"user_id\":\"%s\",\"acsp_number\":\"%s\",\"user_role\":\"admin\"}",
+                          NEW_USER_ID, ACSP_NUMBER)))
+          .andExpect(status().isForbidden());
+
+      verify(acspMembersService, never()).addAcspMember(eq(requestBodyPost), eq(NEW_USER_ID));
+    }
+
+    @Test
+    void testAddAcspMemberForbiddenWhenAdminAddsOwner() throws Exception {
+      RequestBodyPost requestBodyPost =
+          new RequestBodyPost()
+              .userId(NEW_USER_ID)
+              .acspNumber(ACSP_NUMBER)
+              .userRole(RequestBodyPost.UserRoleEnum.OWNER);
+
+      AcspMembersDao adminMember =
+          createMemberDao(ADMIN_USER_ID, AcspMembership.UserRoleEnum.ADMIN);
+
+      when(acspMembersService.fetchAcspMemberByUserIdAndAcspNumber(ADMIN_USER_ID, ACSP_NUMBER))
+          .thenReturn(Optional.of(adminMember));
+      when(usersService.doesUserExist(NEW_USER_ID)).thenReturn(true);
+      when(acspMembersService.fetchAcspMember(NEW_USER_ID)).thenReturn(Optional.empty());
+
+      mockMvc
+          .perform(
+              post("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", ADMIN_USER_ID)
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(
+                      String.format(
+                          "{\"user_id\":\"%s\",\"acsp_number\":\"%s\",\"user_role\":\"owner\"}",
+                          NEW_USER_ID, ACSP_NUMBER)))
+          .andExpect(status().isForbidden());
+
+      verify(acspMembersService, never()).addAcspMember(eq(requestBodyPost), eq(NEW_USER_ID));
+    }
+
+    private AcspMembersDao createMemberDao(String userId, AcspMembership.UserRoleEnum userRole) {
+      AcspMembersDao member = new AcspMembersDao();
+      member.setId(userId + "_id");
+      member.setAcspNumber(ACSP_NUMBER);
+      member.setUserId(userId);
+      member.setUserRole(userRole);
+      return member;
+    }
   }
 }

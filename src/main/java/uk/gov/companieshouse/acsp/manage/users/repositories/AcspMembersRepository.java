@@ -32,4 +32,7 @@ public interface AcspMembersRepository extends MongoRepository<AcspMembersDao, S
     @Query(value = "{ 'user_id': ?0, 'acsp_number': ?1 }")
     Optional<AcspMembersDao> fetchAcspMemberByUserIdAndAcspNumber(
       final String userId, final String acspNumber);
+
+  @Query(value = "{ 'user_id': ?0, 'acsp_number': ?1 }")
+  List<AcspMembersDao> findByUserIdAndAcspNumber(final String userId, final String acspNumber);
 }
