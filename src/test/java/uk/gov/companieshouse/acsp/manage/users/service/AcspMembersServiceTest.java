@@ -21,7 +21,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,7 +42,7 @@ import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepositor
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 
-import static org.mockito.ArgumentMatchers.argThat;
+import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 @Tag("unit-test")
@@ -325,5 +324,53 @@ class AcspMembersServiceTest {
         // Then
         Mockito.verify(acspMembersRepository)
                 .save(argThat(createAcspMembersDaoMatches(acspNumber, userId, userRole)));
+    }
+
+    @Test
+    void fetchAcspMembersForAcspNumberAndUserIdWithNullInputsThrowsNullPointerException() {
+        Assertions.assertThrows(
+                NullPointerException.class,
+                () -> acspMembersService.fetchAcspMembersForAcspNumberAndUserId(null, "12345"));
+        Assertions.assertThrows(
+                NullPointerException.class,
+                () -> acspMembersService.fetchAcspMembersForAcspNumberAndUserId("1122334455", null));
+    }
+
+    @Test
+    void fetchAcspMembersForAcspNumberAndUserIdWithInputsProvidedReturnsEmptyResponse() {
+        // Given
+        String acspNumber = "1122334455";
+        String userId = "987654321";
+        Mockito.when(acspMembersRepository.fetchAcspMembersForAcspNumberAndUserId(acspNumber, userId))
+                .thenReturn(Optional.empty());
+
+        // When
+        var result = acspMembersService.fetchAcspMembersForAcspNumberAndUserId(acspNumber, userId);
+
+        // Then
+        Assertions.assertFalse(result.isPresent());
+    }
+
+    @Test
+    void fetchAcspMembersForAcspNumberAndUserIdWithInputsProvidedReturnsAcspMembers() {
+        // Given
+        String acspNumber = "1122334455";
+        String userId = "123456789";
+        String id = "1";
+        AcspMembersDao acspMembersDao = new AcspMembersDao();
+        acspMembersDao.setId(id);
+        acspMembersDao.setUserId(userId);
+        acspMembersDao.setAcspNumber(acspNumber);
+        Mockito.when(acspMembersRepository.fetchAcspMembersForAcspNumberAndUserId(acspNumber, userId))
+                .thenReturn(Optional.of(acspMembersDao));
+
+        // When
+        var response = acspMembersService.fetchAcspMembersForAcspNumberAndUserId(acspNumber, userId);
+
+        // Then
+        Assertions.assertTrue(response.isPresent());
+        Assertions.assertEquals(id, response.get().getId());
+        Assertions.assertEquals(userId, response.get().getUserId());
+        Assertions.assertEquals(acspNumber, response.get().getAcspNumber());
     }
 }

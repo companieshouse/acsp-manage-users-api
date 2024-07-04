@@ -17,6 +17,8 @@ import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.accounts.user.model.UsersList;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
@@ -43,6 +45,31 @@ class UserAcspMembershipInternalTest {
     var response =
         mockMvc
             .perform(post(url).contentType(MediaType.APPLICATION_JSON).content(payload))
+            .andReturn();
+
+    // Then
+    assertEquals(400, response.getResponse().getStatus());
+  }
+
+  @Test
+  void addAcspOwnerReturnsBadRequestIfAcspMembersAlreadyExists() throws Exception {
+    // Given
+    String acspNumber = "1122334455";
+    String ownerEmail = "j.smith@test.com";
+    String payload = String.format("{\"owner_email\":\"%s\"}", ownerEmail);
+    String url = String.format("/internal/acsp-members/acsp/%s", acspNumber);
+    Mockito.when(
+            acspMembersService.fetchAcspMembersForAcspNumberAndUserId(Mockito.any(), Mockito.any()))
+        .thenReturn(Optional.of(new AcspMembersDao()));
+
+    // When
+    var response =
+        mockMvc
+            .perform(
+                post(url)
+                    .header("X-Request-Id", "theId123")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(payload))
             .andReturn();
 
     // Then

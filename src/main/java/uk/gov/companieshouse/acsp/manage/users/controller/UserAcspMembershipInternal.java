@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
+import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
@@ -52,8 +53,8 @@ public class UserAcspMembershipInternal implements UserAcspMembershipInternalInt
         String.format("Attempting to add ACSP owner for acsp_number %s", acspNumber),
         null);
     acspDataService.fetchAcspData(acspNumber);
-    String userEmail = internalRequestBodyPost.getOwnerEmail();
-    UsersList users =
+    final String userEmail = internalRequestBodyPost.getOwnerEmail();
+    final UsersList users =
         Optional.ofNullable(usersService.searchUserDetails(List.of(userEmail)))
             .filter((userList -> !userList.isEmpty()))
             .orElseThrow(
@@ -62,14 +63,23 @@ public class UserAcspMembershipInternal implements UserAcspMembershipInternalInt
                   return new NotFoundRuntimeException(
                       "acsp-manage-users-api", "Failed to find user");
                 });
-    String userId = users.getFirst().getUserId();
-    final var acspMembers = acspMembersService.createAcspMembersWithOwnerRole(acspNumber, userId);
+    final String userId = users.getFirst().getUserId();
+    final var acspMembers =
+        acspMembersService.fetchAcspMembersForAcspNumberAndUserId(acspNumber, userId);
+    if (acspMembers.isPresent() && acspMembers.get().getRemovedBy().isBlank()) {
+      final String errorMessage =
+          String.format("ACSP for acspNumber %s and userId %s already exists.", acspNumber, userId);
+      LOG.error(errorMessage);
+      throw new BadRequestRuntimeException(errorMessage);
+    }
+    final var newAcspMembers =
+        acspMembersService.createAcspMembersWithOwnerRole(acspNumber, userId);
     LOG.debugContext(
         xRequestId,
         String.format("Successfully added ACSP owner for acsp_number %s", acspNumber),
         null);
     return new ResponseEntity<>(
-        new ResponseBodyPost().acspMembershipId(acspMembers.getId()), HttpStatus.CREATED);
+        new ResponseBodyPost().acspMembershipId(newAcspMembers.getId()), HttpStatus.CREATED);
   }
 
   @Override

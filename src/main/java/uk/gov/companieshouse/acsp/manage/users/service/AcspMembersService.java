@@ -97,4 +97,18 @@ public class AcspMembersService {
         acspMembersDao.setEtag(generateEtag());
         return acspMembersRepository.save(acspMembersDao);
     }
+
+    @Transactional(readOnly = true)
+    public Optional<AcspMembersDao> fetchAcspMembersForAcspNumberAndUserId(
+            final String acspNumber, final String userId) {
+        if (Objects.isNull(acspNumber)) {
+            throw new NullPointerException("AcspNumber should be provided");
+        }
+
+        if (Objects.isNull(userId)) {
+            throw new NullPointerException("UserId should be provided");
+        }
+
+        return acspMembersRepository.fetchAcspMembersForAcspNumberAndUserId(acspNumber, userId);
+    }
 }
