@@ -3,6 +3,7 @@ package uk.gov.companieshouse.acsp.manage.users.controller;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -66,7 +67,7 @@ public class UserAcspMembershipInternal implements UserAcspMembershipInternalInt
     final String userId = users.getFirst().getUserId();
     final var acspMembers =
         acspMembersService.fetchAcspMembersForAcspNumberAndUserId(acspNumber, userId);
-    if (acspMembers.isPresent() && acspMembers.get().getRemovedBy().isBlank()) {
+    if (acspMembers.isPresent() && StringUtils.isBlank(acspMembers.get().getRemovedBy())) {
       final String errorMessage =
           String.format("ACSP for acspNumber %s and userId %s already exists.", acspNumber, userId);
       LOG.error(errorMessage);

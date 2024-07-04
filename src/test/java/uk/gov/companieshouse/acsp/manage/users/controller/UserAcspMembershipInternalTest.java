@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -20,6 +21,7 @@ import uk.gov.companieshouse.api.accounts.user.model.UsersList;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 @WebMvcTest(UserAcspMembershipInternal.class)
@@ -32,9 +34,16 @@ class UserAcspMembershipInternalTest {
   @MockBean AcspMembersService acspMembersService;
 
   private UsersList users;
+  private final User user1 = new User();
+
+  @BeforeEach
+  void setUp() {
+    user1.setUserId("user1");
+    when(usersService.fetchUserDetails(user1.getUserId())).thenReturn(user1);
+  }
 
   @Test
-  void addAcspOwnerWithoutXRequestIdReturnsBadRequest() throws Exception {
+  void addAcspOwnerWithoutHeadersReturnsUnauthorised() throws Exception {
     // Given
     String acspNumber = "1122334455";
     String ownerEmail = "j.smith@test.com";
@@ -48,7 +57,7 @@ class UserAcspMembershipInternalTest {
             .andReturn();
 
     // Then
-    assertEquals(400, response.getResponse().getStatus());
+    assertEquals(401, response.getResponse().getStatus());
   }
 
   @Test
@@ -58,6 +67,9 @@ class UserAcspMembershipInternalTest {
     String ownerEmail = "j.smith@test.com";
     String payload = String.format("{\"owner_email\":\"%s\"}", ownerEmail);
     String url = String.format("/internal/acsp-members/acsp/%s", acspNumber);
+    users = new UsersList();
+    users.add(user1);
+    Mockito.when(usersService.searchUserDetails(Mockito.any())).thenReturn(users);
     Mockito.when(
             acspMembersService.fetchAcspMembersForAcspNumberAndUserId(Mockito.any(), Mockito.any()))
         .thenReturn(Optional.of(new AcspMembersDao()));
@@ -68,6 +80,9 @@ class UserAcspMembershipInternalTest {
             .perform(
                 post(url)
                     .header("X-Request-Id", "theId123")
+                    .header("ERIC-Identity", "user1")
+                    .header("ERIC-Identity-Type", "key")
+                    .header("ERIC-Authorised-Key-Roles", "*")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(payload))
             .andReturn();
@@ -92,6 +107,9 @@ class UserAcspMembershipInternalTest {
             .perform(
                 post(url)
                     .header("X-Request-Id", "theId123")
+                    .header("ERIC-Identity", "user1")
+                    .header("ERIC-Identity-Type", "key")
+                    .header("ERIC-Authorised-Key-Roles", "*")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(payload))
             .andReturn();
@@ -117,6 +135,9 @@ class UserAcspMembershipInternalTest {
             .perform(
                 post(url)
                     .header("X-Request-Id", "theId123")
+                    .header("ERIC-Identity", "user1")
+                    .header("ERIC-Identity-Type", "key")
+                    .header("ERIC-Authorised-Key-Roles", "*")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(payload))
             .andReturn();
@@ -145,6 +166,9 @@ class UserAcspMembershipInternalTest {
             .perform(
                 post(url)
                     .header("X-Request-Id", "theId123")
+                    .header("ERIC-Identity", "user1")
+                    .header("ERIC-Identity-Type", "key")
+                    .header("ERIC-Authorised-Key-Roles", "*")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(payload))
             .andReturn();
