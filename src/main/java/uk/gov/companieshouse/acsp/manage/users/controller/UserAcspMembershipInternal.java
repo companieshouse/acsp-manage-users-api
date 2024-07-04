@@ -3,7 +3,6 @@ package uk.gov.companieshouse.acsp.manage.users.controller;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,9 +35,9 @@ public class UserAcspMembershipInternal implements UserAcspMembershipInternalInt
 
   @Autowired
   public UserAcspMembershipInternal(
-      AcspDataService acspDataService,
-      UsersService usersService,
-      AcspMembersService acspMembersService) {
+      final AcspDataService acspDataService,
+      final UsersService usersService,
+      final AcspMembersService acspMembersService) {
     this.acspDataService = acspDataService;
     this.usersService = usersService;
     this.acspMembersService = acspMembersService;
@@ -62,16 +61,22 @@ public class UserAcspMembershipInternal implements UserAcspMembershipInternalInt
                 () -> {
                   LOG.error(String.format("Failed to find user with userEmail %s", userEmail));
                   return new NotFoundRuntimeException(
-                      "acsp-manage-users-api", "Failed to find user");
+                      StaticPropertyUtil.APPLICATION_NAMESPACE, "Failed to find user");
                 });
     final String userId = users.getFirst().getUserId();
-    final var acspMembers =
-        acspMembersService.fetchAcspMembersForAcspNumberAndUserId(acspNumber, userId);
-    if (acspMembers.isPresent() && StringUtils.isBlank(acspMembers.get().getRemovedBy())) {
-      final var errorMessage =
-          String.format("ACSP for acspNumber %s and userId %s already exists.", acspNumber, userId);
-      LOG.error(errorMessage);
-      throw new BadRequestRuntimeException(errorMessage);
+    final var acspMembers = acspMembersService.fetchAcspMemberships(users.getFirst(), false);
+    if (!acspMembers.isEmpty()) {
+      acspMembers.stream()
+          .filter(item -> item.getAcspNumber().equals(acspNumber))
+          .findFirst()
+          .ifPresent(
+              elem -> {
+                final var errorMessage =
+                    String.format(
+                        "ACSP for acspNumber %s and userId %s already exists.", acspNumber, userId);
+                LOG.error(errorMessage);
+                throw new BadRequestRuntimeException(errorMessage);
+              });
     }
     final var newAcspMembers =
         acspMembersService.createAcspMembersWithOwnerRole(acspNumber, userId);

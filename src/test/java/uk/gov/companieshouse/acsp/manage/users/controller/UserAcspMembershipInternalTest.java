@@ -17,8 +17,9 @@ import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.accounts.user.model.UsersList;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 
-import java.util.Optional;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -69,10 +70,12 @@ class UserAcspMembershipInternalTest {
     String url = String.format("/internal/acsp-members/acsp/%s", acspNumber);
     users = new UsersList();
     users.add(user1);
+    final var acspMembership = new AcspMembership();
+    acspMembership.setAcspNumber(acspNumber);
     Mockito.when(usersService.searchUserDetails(Mockito.any())).thenReturn(users);
     Mockito.when(
-            acspMembersService.fetchAcspMembersForAcspNumberAndUserId(Mockito.any(), Mockito.any()))
-        .thenReturn(Optional.of(new AcspMembersDao()));
+            acspMembersService.fetchAcspMemberships(user1, false))
+        .thenReturn(List.of(acspMembership));
 
     // When
     var response =

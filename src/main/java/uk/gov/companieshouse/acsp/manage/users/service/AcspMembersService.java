@@ -35,10 +35,13 @@ public class AcspMembersService {
   private static final Logger LOG =
       LoggerFactory.getLogger(StaticPropertyUtil.APPLICATION_NAMESPACE);
 
-  public AcspMembersService( final AcspMembersRepository acspMembersRepository, final AcspMembershipListMapper acspMembershipListMapper, final AcspMembersMapper acspMembersMapper ) {
-      this.acspMembersRepository = acspMembersRepository;
-      this.acspMembershipListMapper = acspMembershipListMapper;
-      this.acspMembersMapper = acspMembersMapper;
+  public AcspMembersService(
+      final AcspMembersRepository acspMembersRepository,
+      final AcspMembershipListMapper acspMembershipListMapper,
+      final AcspMembersMapper acspMembersMapper) {
+    this.acspMembersRepository = acspMembersRepository;
+    this.acspMembershipListMapper = acspMembershipListMapper;
+    this.acspMembersMapper = acspMembersMapper;
   }
 
   @Transactional(readOnly = true)
@@ -58,57 +61,56 @@ public class AcspMembersService {
     return acspMembershipListMapper.daoToDto(acspMembers, user);
   }
 
-    @Transactional( readOnly = true )
-    public AcspMembers fetchAcspMembers( final AcspDataDao acspData, final boolean includeRemoved, final String userId, final String role, final int pageIndex, final int itemsPerPage ) {
-        final var acspNumber = acspData.getId();
+  @Transactional(readOnly = true)
+  public AcspMembers fetchAcspMembers(
+      final AcspDataDao acspData,
+      final boolean includeRemoved,
+      final String userId,
+      final String role,
+      final int pageIndex,
+      final int itemsPerPage) {
+    final var acspNumber = acspData.getId();
 
-        if ( Objects.isNull( acspNumber ) ){
-            throw new IllegalArgumentException( "acspNumber is null." );
-        }
-
-        final var userRoles = Objects.nonNull( role ) ? Set.of( UserRoleEnum.fromValue( role ) ) : Set.of( UserRoleEnum.OWNER, UserRoleEnum.ADMIN, UserRoleEnum.STANDARD );
-        final var userIdRegex = Optional.ofNullable( userId ).orElse( "" );
-        final var pageable = PageRequest.of( pageIndex, itemsPerPage );
-
-        Page<AcspMembersDao> acspMembers;
-        if ( includeRemoved ) {
-            acspMembers = acspMembersRepository.findAllByAcspNumberUserRolesAndUserIdLike( acspNumber, userRoles, userIdRegex, pageable );
-        } else {
-            acspMembers = acspMembersRepository.findAllByAcspNumberUserRolesAndUserIdLike( acspNumber, userRoles, userIdRegex, null, pageable );
-        }
-
-        return acspMembersMapper.daoToDto( acspMembers, acspData );
+    if (Objects.isNull(acspNumber)) {
+      throw new IllegalArgumentException("acspNumber is null.");
     }
 
-    public AcspMembersDao createAcspMembersWithOwnerRole(String acspNumber, String userId) {
-        if (Objects.isNull(acspNumber)) {
-            throw new NullPointerException("AcspNumber should be provided");
-        }
+    final var userRoles =
+        Objects.nonNull(role)
+            ? Set.of(UserRoleEnum.fromValue(role))
+            : Set.of(UserRoleEnum.OWNER, UserRoleEnum.ADMIN, UserRoleEnum.STANDARD);
+    final var userIdRegex = Optional.ofNullable(userId).orElse("");
+    final var pageable = PageRequest.of(pageIndex, itemsPerPage);
 
-        if (Objects.isNull(userId)) {
-            throw new NullPointerException("UserId should be provided");
-        }
-
-        final var acspMembersDao = new AcspMembersDao();
-        acspMembersDao.setAcspNumber(acspNumber);
-        acspMembersDao.setUserId(userId);
-        acspMembersDao.setUserRole(AcspMembership.UserRoleEnum.OWNER);
-        acspMembersDao.setAddedAt(LocalDateTime.now());
-        acspMembersDao.setEtag(generateEtag());
-        return acspMembersRepository.save(acspMembersDao);
+    Page<AcspMembersDao> acspMembers;
+    if (includeRemoved) {
+      acspMembers =
+          acspMembersRepository.findAllByAcspNumberUserRolesAndUserIdLike(
+              acspNumber, userRoles, userIdRegex, pageable);
+    } else {
+      acspMembers =
+          acspMembersRepository.findAllByAcspNumberUserRolesAndUserIdLike(
+              acspNumber, userRoles, userIdRegex, null, pageable);
     }
 
-    @Transactional(readOnly = true)
-    public Optional<AcspMembersDao> fetchAcspMembersForAcspNumberAndUserId(
-            final String acspNumber, final String userId) {
-        if (Objects.isNull(acspNumber)) {
-            throw new NullPointerException("AcspNumber should be provided");
-        }
+    return acspMembersMapper.daoToDto(acspMembers, acspData);
+  }
 
-        if (Objects.isNull(userId)) {
-            throw new NullPointerException("UserId should be provided");
-        }
-
-        return acspMembersRepository.fetchAcspMembersForAcspNumberAndUserId(acspNumber, userId);
+  public AcspMembersDao createAcspMembersWithOwnerRole(String acspNumber, String userId) {
+    if (Objects.isNull(acspNumber)) {
+      throw new NullPointerException("AcspNumber should be provided");
     }
+
+    if (Objects.isNull(userId)) {
+      throw new NullPointerException("UserId should be provided");
+    }
+
+    final var acspMembersDao = new AcspMembersDao();
+    acspMembersDao.setAcspNumber(acspNumber);
+    acspMembersDao.setUserId(userId);
+    acspMembersDao.setUserRole(AcspMembership.UserRoleEnum.OWNER);
+    acspMembersDao.setAddedAt(LocalDateTime.now());
+    acspMembersDao.setEtag(generateEtag());
+    return acspMembersRepository.save(acspMembersDao);
+  }
 }
