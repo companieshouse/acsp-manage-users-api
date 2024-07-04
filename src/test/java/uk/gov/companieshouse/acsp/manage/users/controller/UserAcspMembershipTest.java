@@ -359,7 +359,7 @@ class UserAcspMembershipTest {
                           NEW_USER_ID, ACSP_NUMBER)))
           .andExpect(status().isForbidden());
 
-      verify(acspMembersService, never()).addAcspMember(eq(requestBodyPost), eq(NEW_USER_ID));
+      verify(acspMembersService, never()).addAcspMember(requestBodyPost, NEW_USER_ID);
     }
 
     @Test
@@ -391,7 +391,7 @@ class UserAcspMembershipTest {
                           NEW_USER_ID, ACSP_NUMBER)))
           .andExpect(status().isBadRequest());
 
-      verify(acspMembersService, never()).addAcspMember(eq(requestBodyPost), eq(NEW_USER_ID));
+      verify(acspMembersService, never()).addAcspMember(requestBodyPost, NEW_USER_ID);
     }
 
     @Test
@@ -427,7 +427,7 @@ class UserAcspMembershipTest {
                           NEW_USER_ID, ACSP_NUMBER)))
           .andExpect(status().isBadRequest());
 
-      verify(acspMembersService, never()).addAcspMember(eq(requestBodyPost), eq(NEW_USER_ID));
+      verify(acspMembersService, never()).addAcspMember(requestBodyPost, NEW_USER_ID);
     }
 
     @Test
@@ -460,7 +460,7 @@ class UserAcspMembershipTest {
                           NEW_USER_ID, ACSP_NUMBER)))
           .andExpect(status().isForbidden());
 
-      verify(acspMembersService, never()).addAcspMember(eq(requestBodyPost), eq(NEW_USER_ID));
+      verify(acspMembersService, never()).addAcspMember(requestBodyPost, NEW_USER_ID);
     }
 
     @Test
@@ -493,7 +493,7 @@ class UserAcspMembershipTest {
                           NEW_USER_ID, ACSP_NUMBER)))
           .andExpect(status().isForbidden());
 
-      verify(acspMembersService, never()).addAcspMember(eq(requestBodyPost), eq(NEW_USER_ID));
+      verify(acspMembersService, never()).addAcspMember(requestBodyPost, NEW_USER_ID);
     }
 
     @Test
@@ -521,7 +521,7 @@ class UserAcspMembershipTest {
                           NEW_USER_ID, ACSP_NUMBER)))
           .andExpect(status().isForbidden());
 
-      verify(acspMembersService, never()).addAcspMember(eq(requestBodyPost), eq(NEW_USER_ID));
+      verify(acspMembersService, never()).addAcspMember(requestBodyPost, NEW_USER_ID);
     }
 
     @Test
@@ -557,7 +557,7 @@ class UserAcspMembershipTest {
                           NEW_USER_ID, ACSP_NUMBER)))
           .andExpect(status().isBadRequest());
 
-      verify(acspMembersService, never()).addAcspMember(eq(requestBodyPost), eq(NEW_USER_ID));
+      verify(acspMembersService, never()).addAcspMember(requestBodyPost, NEW_USER_ID);
     }
 
     @Test
