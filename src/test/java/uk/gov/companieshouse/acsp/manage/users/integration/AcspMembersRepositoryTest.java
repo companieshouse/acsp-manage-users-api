@@ -50,8 +50,9 @@ class AcspMembersRepositoryTest {
     void findAllByAcspNumberUserRolesAndUserIdLikeWithNullUserRolesOrNullUserIdThrowsUncategorizedMongoDbException(){
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos("COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016" ) );
         final var pageRequest = PageRequest.of( 0, 20 );
+        final var roles = Set.of( UserRoleEnum.OWNER, UserRoleEnum.ADMIN, UserRoleEnum.STANDARD );
         Assertions.assertThrows( UncategorizedMongoDbException.class, () -> acspMembersRepository.findAllByAcspNumberUserRolesAndUserIdLike( "COMA001", null, "", pageRequest ) );
-        Assertions.assertThrows( UncategorizedMongoDbException.class, () -> acspMembersRepository.findAllByAcspNumberUserRolesAndUserIdLike( "COMA001", Set.of( UserRoleEnum.OWNER, UserRoleEnum.ADMIN, UserRoleEnum.STANDARD ), null, pageRequest ) );
+        Assertions.assertThrows( UncategorizedMongoDbException.class, () -> acspMembersRepository.findAllByAcspNumberUserRolesAndUserIdLike( "COMA001", roles, null, pageRequest ) );
     }
 
     @Test
