@@ -103,8 +103,8 @@ class AcspMembersServiceTest {
         };
     }
 
-    @Test
-    void fetchAcspMemberships_includeRemoved_returnsAllMemberships() {
+  @Test
+  void fetchActiveAcspMemberships_includeRemoved_returnsAllMemberships() {
         when(acspMembersRepository.fetchAllAcspMembersByUserId(testUser.getUserId()))
                 .thenReturn(testAllAcspMembersDaos);
         when(acspMembershipListMapper.daoToDto(testAllAcspMembersDaos, testUser))
@@ -119,8 +119,8 @@ class AcspMembersServiceTest {
         verifyNoMoreInteractions(acspMembersRepository, acspMembershipListMapper);
     }
 
-    @Test
-    void fetchAcspMemberships_excludeRemoved_returnsOnlyActiveMemberships() {
+  @Test
+  void fetchActiveAcspMemberships_excludeRemoved_returnsOnlyActiveMemberships() {
         when(acspMembersRepository.fetchActiveAcspMembersByUserId(testUser.getUserId()))
                 .thenReturn(testActiveAcspMembersDaos);
         when(acspMembershipListMapper.daoToDto(testActiveAcspMembersDaos, testUser))
@@ -135,8 +135,8 @@ class AcspMembersServiceTest {
         verifyNoMoreInteractions(acspMembersRepository, acspMembershipListMapper);
     }
 
-    @Test
-    void fetchAcspMemberships_noMemberships_returnsEmptyList() {
+  @Test
+  void fetchActiveAcspMemberships_noMemberships_returnsEmptyList() {
         when(acspMembersRepository.fetchActiveAcspMembersByUserId(testUser.getUserId()))
                 .thenReturn(Collections.emptyList());
         when(acspMembershipListMapper.daoToDto(Collections.emptyList(), testUser))
@@ -150,8 +150,8 @@ class AcspMembersServiceTest {
         verifyNoMoreInteractions(acspMembersRepository, acspMembershipListMapper);
     }
 
-    @Test
-    void fetchAcspMemberships_repositoryThrowsException_propagatesException() {
+  @Test
+  void fetchActiveAcspMemberships_repositoryThrowsException_propagatesException() {
         when(acspMembersRepository.fetchActiveAcspMembersByUserId(anyString()))
                 .thenThrow(new RuntimeException("Database error"));
 
@@ -166,9 +166,9 @@ class AcspMembersServiceTest {
         return dao;
     }
 
-
-    @Test
-    void fetchAcspMembersWithMalformedRoleOrPageIndexOrItemsPerPageThrowsIllegalArgumentException(){
+  @Test
+  void
+      fetchActiveAcspMembersWithMalformedRoleOrPageIndexOrItemsPerPageThrowsIllegalArgumentException() {
         final var acspData = testDataManager.fetchAcspDataDaos( "COMA001" ).getFirst();
 
         Assertions.assertThrows( IllegalArgumentException.class, () -> acspMembersService.fetchAcspMembers( acspData, true, null, "teacher", 0, 20 ) );
@@ -176,8 +176,8 @@ class AcspMembersServiceTest {
         Assertions.assertThrows( IllegalArgumentException.class, () -> acspMembersService.fetchAcspMembers( acspData, true, null, null, 0, -1 ) );
     }
 
-    @Test
-    void fetchAcspMembersWithMalformedAcspIdReturnsEmptyResults(){
+  @Test
+  void fetchAcspMembersWithMalformedActiveAcspIdReturnsEmptyResults() {
         Mockito.doReturn( Page.empty( PageRequest.of(0, 20) ) ).when( acspMembersRepository ).findAllByAcspNumberUserRolesAndUserIdLike( anyString(), anySet(), anyString(), any(Pageable.class) );
 
         final var malformedAcspId = new AcspDataDao();
@@ -186,19 +186,19 @@ class AcspMembersServiceTest {
         Mockito.verify( acspMembersMapper ).daoToDto( argThat( acspMembersDaoPageMatcher( 0, 20, 0, 0, Set.of() ) ), eq( malformedAcspId ) );
     }
 
-    @Test
-    void fetchAcspMembersWithNullAcspDataThrowsNullPointerException(){
+  @Test
+  void fetchAcspMembersWithNullActiveAcspDataThrowsNullPointerException() {
         Assertions.assertThrows( NullPointerException.class, () -> acspMembersService.fetchAcspMembers( null, true, null, null, 0, 20 ) );
     }
 
-    @Test
-    void fetchAcspMembersWithNullAcspNumberThrowsIllegalArgumentException(){
+  @Test
+  void fetchAcspMembersWithNullActiveAcspNumberThrowsIllegalArgumentException() {
         final var acspDataDao = new AcspDataDao();
         Assertions.assertThrows( IllegalArgumentException.class, () -> acspMembersService.fetchAcspMembers( acspDataDao, true, null, null, 0, 20 ) );
     }
 
-    @Test
-    void fetchAcspMembersWithNonexistentAcspIdReturnsEmptyResults(){
+  @Test
+  void fetchAcspMembersWithNonexistentActiveAcspIdReturnsEmptyResults() {
         Mockito.doReturn( Page.empty( PageRequest.of(0, 20) ) ).when( acspMembersRepository ).findAllByAcspNumberUserRolesAndUserIdLike( anyString(), anySet(), anyString(), any(Pageable.class) );
 
         final var nonexistentAcspId = new AcspDataDao();
@@ -207,8 +207,8 @@ class AcspMembersServiceTest {
         Mockito.verify( acspMembersMapper ).daoToDto( argThat( acspMembersDaoPageMatcher( 0, 20, 0, 0, Set.of() ) ), eq( nonexistentAcspId ) );
     }
 
-    @Test
-    void fetchAcspMembersWithMalformedUserIdReturnsEmptyResults(){
+  @Test
+  void fetchActiveAcspMembersWithMalformedUserIdReturnsEmptyResults() {
         final var acspData = testDataManager.fetchAcspDataDaos( "COMA001" ).getFirst();
 
         Mockito.doReturn( Page.empty( PageRequest.of(0, 20) ) ).when( acspMembersRepository ).findAllByAcspNumberUserRolesAndUserIdLike( anyString(), anySet(), anyString(), any(Pageable.class) );
@@ -217,8 +217,8 @@ class AcspMembersServiceTest {
         Mockito.verify( acspMembersMapper ).daoToDto( argThat( acspMembersDaoPageMatcher( 0, 20, 0, 0, Set.of() ) ), argThat( acspDataDaoMatcher( acspData.getId(), acspData.getAcspName(), acspData.getAcspStatus() ) ) );
     }
 
-    @Test
-    void fetchAcspMembersWithNonexistentUserIdReturnsEmptyResults(){
+  @Test
+  void fetchActiveAcspMembersWithNonexistentUserIdReturnsEmptyResults() {
         final var acspData = testDataManager.fetchAcspDataDaos( "COMA001" ).getFirst();
 
         Mockito.doReturn( Page.empty( PageRequest.of(0, 20) ) ).when( acspMembersRepository ).findAllByAcspNumberUserRolesAndUserIdLike( anyString(), anySet(), anyString(), any(Pageable.class) );
@@ -227,8 +227,8 @@ class AcspMembersServiceTest {
         Mockito.verify( acspMembersMapper ).daoToDto( argThat( acspMembersDaoPageMatcher( 0, 20, 0, 0, Set.of() ) ), argThat( acspDataDaoMatcher( acspData.getId(), acspData.getAcspName(), acspData.getAcspStatus() ) ) );
     }
 
-    @Test
-    void fetchAcspMembersAppliesAcspIdAndRoleAndIncludeRemovedFiltersCorrectly(){
+  @Test
+  void fetchAcspMembersAppliesActiveAcspIdAndRoleAndIncludeRemovedFiltersCorrectly() {
         final var acspData = testDataManager.fetchAcspDataDaos( "COMA001" ).getFirst();
         final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "COM002", "COM010" );
 
@@ -241,8 +241,8 @@ class AcspMembersServiceTest {
         Mockito.verify( acspMembersMapper ).daoToDto( argThat( acspMembersDaoPageMatcher( 0, 20, 2, 1, Set.of( "COM002", "COM010" ) ) ), eq( acspData ) );
     }
 
-    @Test
-    void fetchAcspMembersAppliesUserIdFilterCorrectly(){
+  @Test
+  void fetchActiveAcspMembersAppliesUserIdFilterCorrectly() {
         final var acspData = testDataManager.fetchAcspDataDaos( "COMA001" ).getFirst();
         final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "COM002" );
 
@@ -255,8 +255,8 @@ class AcspMembersServiceTest {
         Mockito.verify( acspMembersMapper ).daoToDto( argThat( acspMembersDaoPageMatcher( 0, 20, 1, 1, Set.of( "COM002" ) ) ), eq( acspData ) );
     }
 
-    @Test
-    void fetchAcspMembersWithoutFiltersReturnsEverything(){
+  @Test
+  void fetchActiveAcspMembersWithoutFiltersReturnsEverything() {
         final var acspData = testDataManager.fetchAcspDataDaos( "COMA001" ).getFirst();
         final var acspMemberDaos = testDataManager.fetchAcspMembersDaos("COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016" );
 
@@ -269,8 +269,8 @@ class AcspMembersServiceTest {
         Mockito.verify( acspMembersMapper ).daoToDto( argThat( acspMembersDaoPageMatcher( 0, 20, 16, 1, Set.of( "COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016" ) ) ), eq( acspData ) );
     }
 
-    @Test
-    void fetchAcspMembersAppliesPaginationCorrectly(){
+  @Test
+  void fetchActiveAcspMembersAppliesPaginationCorrectly() {
         final var acspData = testDataManager.fetchAcspDataDaos( "COMA001" ).getFirst();
         final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "COM004", "COM005", "COM006" );
 

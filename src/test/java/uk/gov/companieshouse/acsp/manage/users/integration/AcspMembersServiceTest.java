@@ -137,8 +137,9 @@ class AcspMembersServiceTest {
         };
     }
 
-    @Test
-    void fetchAcspMembersWithMalformedRoleOrPageIndexOrItemsPerPageThrowsIllegalArgumentException(){
+  @Test
+  void
+      fetchActiveAcspMembersWithMalformedRoleOrPageIndexOrItemsPerPageThrowsIllegalArgumentException() {
         final var acspData = testDataManager.fetchAcspDataDaos( "COMA001" ).getFirst();
 
         Assertions.assertThrows( IllegalArgumentException.class, () -> acspMembersService.fetchAcspMembers( acspData, true, null, "teacher", 0, 20 ) );
@@ -146,8 +147,8 @@ class AcspMembersServiceTest {
         Assertions.assertThrows( IllegalArgumentException.class, () -> acspMembersService.fetchAcspMembers( acspData, true, null, null, 0, -1 ) );
     }
 
-    @Test
-    void fetchAcspMembersWithMalformedAcspIdReturnsEmptyResults(){
+  @Test
+  void fetchAcspMembersWithMalformedActiveAcspIdReturnsEmptyResults() {
         final var acspMemberDaos = testDataManager.fetchAcspMembersDaos("COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016" );
 
         acspMembersRepository.insert( acspMemberDaos );
@@ -158,19 +159,19 @@ class AcspMembersServiceTest {
         Mockito.verify( acspMembersMapper ).daoToDto( argThat( acspMembersDaoPageMatcher( 0, 20, 0, 0, Set.of() ) ), eq( malformedAcspId ) );
     }
 
-    @Test
-    void fetchAcspMembersWithNullAcspDataThrowsNullPointerException(){
+  @Test
+  void fetchAcspMembersWithNullActiveAcspDataThrowsNullPointerException() {
         Assertions.assertThrows( NullPointerException.class, () -> acspMembersService.fetchAcspMembers( null, true, null, null, 0, 20 ) );
     }
 
-    @Test
-    void fetchAcspMembersWithNullAcspNumberThrowsIllegalArgumentException(){
+  @Test
+  void fetchAcspMembersWithNullActiveAcspNumberThrowsIllegalArgumentException() {
         final var acspDataDao = new AcspDataDao();
         Assertions.assertThrows( IllegalArgumentException.class, () -> acspMembersService.fetchAcspMembers( acspDataDao, true, null, null, 0, 20 ) );
     }
 
-    @Test
-    void fetchAcspMembersWithNonexistentAcspIdReturnsEmptyResults(){
+  @Test
+  void fetchAcspMembersWithNonexistentActiveAcspIdReturnsEmptyResults() {
         final var acspMemberDaos = testDataManager.fetchAcspMembersDaos("COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016" );
 
         acspMembersRepository.insert( acspMemberDaos );
@@ -181,8 +182,8 @@ class AcspMembersServiceTest {
         Mockito.verify( acspMembersMapper ).daoToDto( argThat( acspMembersDaoPageMatcher( 0, 20, 0, 0, Set.of() ) ), eq( nonexistentAcspId ) );
     }
 
-    @Test
-    void fetchAcspMembersWithMalformedUserIdReturnsEmptyResults(){
+  @Test
+  void fetchActiveAcspMembersWithMalformedUserIdReturnsEmptyResults() {
         final var acspData = testDataManager.fetchAcspDataDaos( "COMA001" ).getFirst();
         final var acspMemberDaos = testDataManager.fetchAcspMembersDaos("COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016" );
 
@@ -192,8 +193,8 @@ class AcspMembersServiceTest {
         Mockito.verify( acspMembersMapper ).daoToDto( argThat( acspMembersDaoPageMatcher( 0, 20, 0, 0, Set.of() ) ), argThat( acspDataDaoMatcher( acspData.getId(), acspData.getAcspName(), acspData.getAcspStatus() ) ) );
     }
 
-    @Test
-    void fetchAcspMembersWithNonexistentUserIdReturnsEmptyResults(){
+  @Test
+  void fetchActiveAcspMembersWithNonexistentUserIdReturnsEmptyResults() {
         final var acspData = testDataManager.fetchAcspDataDaos( "COMA001" ).getFirst();
         final var acspMemberDaos = testDataManager.fetchAcspMembersDaos("COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016" );
 
@@ -203,8 +204,8 @@ class AcspMembersServiceTest {
         Mockito.verify( acspMembersMapper ).daoToDto( argThat( acspMembersDaoPageMatcher( 0, 20, 0, 0, Set.of() ) ), argThat( acspDataDaoMatcher( acspData.getId(), acspData.getAcspName(), acspData.getAcspStatus() ) ) );
     }
 
-    @Test
-    void fetchAcspMembersAppliesAcspIdAndRoleAndIncludeRemovedFiltersCorrectly(){
+  @Test
+  void fetchAcspMembersAppliesActiveAcspIdAndRoleAndIncludeRemovedFiltersCorrectly() {
         final var acspData = testDataManager.fetchAcspDataDaos( "COMA001" ).getFirst();
         final var acspMemberDaos = testDataManager.fetchAcspMembersDaos("COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016" );
 
@@ -215,8 +216,8 @@ class AcspMembersServiceTest {
         Mockito.verify( acspMembersMapper ).daoToDto( argThat( acspMembersDaoPageMatcher( 0, 20, 2, 1, Set.of( "COM002", "COM010" ) ) ), eq( acspData ) );
     }
 
-    @Test
-    void fetchAcspMembersAppliesUserIdFilterCorrectly(){
+  @Test
+  void fetchActiveAcspMembersAppliesUserIdFilterCorrectly() {
         final var acspData = testDataManager.fetchAcspDataDaos( "COMA001" ).getFirst();
         final var acspMemberDaos = testDataManager.fetchAcspMembersDaos("COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016" );
 
@@ -226,8 +227,8 @@ class AcspMembersServiceTest {
         Mockito.verify( acspMembersMapper ).daoToDto( argThat( acspMembersDaoPageMatcher( 0, 20, 1, 1, Set.of( "COM002" ) ) ), eq( acspData ) );
     }
 
-    @Test
-    void fetchAcspMembersWithoutFiltersReturnsEverything(){
+  @Test
+  void fetchActiveAcspMembersWithoutFiltersReturnsEverything() {
         final var acspData = testDataManager.fetchAcspDataDaos( "COMA001" ).getFirst();
         final var acspMemberDaos = testDataManager.fetchAcspMembersDaos("COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016" );
 
@@ -237,8 +238,8 @@ class AcspMembersServiceTest {
         Mockito.verify( acspMembersMapper ).daoToDto( argThat( acspMembersDaoPageMatcher( 0, 20, 16, 1, Set.of( "COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016" ) ) ), eq( acspData ) );
     }
 
-    @Test
-    void fetchAcspMembersAppliesPaginationCorrectly(){
+  @Test
+  void fetchActiveAcspMembersAppliesPaginationCorrectly() {
         final var acspData = testDataManager.fetchAcspDataDaos( "COMA001" ).getFirst();
         final var acspMemberDaos = testDataManager.fetchAcspMembersDaos("COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016" );
 
@@ -253,13 +254,8 @@ class AcspMembersServiceTest {
         mongoTemplate.dropCollection( AcspMembersDao.class );
     }
 
-
-
-
-
-
-    @Test
-    void fetchAcspMemberships_includeRemoved_returnsAllMemberships() {
+  @Test
+  void fetchActiveAcspMemberships_includeRemoved_returnsAllMemberships() {
         List<AcspMembership> result = acspMembersService.fetchAcspMemberships(testUser, true);
 
         assertEquals(2, result.size());
@@ -267,16 +263,16 @@ class AcspMembersServiceTest {
         assertTrue(result.stream().anyMatch(m -> m.getAcspNumber().equals("ACSP002")));
     }
 
-    @Test
-    void fetchAcspMemberships_excludeRemoved_returnsOnlyActiveMemberships() {
+  @Test
+  void fetchActiveAcspMemberships_excludeRemoved_returnsOnlyActiveMemberships() {
         List<AcspMembership> result = acspMembersService.fetchAcspMemberships(testUser, false);
 
         assertEquals(1, result.size());
         assertEquals("ACSP001", result.getFirst().getAcspNumber());
     }
 
-    @Test
-    void fetchAcspMemberships_noMemberships_returnsEmptyList() {
+  @Test
+  void fetchActiveAcspMemberships_noMemberships_returnsEmptyList() {
         User newUser = new User();
         newUser.setUserId("newUser456");
 
@@ -285,14 +281,14 @@ class AcspMembersServiceTest {
         assertTrue(result.isEmpty());
     }
 
-    @Test
-    void fetchAcspMemberships_nullUser_throwsIllegalArgumentException() {
+  @Test
+  void fetchActiveAcspMemberships_nullUser_throwsIllegalArgumentException() {
         assertThrows(
                 NullPointerException.class, () -> acspMembersService.fetchAcspMemberships(null, true));
     }
 
-    @Test
-    void fetchAcspMemberships_userWithNoMemberships_returnsEmptyList() {
+  @Test
+  void fetchActiveAcspMemberships_userWithNoMemberships_returnsEmptyList() {
         User userWithNoMemberships = new User();
         userWithNoMemberships.setUserId("noMembershipsUser");
 

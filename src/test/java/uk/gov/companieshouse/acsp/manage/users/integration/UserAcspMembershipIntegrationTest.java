@@ -4,6 +4,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static uk.gov.companieshouse.GenerateEtagUtil.generateEtag;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -410,6 +411,112 @@ class UserAcspMembershipIntegrationTest {
       List<AcspMembersDao> members =
           acspMembersRepository.findByUserIdAndAcspNumber(newUserId, "ACSP001");
       Assertions.assertTrue(members.isEmpty());
+    }
+
+    @Test
+    void addAcspMemberSuccessWhenPreviouslyRemovedMember() throws Exception {
+      String previouslyRemovedUserId = "previouslyRemovedUser";
+      User previouslyRemovedUser = new User();
+      previouslyRemovedUser.setUserId(previouslyRemovedUserId);
+      previouslyRemovedUser.setEmail("removed@example.com");
+      previouslyRemovedUser.setDisplayName("Previously Removed User");
+      when(usersService.fetchUserDetails(previouslyRemovedUserId))
+          .thenReturn(previouslyRemovedUser);
+      when(usersService.doesUserExist(previouslyRemovedUserId)).thenReturn(true);
+
+      AcspMembersDao removedMembership = new AcspMembersDao();
+      removedMembership.setUserId(previouslyRemovedUserId);
+      removedMembership.setAcspNumber("ACSP001");
+      removedMembership.setUserRole(UserRoleEnum.STANDARD);
+      removedMembership.setCreatedAt(now.minusDays(10));
+      removedMembership.setAddedAt(now.minusDays(10));
+      removedMembership.setAddedBy("admin1");
+      removedMembership.setRemovedAt(now.minusDays(1));
+      removedMembership.setRemovedBy("admin2");
+      removedMembership.setEtag(generateEtag());
+      acspMembersRepository.save(removedMembership);
+
+      mockMvc
+          .perform(
+              post("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", adminUserId)
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(
+                      String.format(
+                          "{\"user_id\":\"%s\",\"acsp_number\":\"ACSP001\",\"user_role\":\"standard\"}",
+                          previouslyRemovedUserId)))
+          .andExpect(status().isCreated())
+          .andExpect(jsonPath("$.acsp_membership_id").exists());
+
+      List<AcspMembersDao> members =
+          acspMembersRepository.findByUserIdAndAcspNumber(previouslyRemovedUserId, "ACSP001");
+      Assertions.assertEquals(2, members.size());
+      Assertions.assertTrue(members.stream().anyMatch(m -> m.getRemovedAt() == null));
+    }
+
+    @Test
+    void addAcspMemberBadRequestWhenInviteeAlreadyActiveMember() throws Exception {
+      mockMvc
+          .perform(
+              post("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", adminUserId)
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(
+                      String.format(
+                          "{\"user_id\":\"%s\",\"acsp_number\":\"ACSP001\",\"user_role\":\"standard\"}",
+                          userId)))
+          .andExpect(status().isBadRequest());
+
+      List<AcspMembersDao> members =
+          acspMembersRepository.findByUserIdAndAcspNumber(userId, "ACSP001");
+      Assertions.assertEquals(1, members.size());
+      Assertions.assertNull(members.get(0).getRemovedAt());
+    }
+
+    @Test
+    void addAcspMemberSuccessWhenInviteeHasRemovedMembershipInDifferentAcsp() throws Exception {
+      String newUserId = "userWithRemovedMembership";
+      User newUser = new User();
+      newUser.setUserId(newUserId);
+      newUser.setEmail("removed@example.com");
+      newUser.setDisplayName("User With Removed Membership");
+      when(usersService.fetchUserDetails(newUserId)).thenReturn(newUser);
+      when(usersService.doesUserExist(newUserId)).thenReturn(true);
+
+      AcspMembersDao removedMembership = new AcspMembersDao();
+      removedMembership.setUserId(newUserId);
+      removedMembership.setAcspNumber("ACSP002");
+      removedMembership.setUserRole(UserRoleEnum.STANDARD);
+      removedMembership.setCreatedAt(now.minusDays(10));
+      removedMembership.setAddedAt(now.minusDays(10));
+      removedMembership.setAddedBy("admin1");
+      removedMembership.setRemovedAt(now.minusDays(1));
+      removedMembership.setRemovedBy("admin2");
+      removedMembership.setEtag(generateEtag());
+      acspMembersRepository.save(removedMembership);
+
+      mockMvc
+          .perform(
+              post("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", adminUserId)
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(
+                      String.format(
+                          "{\"user_id\":\"%s\",\"acsp_number\":\"ACSP001\",\"user_role\":\"standard\"}",
+                          newUserId)))
+          .andExpect(status().isCreated())
+          .andExpect(jsonPath("$.acsp_membership_id").exists());
+
+      List<AcspMembersDao> members =
+          acspMembersRepository.findByUserIdAndAcspNumber(newUserId, "ACSP001");
+      Assertions.assertEquals(1, members.size());
+      Assertions.assertNull(members.get(0).getRemovedAt());
     }
   }
 

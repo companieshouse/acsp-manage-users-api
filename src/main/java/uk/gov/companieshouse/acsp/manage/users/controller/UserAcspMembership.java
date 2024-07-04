@@ -44,7 +44,7 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
       final String requestingUserId,
       final RequestBodyPost requestBodyPost) {
     Optional<AcspMembersDao> requestingUserMembership =
-        acspMembersService.fetchAcspMemberByUserIdAndAcspNumber(
+        acspMembersService.fetchActiveAcspMemberByUserIdAndAcspNumber(
             requestingUserId, requestBodyPost.getAcspNumber());
     if (requestingUserMembership.isEmpty()) {
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -57,7 +57,7 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
-    if (acspMembersService.fetchAcspMember(inviteeUserId).isPresent()) {
+    if (acspMembersService.fetchActiveAcspMember(inviteeUserId).isPresent()) {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 

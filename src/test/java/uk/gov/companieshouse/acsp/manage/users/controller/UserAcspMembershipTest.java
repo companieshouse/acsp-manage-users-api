@@ -276,9 +276,10 @@ class UserAcspMembershipTest {
       AcspMembersDao addedMember =
           createMemberDao(NEW_USER_ID, AcspMembership.UserRoleEnum.STANDARD);
 
-      when(acspMembersService.fetchAcspMemberByUserIdAndAcspNumber(ADMIN_USER_ID, ACSP_NUMBER))
+      when(acspMembersService.fetchActiveAcspMemberByUserIdAndAcspNumber(
+              ADMIN_USER_ID, ACSP_NUMBER))
           .thenReturn(Optional.of(adminMember));
-      when(acspMembersService.fetchAcspMember(NEW_USER_ID)).thenReturn(Optional.empty());
+      when(acspMembersService.fetchActiveAcspMember(NEW_USER_ID)).thenReturn(Optional.empty());
       when(acspMembersService.addAcspMember(requestBodyPost, NEW_USER_ID)).thenReturn(addedMember);
 
       mockMvc
@@ -310,9 +311,10 @@ class UserAcspMembershipTest {
           createMemberDao(OWNER_USER_ID, AcspMembership.UserRoleEnum.OWNER);
       AcspMembersDao addedMember = createMemberDao(NEW_USER_ID, AcspMembership.UserRoleEnum.ADMIN);
 
-      when(acspMembersService.fetchAcspMemberByUserIdAndAcspNumber(OWNER_USER_ID, ACSP_NUMBER))
+      when(acspMembersService.fetchActiveAcspMemberByUserIdAndAcspNumber(
+              OWNER_USER_ID, ACSP_NUMBER))
           .thenReturn(Optional.of(ownerMember));
-      when(acspMembersService.fetchAcspMember(NEW_USER_ID)).thenReturn(Optional.empty());
+      when(acspMembersService.fetchActiveAcspMember(NEW_USER_ID)).thenReturn(Optional.empty());
       when(acspMembersService.addAcspMember(requestBodyPost, NEW_USER_ID)).thenReturn(addedMember);
 
       mockMvc
@@ -340,7 +342,8 @@ class UserAcspMembershipTest {
               .acspNumber(ACSP_NUMBER)
               .userRole(RequestBodyPost.UserRoleEnum.STANDARD);
 
-      when(acspMembersService.fetchAcspMemberByUserIdAndAcspNumber(ADMIN_USER_ID, ACSP_NUMBER))
+      when(acspMembersService.fetchActiveAcspMemberByUserIdAndAcspNumber(
+              ADMIN_USER_ID, ACSP_NUMBER))
           .thenReturn(Optional.empty());
 
       mockMvc
@@ -370,7 +373,8 @@ class UserAcspMembershipTest {
       AcspMembersDao adminMember =
           createMemberDao(ADMIN_USER_ID, AcspMembership.UserRoleEnum.ADMIN);
 
-      when(acspMembersService.fetchAcspMemberByUserIdAndAcspNumber(ADMIN_USER_ID, ACSP_NUMBER))
+      when(acspMembersService.fetchActiveAcspMemberByUserIdAndAcspNumber(
+              ADMIN_USER_ID, ACSP_NUMBER))
           .thenReturn(Optional.of(adminMember));
       when(usersService.doesUserExist(NEW_USER_ID)).thenReturn(false);
 
@@ -403,10 +407,12 @@ class UserAcspMembershipTest {
       AcspMembersDao existingMember =
           createMemberDao(NEW_USER_ID, AcspMembership.UserRoleEnum.STANDARD);
 
-      when(acspMembersService.fetchAcspMemberByUserIdAndAcspNumber(ADMIN_USER_ID, ACSP_NUMBER))
+      when(acspMembersService.fetchActiveAcspMemberByUserIdAndAcspNumber(
+              ADMIN_USER_ID, ACSP_NUMBER))
           .thenReturn(Optional.of(adminMember));
       when(usersService.doesUserExist(NEW_USER_ID)).thenReturn(true);
-      when(acspMembersService.fetchAcspMember(NEW_USER_ID)).thenReturn(Optional.of(existingMember));
+      when(acspMembersService.fetchActiveAcspMember(NEW_USER_ID))
+          .thenReturn(Optional.of(existingMember));
 
       mockMvc
           .perform(
@@ -435,10 +441,11 @@ class UserAcspMembershipTest {
       AcspMembersDao standardMember =
           createMemberDao(STANDARD_USER_ID, AcspMembership.UserRoleEnum.STANDARD);
 
-      when(acspMembersService.fetchAcspMemberByUserIdAndAcspNumber(STANDARD_USER_ID, ACSP_NUMBER))
+      when(acspMembersService.fetchActiveAcspMemberByUserIdAndAcspNumber(
+              STANDARD_USER_ID, ACSP_NUMBER))
           .thenReturn(Optional.of(standardMember));
       when(usersService.doesUserExist(NEW_USER_ID)).thenReturn(true);
-      when(acspMembersService.fetchAcspMember(NEW_USER_ID)).thenReturn(Optional.empty());
+      when(acspMembersService.fetchActiveAcspMember(NEW_USER_ID)).thenReturn(Optional.empty());
 
       mockMvc
           .perform(
@@ -467,10 +474,11 @@ class UserAcspMembershipTest {
       AcspMembersDao adminMember =
           createMemberDao(ADMIN_USER_ID, AcspMembership.UserRoleEnum.ADMIN);
 
-      when(acspMembersService.fetchAcspMemberByUserIdAndAcspNumber(ADMIN_USER_ID, ACSP_NUMBER))
+      when(acspMembersService.fetchActiveAcspMemberByUserIdAndAcspNumber(
+              ADMIN_USER_ID, ACSP_NUMBER))
           .thenReturn(Optional.of(adminMember));
       when(usersService.doesUserExist(NEW_USER_ID)).thenReturn(true);
-      when(acspMembersService.fetchAcspMember(NEW_USER_ID)).thenReturn(Optional.empty());
+      when(acspMembersService.fetchActiveAcspMember(NEW_USER_ID)).thenReturn(Optional.empty());
 
       mockMvc
           .perform(
@@ -486,6 +494,107 @@ class UserAcspMembershipTest {
           .andExpect(status().isForbidden());
 
       verify(acspMembersService, never()).addAcspMember(eq(requestBodyPost), eq(NEW_USER_ID));
+    }
+
+    @Test
+    void testAddAcspMemberForbiddenWhenRequestingUserNotActiveMember() throws Exception {
+      RequestBodyPost requestBodyPost =
+          new RequestBodyPost()
+              .userId(NEW_USER_ID)
+              .acspNumber(ACSP_NUMBER)
+              .userRole(RequestBodyPost.UserRoleEnum.STANDARD);
+
+      when(acspMembersService.fetchActiveAcspMemberByUserIdAndAcspNumber(
+              ADMIN_USER_ID, ACSP_NUMBER))
+          .thenReturn(Optional.empty());
+
+      mockMvc
+          .perform(
+              post("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", ADMIN_USER_ID)
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(
+                      String.format(
+                          "{\"user_id\":\"%s\",\"acsp_number\":\"%s\",\"user_role\":\"standard\"}",
+                          NEW_USER_ID, ACSP_NUMBER)))
+          .andExpect(status().isForbidden());
+
+      verify(acspMembersService, never()).addAcspMember(eq(requestBodyPost), eq(NEW_USER_ID));
+    }
+
+    @Test
+    void testAddAcspMemberBadRequestWhenInviteeAlreadyActiveMember() throws Exception {
+      RequestBodyPost requestBodyPost =
+          new RequestBodyPost()
+              .userId(NEW_USER_ID)
+              .acspNumber(ACSP_NUMBER)
+              .userRole(RequestBodyPost.UserRoleEnum.STANDARD);
+
+      AcspMembersDao adminMember =
+          createMemberDao(ADMIN_USER_ID, AcspMembership.UserRoleEnum.ADMIN);
+      AcspMembersDao existingMember =
+          createMemberDao(NEW_USER_ID, AcspMembership.UserRoleEnum.STANDARD);
+
+      when(acspMembersService.fetchActiveAcspMemberByUserIdAndAcspNumber(
+              ADMIN_USER_ID, ACSP_NUMBER))
+          .thenReturn(Optional.of(adminMember));
+      when(usersService.doesUserExist(NEW_USER_ID)).thenReturn(true);
+      when(acspMembersService.fetchActiveAcspMember(NEW_USER_ID))
+          .thenReturn(Optional.of(existingMember));
+
+      mockMvc
+          .perform(
+              post("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", ADMIN_USER_ID)
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(
+                      String.format(
+                          "{\"user_id\":\"%s\",\"acsp_number\":\"%s\",\"user_role\":\"standard\"}",
+                          NEW_USER_ID, ACSP_NUMBER)))
+          .andExpect(status().isBadRequest());
+
+      verify(acspMembersService, never()).addAcspMember(eq(requestBodyPost), eq(NEW_USER_ID));
+    }
+
+    @Test
+    void testAddAcspMemberSuccessWhenInviteeHasInactiveMembership() throws Exception {
+      RequestBodyPost requestBodyPost =
+          new RequestBodyPost()
+              .userId(NEW_USER_ID)
+              .acspNumber(ACSP_NUMBER)
+              .userRole(RequestBodyPost.UserRoleEnum.STANDARD);
+
+      AcspMembersDao adminMember =
+          createMemberDao(ADMIN_USER_ID, AcspMembership.UserRoleEnum.ADMIN);
+      AcspMembersDao addedMember =
+          createMemberDao(NEW_USER_ID, AcspMembership.UserRoleEnum.STANDARD);
+
+      when(acspMembersService.fetchActiveAcspMemberByUserIdAndAcspNumber(
+              ADMIN_USER_ID, ACSP_NUMBER))
+          .thenReturn(Optional.of(adminMember));
+      when(usersService.doesUserExist(NEW_USER_ID)).thenReturn(true);
+      when(acspMembersService.fetchActiveAcspMember(NEW_USER_ID)).thenReturn(Optional.empty());
+      when(acspMembersService.addAcspMember(requestBodyPost, NEW_USER_ID)).thenReturn(addedMember);
+
+      mockMvc
+          .perform(
+              post("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", ADMIN_USER_ID)
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(
+                      String.format(
+                          "{\"user_id\":\"%s\",\"acsp_number\":\"%s\",\"user_role\":\"standard\"}",
+                          NEW_USER_ID, ACSP_NUMBER)))
+          .andExpect(status().isCreated())
+          .andExpect(jsonPath("$.acsp_membership_id").value(addedMember.getId()));
+
+      verify(acspMembersService).addAcspMember(requestBodyPost, NEW_USER_ID);
     }
 
     private AcspMembersDao createMemberDao(String userId, AcspMembership.UserRoleEnum userRole) {
