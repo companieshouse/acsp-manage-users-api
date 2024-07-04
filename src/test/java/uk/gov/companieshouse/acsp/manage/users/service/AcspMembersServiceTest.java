@@ -44,7 +44,7 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 
 @ExtendWith(MockitoExtension.class)
 @Tag("unit-test")
-public class AcspMembersServiceTest {
+class AcspMembersServiceTest {
 
     private final TestDataManager testDataManager = TestDataManager.getInstance();
 
@@ -187,9 +187,14 @@ public class AcspMembersServiceTest {
     }
 
     @Test
-    void fetchAcspMembersWithNullAcspDataOrAcspNumberThrowsNullPointerException(){
+    void fetchAcspMembersWithNullAcspDataThrowsNullPointerException(){
         Assertions.assertThrows( NullPointerException.class, () -> acspMembersService.fetchAcspMembers( null, true, null, null, 0, 20 ) );
-        Assertions.assertThrows( NullPointerException.class, () -> acspMembersService.fetchAcspMembers( new AcspDataDao(), true, null, null, 0, 20 ) );
+    }
+
+    @Test
+    void fetchAcspMembersWithNullAcspNumberThrowsIllegalArgumentException(){
+        final var acspDataDao = new AcspDataDao();
+        Assertions.assertThrows( IllegalArgumentException.class, () -> acspMembersService.fetchAcspMembers( acspDataDao, true, null, null, 0, 20 ) );
     }
 
     @Test

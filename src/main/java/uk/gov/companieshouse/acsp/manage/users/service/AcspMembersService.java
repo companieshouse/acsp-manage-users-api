@@ -59,7 +59,7 @@ public class AcspMembersService {
         final var acspNumber = acspData.getId();
 
         if ( Objects.isNull( acspNumber ) ){
-            throw new NullPointerException( "acspNumber is null." );
+            throw new IllegalArgumentException( "acspNumber is null." );
         }
 
         final var userRoles = Objects.nonNull( role ) ? Set.of( UserRoleEnum.fromValue( role ) ) : Set.of( UserRoleEnum.OWNER, UserRoleEnum.ADMIN, UserRoleEnum.STANDARD );

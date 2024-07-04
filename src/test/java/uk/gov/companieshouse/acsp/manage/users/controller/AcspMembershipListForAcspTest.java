@@ -27,7 +27,7 @@ import uk.gov.companieshouse.api.accounts.user.model.UsersList;
 
 @WebMvcTest(AcspMembershipListForAcsp.class)
 @Tag("unit-test")
-public class AcspMembershipListForAcspTest {
+class AcspMembershipListForAcspTest {
 
     @Autowired
     private MockMvc mockMvc;

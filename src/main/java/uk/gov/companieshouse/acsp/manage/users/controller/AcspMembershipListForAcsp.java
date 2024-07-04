@@ -42,7 +42,7 @@ public class AcspMembershipListForAcsp implements AcspMembershipListForAcspInter
 
         LOG.infoContext( xRequestId, String.format( "Attempting to fetch members for Acsp %s", acspNumber ), null );
 
-        final var roleIsValid =
+        final boolean roleIsValid =
         Optional.ofNullable( role )
                 .map( theRole -> Arrays.stream( UserRoleEnum.values() )
                         .map( UserRoleEnum::getValue )

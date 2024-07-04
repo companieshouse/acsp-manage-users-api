@@ -44,7 +44,7 @@ import uk.gov.companieshouse.api.sdk.ApiClientService;
 @Testcontainers
 @ExtendWith(MockitoExtension.class)
 @Tag("integration-test")
-public class AcspMembershipListForAcspTest {
+class AcspMembershipListForAcspTest {
 
     @Container
     @ServiceConnection
