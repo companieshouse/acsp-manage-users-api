@@ -1,21 +1,26 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -25,6 +30,7 @@ import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRun
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipListMapper;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspMembershipService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.accounts.user.model.User;
@@ -35,12 +41,10 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPost;
 @Tag("unit-test")
 class UserAcspMembershipTest {
 
+  @MockBean private AcspMembershipService acspMembershipService;
   @Autowired private MockMvc mockMvc;
-
   @MockBean private AcspMembershipListMapper acspMembershipListMapper;
-
   @MockBean private AcspMembersService acspMembersService;
-
   @MockBean private UsersService usersService;
 
   @MockBean private StaticPropertyUtil staticPropertyUtil;
@@ -53,6 +57,7 @@ class UserAcspMembershipTest {
     private AcspMembersDao removedMember;
     private AcspMembership activeMembership;
     private AcspMembership removedMembership;
+    private AcspMembership acspMembership1;
 
     @BeforeEach
     void setUp() {
@@ -92,6 +97,13 @@ class UserAcspMembershipTest {
       removedMembership.setAddedAt(OffsetDateTime.now().minusDays(60));
       removedMembership.setRemovedBy("removedBy1");
       removedMembership.setRemovedAt(OffsetDateTime.now().minusDays(10));
+
+      acspMembership1 = new AcspMembership();
+      acspMembership1.setId("acsp1");
+      acspMembership1.setAcspNumber("ACSP123");
+      acspMembership1.setUserId("existingUser");
+      acspMembership1.setUserRole(AcspMembership.UserRoleEnum.ADMIN);
+      acspMembership1.setAddedAt(OffsetDateTime.now().minusDays(30));
     }
 
     @Test
@@ -246,6 +258,79 @@ class UserAcspMembershipTest {
                   .header("ERIC-Identity-Type", "oauth2")
                   .contentType(MediaType.APPLICATION_JSON))
           .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void getAcspMembershipForAcspIdTestShouldThrow400ErrorRequestWhenRequestIdNotProvided()
+        throws Exception {
+      var response =
+          mockMvc
+              .perform(
+                  get("/acsp-members/{id}", "acsp1")
+                      .header("ERIC-Identity", "existingUser")
+                      .header("ERIC-Identity-Type", "oauth2"))
+              .andReturn();
+      assertEquals(400, response.getResponse().getStatus());
+    }
+
+    @Test
+    void getAcspMembershipForAcspIdTestShouldThrow404ErrorRequestWhenRequestIdMalformed()
+        throws Exception {
+      var response =
+          mockMvc
+              .perform(
+                  get("/acsp-members/{id}", "acsp1")
+                      .header("X-Request-Id", "&&&&")
+                      .header("ERIC-Identity", "existingUser")
+                      .header("ERIC-Identity-Type", "oauth2"))
+              .andReturn();
+      assertEquals(404, response.getResponse().getStatus());
+    }
+
+    @Test
+    void getAcspMembershipForExistingMemberIdShouldReturnData() throws Exception {
+      Mockito.doReturn(Optional.of(acspMembership1))
+          .when(acspMembershipService)
+          .fetchAcspMembership("acsp1");
+
+      final var responseJson =
+          mockMvc
+              .perform(
+                  get("/acsp-members/{id}", "acsp1")
+                      .header("X-Request-Id", "theId")
+                      .header("ERIC-Identity", "existingUser")
+                      .header("ERIC-Identity-Type", "oauth2")
+                      .contentType(MediaType.APPLICATION_JSON))
+              .andExpect(status().isOk())
+              .andReturn()
+              .getResponse();
+
+      final var objectMapper = new ObjectMapper();
+      objectMapper.registerModule(new JavaTimeModule());
+      final var response =
+          objectMapper.readValue(responseJson.getContentAsByteArray(), AcspMembership.class);
+
+      Assertions.assertEquals("acsp1", response.getId());
+    }
+
+    @Test
+    void getAcspMembershipForNonExistingMemberIdShouldNotReturnData() throws Exception {
+
+      Mockito.doReturn(Optional.of(acspMembership1))
+          .when(acspMembershipService)
+          .fetchAcspMembership("acsp3");
+
+      final var responseJson =
+          mockMvc
+              .perform(
+                  get("/acsp-members/{id}", "acsp2")
+                      .header("X-Request-Id", "theId")
+                      .header("ERIC-Identity", "existingUser")
+                      .header("ERIC-Identity-Type", "oauth2")
+                      .contentType(MediaType.APPLICATION_JSON))
+              .andExpect(status().isNotFound())
+              .andReturn()
+              .getResponse();
     }
   }
 

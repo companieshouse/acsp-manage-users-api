@@ -6,6 +6,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static uk.gov.companieshouse.GenerateEtagUtil.generateEtag;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.*;
@@ -28,6 +30,7 @@ import uk.gov.companieshouse.acsp.manage.users.repositories.AcspDataRepository;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.api.accounts.user.model.User;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 
 @AutoConfigureMockMvc
@@ -41,13 +44,9 @@ class UserAcspMembershipIntegrationTest {
   static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:5");
 
   @Autowired MongoTemplate mongoTemplate;
-
   @Autowired MockMvc mockMvc;
-
   @Autowired AcspMembersRepository acspMembersRepository;
-
   @Autowired AcspDataRepository acspDataRepository;
-
   @MockBean UsersService usersService;
 
   private final LocalDateTime now = LocalDateTime.now();
@@ -62,6 +61,12 @@ class UserAcspMembershipIntegrationTest {
     user.setEmail("standardUser@example.com");
     user.setDisplayName("Test User");
     when(usersService.fetchUserDetails(userId)).thenReturn(user);
+
+    User user123 = new User();
+    user123.setUserId("user123");
+    user123.setEmail("user123@test.com");
+    user123.setDisplayName("Test User");
+    when(usersService.fetchUserDetails("user123")).thenReturn(user123);
 
     User adminUser = new User();
     adminUser.setUserId(adminUserId);
@@ -79,6 +84,7 @@ class UserAcspMembershipIntegrationTest {
   }
 
   private void setupTestData() {
+
     AcspMembersDao activeMembership = new AcspMembersDao();
     activeMembership.setId("1");
     activeMembership.setUserId(userId);
@@ -124,6 +130,23 @@ class UserAcspMembershipIntegrationTest {
     acspMembersRepository.saveAll(
         List.of(activeMembership, removedMembership, adminMembership, ownerMembership));
 
+    AcspMembersDao acspMembersDao = new AcspMembersDao();
+    acspMembersDao.setId("acsp1");
+    acspMembersDao.setUserId("user123");
+    acspMembersDao.setAcspNumber("ACSP123");
+    acspMembersDao.setUserRole(AcspMembership.UserRoleEnum.ADMIN);
+    acspMembersDao.setCreatedAt(now.minusDays(10));
+    acspMembersDao.setAddedAt(now.minusDays(10));
+    acspMembersDao.setAddedBy("admin1");
+    acspMembersDao.setEtag("etag");
+
+    AcspDataDao acspData3 = new AcspDataDao();
+    acspData3.setId("ACSP123");
+    acspData3.setAcspName("ACSP123");
+    acspData3.setAcspStatus("active");
+
+    acspMembersRepository.saveAll(List.of(activeMembership, removedMembership, acspMembersDao));
+
     AcspDataDao acspData1 = new AcspDataDao();
     acspData1.setId("ACSP001");
     acspData1.setAcspName("ACSP 1 Ltd");
@@ -134,7 +157,7 @@ class UserAcspMembershipIntegrationTest {
     acspData2.setAcspName("ACSP 2 Ltd");
     acspData2.setAcspStatus("suspended");
 
-    acspDataRepository.saveAll(List.of(acspData1, acspData2));
+    acspDataRepository.saveAll(List.of(acspData1, acspData2, acspData3));
   }
 
   @Nested
@@ -234,6 +257,72 @@ class UserAcspMembershipIntegrationTest {
                   .header("ERIC-Identity-Type", "oauth2")
                   .header("ERIC-Identity", userId))
           .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getAcspMembershipForAcspIdWithoutXRequestIdReturnsBadRequest() throws Exception {
+      mockMvc
+          .perform(
+              get("/acsp-members")
+                  .header("ERIC-Identity", "user1")
+                  .header("ERIC-Identity-Type", "oauth2"))
+          .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getAcspMembershipForMalformedMembershipIdReturnsBadRequest() throws Exception {
+      final var response =
+          mockMvc
+              .perform(
+                  get("/acsp-members/{id}", "$$$")
+                      .header("X-Request-Id", "theId123")
+                      .header("ERIC-Identity", "user123")
+                      .header("ERIC-Identity-Type", "oauth2"))
+              .andExpect(status().isBadRequest())
+              .andReturn()
+              .getResponse();
+    }
+
+    @Test
+    void getAcspMembershipForAcspIdWithoutRequiredHeadersReturnsBadRequest() throws Exception {
+      mockMvc.perform(get("/acsp-members")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getAcspMembershipForExistingMembershipIdShouldReturnData() throws Exception {
+      final var response =
+          mockMvc
+              .perform(
+                  get("/acsp-members/{id}", "acsp1")
+                      .header("X-Request-Id", "theId123")
+                      .header("ERIC-Identity", "user123")
+                      .header("ERIC-Identity-Type", "oauth2"))
+              .andExpect(status().isOk())
+              .andReturn()
+              .getResponse();
+
+      final var objectMapper = new ObjectMapper();
+      objectMapper.registerModule(new JavaTimeModule());
+      final var responseMembership =
+          objectMapper.readValue(response.getContentAsByteArray(), AcspMembership.class);
+
+      Assertions.assertEquals("acsp1", responseMembership.getId());
+      Assertions.assertEquals("user123", responseMembership.getUserId());
+      Assertions.assertEquals("ACSP123", responseMembership.getAcspNumber());
+      Assertions.assertEquals("admin1", responseMembership.getAddedBy());
+    }
+
+    @Test
+    void getAcspMembershipForNonExistingMembershipIdShouldReturnNotFound() throws Exception {
+      mockMvc
+          .perform(
+              get("/acsp-members/{id}", "acsp2")
+                  .header("X-Request-Id", "theId123")
+                  .header("ERIC-Identity", "user123")
+                  .header("ERIC-Identity-Type", "oauth2"))
+          .andExpect(status().isNotFound())
+          .andReturn()
+          .getResponse();
     }
   }
 
