@@ -33,8 +33,8 @@ public interface AcspMembersRepository extends MongoRepository<AcspMembersDao, S
   @Query(value = "{ 'user_id': ?0 }")
   List<AcspMembersDao> fetchAllAcspMembersByUserId(final String userId);
 
-    @Query(value = "{ 'user_id': ?0, 'removed_by': { $exists: false } }")
-    List<AcspMembersDao> fetchActiveAcspMembersByUserId(final String userId);
+  @Query(value = "{ 'user_id': ?0, 'removed_by': { $exists: false } }")
+  List<AcspMembersDao> fetchActiveAcspMembersByUserId(final String userId);
 
   @Query(value = "{ 'user_id': ?0, 'removed_by': { $exists: false } }")
   Optional<AcspMembersDao> fetchActiveAcspMemberByUserId(final String userId);

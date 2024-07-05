@@ -109,11 +109,11 @@ public class AcspMembersService {
       final String role,
       final int pageIndex,
       final int itemsPerPage) {
-        final var acspNumber = acspData.getId();
+    final var acspNumber = acspData.getId();
 
     if (Objects.isNull(acspNumber)) {
       throw new IllegalArgumentException("acspNumber is null.");
-        }
+    }
 
     final var userRoles =
         Objects.nonNull(role)
@@ -122,19 +122,19 @@ public class AcspMembersService {
     final var userIdRegex = Optional.ofNullable(userId).orElse("");
     final var pageable = PageRequest.of(pageIndex, itemsPerPage);
 
-        Page<AcspMembersDao> acspMembers;
+    Page<AcspMembersDao> acspMembers;
     if (includeRemoved) {
       acspMembers =
           acspMembersRepository.findAllByAcspNumberUserRolesAndUserIdLike(
               acspNumber, userRoles, userIdRegex, pageable);
-        } else {
+    } else {
       acspMembers =
           acspMembersRepository.findAllByAcspNumberUserRolesAndUserIdLike(
               acspNumber, userRoles, userIdRegex, null, pageable);
-        }
+    }
 
     return acspMembersMapper.daoToDto(acspMembers, acspData);
-    }
+  }
 
   public AcspMembersDao createAcspMembersWithOwnerRole(String acspNumber, String userId) {
     if (Objects.isNull(acspNumber)) {
