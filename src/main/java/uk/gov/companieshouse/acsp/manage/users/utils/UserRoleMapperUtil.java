@@ -28,11 +28,6 @@ public class UserRoleMapperUtil {
         RequestBodyPost.UserRoleEnum.STANDARD, AcspMembership.UserRoleEnum.STANDARD);
   }
 
-  public static RequestBodyPost.UserRoleEnum mapToUserRoleEnum(
-      AcspMembership.UserRoleEnum acspUserRole) {
-    return acspToRequestBodyMap.get(acspUserRole);
-  }
-
   public static AcspMembership.UserRoleEnum mapToUserRoleEnum(
       RequestBodyPost.UserRoleEnum requestBodyPostUserRole) {
     return requestBodyToAcspMap.get(requestBodyPostUserRole);

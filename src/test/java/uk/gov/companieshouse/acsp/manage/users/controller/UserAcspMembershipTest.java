@@ -28,7 +28,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipListMapper;
+import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembershipService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
@@ -44,6 +46,7 @@ class UserAcspMembershipTest {
   @MockBean private AcspMembershipService acspMembershipService;
   @Autowired private MockMvc mockMvc;
   @MockBean private AcspMembershipListMapper acspMembershipListMapper;
+  @MockBean private AcspDataService acspDataService;
   @MockBean private AcspMembersService acspMembersService;
   @MockBean private UsersService usersService;
 
@@ -346,6 +349,50 @@ class UserAcspMembershipTest {
     @BeforeEach
     void setUp() {
       when(usersService.doesUserExist(NEW_USER_ID)).thenReturn(true);
+      var acspData = new AcspDataDao();
+      acspData.setId(ACSP_NUMBER);
+      acspData.setAcspName("ACSP");
+      acspData.setAcspStatus("active");
+      when(acspDataService.fetchAcspData(ACSP_NUMBER)).thenReturn(acspData);
+    }
+
+    @Test
+    void testAddAcspMemberForbiddenWhenAcspIsDeauthorised() throws Exception {
+      RequestBodyPost requestBodyPost =
+          new RequestBodyPost()
+              .userId(NEW_USER_ID)
+              .acspNumber(ACSP_NUMBER)
+              .userRole(RequestBodyPost.UserRoleEnum.STANDARD);
+
+      AcspMembersDao adminMember =
+          createMemberDao(ADMIN_USER_ID, AcspMembership.UserRoleEnum.ADMIN);
+
+      when(acspMembersService.fetchActiveAcspMemberByUserIdAndAcspNumber(
+              ADMIN_USER_ID, ACSP_NUMBER))
+          .thenReturn(Optional.of(adminMember));
+      when(usersService.doesUserExist(NEW_USER_ID)).thenReturn(true);
+      when(acspMembersService.fetchActiveAcspMember(NEW_USER_ID)).thenReturn(Optional.empty());
+
+      AcspDataDao deauthorisedAcspData = new AcspDataDao();
+      deauthorisedAcspData.setId(ACSP_NUMBER);
+      deauthorisedAcspData.setAcspName("ACSP");
+      deauthorisedAcspData.setAcspStatus("deauthorised");
+      when(acspDataService.fetchAcspData(ACSP_NUMBER)).thenReturn(deauthorisedAcspData);
+
+      mockMvc
+          .perform(
+              post("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", ADMIN_USER_ID)
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(
+                      String.format(
+                          "{\"user_id\":\"%s\",\"acsp_number\":\"%s\",\"user_role\":\"standard\"}",
+                          NEW_USER_ID, ACSP_NUMBER)))
+          .andExpect(status().isForbidden());
+
+      verify(acspMembersService, never()).addAcspMember(requestBodyPost, NEW_USER_ID);
     }
 
     @Test

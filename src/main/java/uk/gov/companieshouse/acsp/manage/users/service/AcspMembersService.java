@@ -86,8 +86,6 @@ public class AcspMembersService {
     newMembership.setCreatedAt(now);
     newMembership.setAddedAt(now);
     newMembership.setAddedBy(addedByUserId);
-    newMembership.setRemovedBy(null);
-    newMembership.setRemovedAt(null);
     newMembership.setEtag(generateEtag());
     return acspMembersRepository.insert(newMembership);
   }

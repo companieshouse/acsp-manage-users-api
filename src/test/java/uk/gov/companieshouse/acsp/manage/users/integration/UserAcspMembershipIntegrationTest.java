@@ -140,24 +140,29 @@ class UserAcspMembershipIntegrationTest {
     acspMembersDao.setAddedBy("admin1");
     acspMembersDao.setEtag("etag");
 
-    AcspDataDao acspData3 = new AcspDataDao();
-    acspData3.setId("ACSP123");
-    acspData3.setAcspName("ACSP123");
-    acspData3.setAcspStatus("active");
-
     acspMembersRepository.saveAll(List.of(activeMembership, removedMembership, acspMembersDao));
 
-    AcspDataDao acspData1 = new AcspDataDao();
-    acspData1.setId("ACSP001");
-    acspData1.setAcspName("ACSP 1 Ltd");
-    acspData1.setAcspStatus("active");
+    AcspDataDao acspData = new AcspDataDao();
+    acspData.setId("ACSP123");
+    acspData.setAcspName("ACSP123");
+    acspData.setAcspStatus("active");
 
-    AcspDataDao acspData2 = new AcspDataDao();
-    acspData2.setId("ACSP002");
-    acspData2.setAcspName("ACSP 2 Ltd");
-    acspData2.setAcspStatus("suspended");
+    AcspDataDao activeAcsp = new AcspDataDao();
+    activeAcsp.setId("ACSP001");
+    activeAcsp.setAcspName("ACSP 1 Ltd");
+    activeAcsp.setAcspStatus("active");
 
-    acspDataRepository.saveAll(List.of(acspData1, acspData2, acspData3));
+    AcspDataDao suspendedAcsp = new AcspDataDao();
+    suspendedAcsp.setId("ACSP002");
+    suspendedAcsp.setAcspName("ACSP 2 Ltd");
+    suspendedAcsp.setAcspStatus("suspended");
+
+    AcspDataDao deauthorisedAcsp = new AcspDataDao();
+    deauthorisedAcsp.setId("ACSP003");
+    deauthorisedAcsp.setAcspName("ACSP 3 Ltd");
+    deauthorisedAcsp.setAcspStatus("deauthorised");
+
+    acspDataRepository.saveAll(List.of(acspData, activeAcsp, suspendedAcsp, deauthorisedAcsp));
   }
 
   @Nested
@@ -329,6 +334,44 @@ class UserAcspMembershipIntegrationTest {
   @Nested
   @DisplayName("POST /acsp-members Tests")
   class PostAcspMembershipTests {
+
+    @Test
+    void addAcspMemberForbiddenWhenAcspIsDeauthorised() throws Exception {
+      String newUserId = "newUser";
+      User newUser = new User();
+      newUser.setUserId(newUserId);
+      newUser.setEmail("newuser@example.com");
+      newUser.setDisplayName("New User");
+      when(usersService.fetchUserDetails(newUserId)).thenReturn(newUser);
+      when(usersService.doesUserExist(newUserId)).thenReturn(true);
+
+      AcspMembersDao adminMembership = new AcspMembersDao();
+      adminMembership.setUserId(adminUserId);
+      adminMembership.setAcspNumber("ACSP003");
+      adminMembership.setUserRole(UserRoleEnum.ADMIN);
+      adminMembership.setCreatedAt(now);
+      adminMembership.setAddedAt(now);
+      adminMembership.setAddedBy("system");
+      adminMembership.setEtag(generateEtag());
+      acspMembersRepository.save(adminMembership);
+
+      mockMvc
+          .perform(
+              post("/acsp-members")
+                  .header("X-Request-Id", "test-request-id")
+                  .header("ERIC-Identity", adminUserId)
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(
+                      String.format(
+                          "{\"user_id\":\"%s\",\"acsp_number\":\"ACSP002\",\"user_role\":\"standard\"}",
+                          newUserId)))
+          .andExpect(status().isForbidden());
+
+      List<AcspMembersDao> members =
+          acspMembersRepository.findByUserIdAndAcspNumber(newUserId, "ACSP003");
+      Assertions.assertTrue(members.isEmpty());
+    }
 
     @Test
     void addAcspMemberSuccessAdminAddsStandard() throws Exception {

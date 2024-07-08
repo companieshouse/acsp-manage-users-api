@@ -3,7 +3,9 @@ package uk.gov.companieshouse.acsp.manage.users.controller;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import org.springframework.http.HttpStatus;
@@ -13,6 +15,7 @@ import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeExcep
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembershipService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
@@ -34,14 +37,17 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
   private static final Logger LOG =
       LoggerFactory.getLogger(StaticPropertyUtil.APPLICATION_NAMESPACE);
   private final AcspMembersService acspMembersService;
+  private final AcspDataService acspDataService;
   private final AcspMembershipService acspMembershipService;
   private final UsersService usersService;
 
   public UserAcspMembership(
       final AcspMembersService acspMembersService,
+      final AcspDataService acspDataService,
       final AcspMembershipService acspMembershipService,
       final UsersService usersService) {
     this.acspMembersService = acspMembersService;
+    this.acspDataService = acspDataService;
     this.acspMembershipService = acspMembershipService;
     this.usersService = usersService;
   }
@@ -51,33 +57,104 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
       final String xRequestId,
       final String requestingUserId,
       final RequestBodyPost requestBodyPost) {
+    LOG.info(
+        String.format(
+            "Received request for POST `/acsp-members` with X-Request-Id: %s, requesting user ID: %s, and ACSP number: %s",
+            xRequestId, requestingUserId, requestBodyPost.getAcspNumber()));
+
+    var acspNumber = requestBodyPost.getAcspNumber();
     Optional<AcspMembersDao> requestingUserMembership =
-        acspMembersService.fetchActiveAcspMemberByUserIdAndAcspNumber(
-            requestingUserId, requestBodyPost.getAcspNumber());
+        acspMembersService.fetchActiveAcspMemberByUserIdAndAcspNumber(requestingUserId, acspNumber);
+
     if (requestingUserMembership.isEmpty()) {
+      LOG.infoContext(
+          xRequestId,
+          "Requesting user is not an active ACSP member",
+          new HashMap<>(Map.of("requestingUserId", requestingUserId, "acspNumber", acspNumber)));
+      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    var acspData = acspDataService.fetchAcspData(acspNumber);
+    if ("deauthorised".equals(acspData.getAcspStatus())) {
+      LOG.infoContext(
+          xRequestId,
+          "ACSP is current deauthorised, cannot add users",
+          new HashMap<>(Map.of("requestingUserId", requestingUserId, "acspNumber", acspNumber)));
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
     final var inviteeUserId = requestBodyPost.getUserId();
-    final var inviteeUserRole = UserRoleMapperUtil.mapToUserRoleEnum(requestBodyPost.getUserRole());
+    LOG.debugContext(
+        xRequestId,
+        "Checking if invitee user exists",
+        new HashMap<>(Map.of("inviteeUserId", inviteeUserId)));
 
     if (!usersService.doesUserExist(inviteeUserId)) {
+      LOG.infoContext(
+          xRequestId,
+          "Invitee user does not exist",
+          new HashMap<>(Map.of("inviteeUserId", inviteeUserId)));
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
+    LOG.debugContext(
+        xRequestId,
+        "Checking if invitee is already an active ACSP member",
+        new HashMap<>(Map.of("inviteeUserId", inviteeUserId)));
     if (acspMembersService.fetchActiveAcspMember(inviteeUserId).isPresent()) {
+      LOG.infoContext(
+          xRequestId,
+          "Invitee is already an active ACSP member",
+          new HashMap<>(Map.of("inviteeUserId", inviteeUserId)));
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
     final var requestingUserRole = requestingUserMembership.get().getUserRole();
-    if (!UserRoleMapperUtil.hasPermissionToAddUser(requestingUserRole, inviteeUserRole)) {
+    LOG.debugContext(
+        xRequestId,
+        "Checking if requesting user has permission to add user",
+        new HashMap<>(
+            Map.of(
+                "requestingUserRole",
+                requestingUserRole,
+                "requestedUserRole",
+                requestBodyPost.getUserRole())));
+
+    if (!UserRoleMapperUtil.hasPermissionToAddUser(
+        requestingUserRole, requestBodyPost.getUserRole())) {
+      LOG.infoContext(
+          xRequestId,
+          "Requesting user does not have permission to add user with specified role",
+          new HashMap<>(
+              Map.of(
+                  "requestingUserRole",
+                  requestingUserRole,
+                  "requestedUserRole",
+                  requestBodyPost.getUserRole())));
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
+    LOG.infoContext(
+        xRequestId,
+        "Adding new ACSP member",
+        new HashMap<>(
+            Map.of(
+                "inviteeUserId", inviteeUserId,
+                "acspNumber", requestBodyPost.getAcspNumber(),
+                "userRole", requestBodyPost.getUserRole())));
+
     final AcspMembersDao addedAcspMembership =
         acspMembersService.addAcspMember(requestBodyPost, inviteeUserId);
+
     var responseBodyPost = new ResponseBodyPost();
     responseBodyPost.setAcspMembershipId(addedAcspMembership.getId());
+
+    LOG.infoContext(
+        xRequestId,
+        "Successfully added new ACSP member",
+        new HashMap<>(
+            Map.of(
+                "acspMembershipId", addedAcspMembership.getId(), "inviteeUserId", inviteeUserId)));
 
     return new ResponseEntity<>(responseBodyPost, HttpStatus.CREATED);
   }
