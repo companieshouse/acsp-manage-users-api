@@ -77,17 +77,17 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
           "Requesting user is not an active ACSP member",
           new HashMap<>(
               Map.of(REQUESTING_USER_ID_KEY, requestingUserId, ACSP_NUMBER_KEY, acspNumber)));
-      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+      throw new BadRequestRuntimeException("Requesting user is not an active ACSP member");
     }
 
     var acspData = acspDataService.fetchAcspData(acspNumber);
     if ("deauthorised".equals(acspData.getAcspStatus())) {
       LOG.infoContext(
           xRequestId,
-          "ACSP is current deauthorised, cannot add users",
+          "ACSP is currently deauthorised, cannot add users",
           new HashMap<>(
               Map.of(REQUESTING_USER_ID_KEY, requestingUserId, ACSP_NUMBER_KEY, acspNumber)));
-      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+      throw new BadRequestRuntimeException("ACSP is currently deauthorised, cannot add users");
     }
 
     final var inviteeUserId = requestBodyPost.getUserId();
@@ -101,7 +101,8 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
           xRequestId,
           "Invitee user does not exist",
           new HashMap<>(Map.of(INVITEE_USER_ID_KEY, inviteeUserId)));
-      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+      throw new NotFoundRuntimeException(
+          StaticPropertyUtil.APPLICATION_NAMESPACE, "Invitee user does not exist");
     }
 
     LOG.debugContext(
@@ -113,7 +114,7 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
           xRequestId,
           "Invitee is already an active ACSP member",
           new HashMap<>(Map.of(INVITEE_USER_ID_KEY, inviteeUserId)));
-      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+      throw new BadRequestRuntimeException("Invitee is already an active ACSP member");
     }
 
     final var requestingUserRole = requestingUserMembership.get().getUserRole();
@@ -138,7 +139,8 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
                   requestingUserRole,
                   "requestedUserRole",
                   requestBodyPost.getUserRole())));
-      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+      throw new BadRequestRuntimeException(
+          "Requesting user does not have permission to add user with specified role");
     }
 
     LOG.infoContext(

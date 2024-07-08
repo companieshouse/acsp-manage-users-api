@@ -1,6 +1,8 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -26,7 +28,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
+import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipListMapper;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
@@ -49,7 +53,6 @@ class UserAcspMembershipTest {
   @MockBean private AcspDataService acspDataService;
   @MockBean private AcspMembersService acspMembersService;
   @MockBean private UsersService usersService;
-
   @MockBean private StaticPropertyUtil staticPropertyUtil;
 
   @Nested
@@ -357,7 +360,7 @@ class UserAcspMembershipTest {
     }
 
     @Test
-    void testAddAcspMemberForbiddenWhenAcspIsDeauthorised() throws Exception {
+    void testAddAcspMemberThrowsBadRequestWhenAcspIsDeauthorised() throws Exception {
       RequestBodyPost requestBodyPost =
           new RequestBodyPost()
               .userId(NEW_USER_ID)
@@ -390,7 +393,15 @@ class UserAcspMembershipTest {
                       String.format(
                           "{\"user_id\":\"%s\",\"acsp_number\":\"%s\",\"user_role\":\"standard\"}",
                           NEW_USER_ID, ACSP_NUMBER)))
-          .andExpect(status().isForbidden());
+          .andExpect(status().isBadRequest())
+          .andExpect(
+              result ->
+                  assertInstanceOf(BadRequestRuntimeException.class, result.getResolvedException()))
+          .andExpect(
+              result ->
+                  Assertions.assertEquals(
+                      "ACSP is currently deauthorised, cannot add users",
+                      result.getResolvedException().getMessage()));
 
       verify(acspMembersService, never()).addAcspMember(requestBodyPost, NEW_USER_ID);
     }
@@ -467,7 +478,7 @@ class UserAcspMembershipTest {
     }
 
     @Test
-    void testAddAcspMemberForbiddenWhenRequestingUserNotMember() throws Exception {
+    void testAddAcspMemberThrowsBadRequestWhenRequestingUserNotMember() throws Exception {
       RequestBodyPost requestBodyPost =
           new RequestBodyPost()
               .userId(NEW_USER_ID)
@@ -489,13 +500,21 @@ class UserAcspMembershipTest {
                       String.format(
                           "{\"user_id\":\"%s\",\"acsp_number\":\"%s\",\"user_role\":\"standard\"}",
                           NEW_USER_ID, ACSP_NUMBER)))
-          .andExpect(status().isForbidden());
+          .andExpect(status().isBadRequest())
+          .andExpect(
+              result ->
+                  assertTrue(result.getResolvedException() instanceof BadRequestRuntimeException))
+          .andExpect(
+              result ->
+                  assertEquals(
+                      "Requesting user is not an active ACSP member",
+                      result.getResolvedException().getMessage()));
 
       verify(acspMembersService, never()).addAcspMember(requestBodyPost, NEW_USER_ID);
     }
 
     @Test
-    void testAddAcspMemberBadRequestWhenInviteeUserDoesNotExist() throws Exception {
+    void testAddAcspMemberThrowsNotFoundWhenInviteeUserDoesNotExist() throws Exception {
       RequestBodyPost requestBodyPost =
           new RequestBodyPost()
               .userId(NEW_USER_ID)
@@ -521,13 +540,20 @@ class UserAcspMembershipTest {
                       String.format(
                           "{\"user_id\":\"%s\",\"acsp_number\":\"%s\",\"user_role\":\"standard\"}",
                           NEW_USER_ID, ACSP_NUMBER)))
-          .andExpect(status().isBadRequest());
+          .andExpect(status().isNotFound())
+          .andExpect(
+              result ->
+                  assertInstanceOf(NotFoundRuntimeException.class, result.getResolvedException()))
+          .andExpect(
+              result ->
+                  Assertions.assertEquals(
+                      "Invitee user does not exist", result.getResolvedException().getMessage()));
 
       verify(acspMembersService, never()).addAcspMember(requestBodyPost, NEW_USER_ID);
     }
 
     @Test
-    void testAddAcspMemberBadRequestWhenInviteeAlreadyMember() throws Exception {
+    void testAddAcspMemberThrowsBadRequestWhenInviteeAlreadyMember() throws Exception {
       RequestBodyPost requestBodyPost =
           new RequestBodyPost()
               .userId(NEW_USER_ID)
@@ -557,13 +583,21 @@ class UserAcspMembershipTest {
                       String.format(
                           "{\"user_id\":\"%s\",\"acsp_number\":\"%s\",\"user_role\":\"standard\"}",
                           NEW_USER_ID, ACSP_NUMBER)))
-          .andExpect(status().isBadRequest());
+          .andExpect(status().isBadRequest())
+          .andExpect(
+              result ->
+                  assertInstanceOf(BadRequestRuntimeException.class, result.getResolvedException()))
+          .andExpect(
+              result ->
+                  Assertions.assertEquals(
+                      "Invitee is already an active ACSP member",
+                      result.getResolvedException().getMessage()));
 
       verify(acspMembersService, never()).addAcspMember(requestBodyPost, NEW_USER_ID);
     }
 
     @Test
-    void testAddAcspMemberForbiddenWhenStandardUserAddsAdmin() throws Exception {
+    void testAddAcspMemberThrowsBadRequestWhenStandardUserAddsAdmin() throws Exception {
       RequestBodyPost requestBodyPost =
           new RequestBodyPost()
               .userId(NEW_USER_ID)
@@ -590,13 +624,21 @@ class UserAcspMembershipTest {
                       String.format(
                           "{\"user_id\":\"%s\",\"acsp_number\":\"%s\",\"user_role\":\"admin\"}",
                           NEW_USER_ID, ACSP_NUMBER)))
-          .andExpect(status().isForbidden());
+          .andExpect(status().isBadRequest())
+          .andExpect(
+              result ->
+                  assertInstanceOf(BadRequestRuntimeException.class, result.getResolvedException()))
+          .andExpect(
+              result ->
+                  Assertions.assertEquals(
+                      "Requesting user does not have permission to add user with specified role",
+                      result.getResolvedException().getMessage()));
 
       verify(acspMembersService, never()).addAcspMember(requestBodyPost, NEW_USER_ID);
     }
 
     @Test
-    void testAddAcspMemberForbiddenWhenAdminAddsOwner() throws Exception {
+    void testAddAcspMemberThrowsBadRequestWhenAdminAddsOwner() throws Exception {
       RequestBodyPost requestBodyPost =
           new RequestBodyPost()
               .userId(NEW_USER_ID)
@@ -623,13 +665,21 @@ class UserAcspMembershipTest {
                       String.format(
                           "{\"user_id\":\"%s\",\"acsp_number\":\"%s\",\"user_role\":\"owner\"}",
                           NEW_USER_ID, ACSP_NUMBER)))
-          .andExpect(status().isForbidden());
+          .andExpect(status().isBadRequest())
+          .andExpect(
+              result ->
+                  assertInstanceOf(BadRequestRuntimeException.class, result.getResolvedException()))
+          .andExpect(
+              result ->
+                  Assertions.assertEquals(
+                      "Requesting user does not have permission to add user with specified role",
+                      result.getResolvedException().getMessage()));
 
       verify(acspMembersService, never()).addAcspMember(requestBodyPost, NEW_USER_ID);
     }
 
     @Test
-    void testAddAcspMemberForbiddenWhenRequestingUserNotActiveMember() throws Exception {
+    void testAddAcspMemberThrowsBadRequestWhenRequestingUserNotActiveMember() throws Exception {
       RequestBodyPost requestBodyPost =
           new RequestBodyPost()
               .userId(NEW_USER_ID)
@@ -651,7 +701,15 @@ class UserAcspMembershipTest {
                       String.format(
                           "{\"user_id\":\"%s\",\"acsp_number\":\"%s\",\"user_role\":\"standard\"}",
                           NEW_USER_ID, ACSP_NUMBER)))
-          .andExpect(status().isForbidden());
+          .andExpect(status().isBadRequest())
+          .andExpect(
+              result ->
+                  assertTrue(result.getResolvedException() instanceof BadRequestRuntimeException))
+          .andExpect(
+              result ->
+                  assertEquals(
+                      "Requesting user is not an active ACSP member",
+                      result.getResolvedException().getMessage()));
 
       verify(acspMembersService, never()).addAcspMember(requestBodyPost, NEW_USER_ID);
     }

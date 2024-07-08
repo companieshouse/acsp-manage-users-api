@@ -1,5 +1,7 @@
 package uk.gov.companieshouse.acsp.manage.users.integration;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -24,6 +26,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
+import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspDataRepository;
@@ -311,10 +315,10 @@ class UserAcspMembershipIntegrationTest {
       final var responseMembership =
           objectMapper.readValue(response.getContentAsByteArray(), AcspMembership.class);
 
-      Assertions.assertEquals("acsp1", responseMembership.getId());
-      Assertions.assertEquals("user123", responseMembership.getUserId());
-      Assertions.assertEquals("ACSP123", responseMembership.getAcspNumber());
-      Assertions.assertEquals("admin1", responseMembership.getAddedBy());
+      assertEquals("acsp1", responseMembership.getId());
+      assertEquals("user123", responseMembership.getUserId());
+      assertEquals("ACSP123", responseMembership.getAcspNumber());
+      assertEquals("admin1", responseMembership.getAddedBy());
     }
 
     @Test
@@ -336,7 +340,7 @@ class UserAcspMembershipIntegrationTest {
   class PostAcspMembershipTests {
 
     @Test
-    void addAcspMemberForbiddenWhenAcspIsDeauthorised() throws Exception {
+    void addAcspMemberThrowsBadRequestWhenAcspIsDeauthorised() throws Exception {
       String newUserId = "newUser";
       User newUser = new User();
       newUser.setUserId(newUserId);
@@ -364,9 +368,18 @@ class UserAcspMembershipIntegrationTest {
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(
                       String.format(
-                          "{\"user_id\":\"%s\",\"acsp_number\":\"ACSP002\",\"user_role\":\"standard\"}",
+                          "{\"user_id\":\"%s\",\"acsp_number\":\"ACSP003\",\"user_role\":\"standard\"}",
                           newUserId)))
-          .andExpect(status().isForbidden());
+          .andExpect(status().isBadRequest())
+          .andExpect(
+              result ->
+                  Assertions.assertInstanceOf(
+                      BadRequestRuntimeException.class, result.getResolvedException()))
+          .andExpect(
+              result ->
+                  assertEquals(
+                      "ACSP is currently deauthorised, cannot add users",
+                      result.getResolvedException().getMessage()));
 
       List<AcspMembersDao> members =
           acspMembersRepository.findByUserIdAndAcspNumber(newUserId, "ACSP003");
@@ -399,8 +412,8 @@ class UserAcspMembershipIntegrationTest {
 
       List<AcspMembersDao> members =
           acspMembersRepository.findByUserIdAndAcspNumber(newUserId, "ACSP001");
-      Assertions.assertEquals(1, members.size());
-      Assertions.assertEquals(UserRoleEnum.STANDARD, members.get(0).getUserRole());
+      assertEquals(1, members.size());
+      assertEquals(UserRoleEnum.STANDARD, members.get(0).getUserRole());
     }
 
     @Test
@@ -429,12 +442,12 @@ class UserAcspMembershipIntegrationTest {
 
       List<AcspMembersDao> members =
           acspMembersRepository.findByUserIdAndAcspNumber(newUserId, "ACSP001");
-      Assertions.assertEquals(1, members.size());
-      Assertions.assertEquals(UserRoleEnum.ADMIN, members.get(0).getUserRole());
+      assertEquals(1, members.size());
+      assertEquals(UserRoleEnum.ADMIN, members.get(0).getUserRole());
     }
 
     @Test
-    void addAcspMemberForbiddenWhenRequestingUserNotMember() throws Exception {
+    void addAcspMemberThrowsBadRequestWhenRequestingUserNotMember() throws Exception {
       String newUserId = "newUser";
       when(usersService.doesUserExist(newUserId)).thenReturn(true);
 
@@ -449,7 +462,15 @@ class UserAcspMembershipIntegrationTest {
                       String.format(
                           "{\"user_id\":\"%s\",\"acsp_number\":\"ACSP001\",\"user_role\":\"standard\"}",
                           newUserId)))
-          .andExpect(status().isForbidden());
+          .andExpect(status().isBadRequest())
+          .andExpect(
+              result ->
+                  assertTrue(result.getResolvedException() instanceof BadRequestRuntimeException))
+          .andExpect(
+              result ->
+                  assertEquals(
+                      "Requesting user is not an active ACSP member",
+                      result.getResolvedException().getMessage()));
 
       List<AcspMembersDao> members =
           acspMembersRepository.findByUserIdAndAcspNumber(newUserId, "ACSP001");
@@ -457,7 +478,7 @@ class UserAcspMembershipIntegrationTest {
     }
 
     @Test
-    void addAcspMemberBadRequestWhenInviteeUserDoesNotExist() throws Exception {
+    void addAcspMemberThrowsNotFoundWhenInviteeUserDoesNotExist() throws Exception {
       String newUserId = "nonExistentUser";
       when(usersService.doesUserExist(newUserId)).thenReturn(false);
 
@@ -472,7 +493,15 @@ class UserAcspMembershipIntegrationTest {
                       String.format(
                           "{\"user_id\":\"%s\",\"acsp_number\":\"ACSP001\",\"user_role\":\"standard\"}",
                           newUserId)))
-          .andExpect(status().isBadRequest());
+          .andExpect(status().isNotFound())
+          .andExpect(
+              result ->
+                  Assertions.assertInstanceOf(
+                      NotFoundRuntimeException.class, result.getResolvedException()))
+          .andExpect(
+              result ->
+                  assertEquals(
+                      "Invitee user does not exist", result.getResolvedException().getMessage()));
 
       List<AcspMembersDao> members =
           acspMembersRepository.findByUserIdAndAcspNumber(newUserId, "ACSP001");
@@ -480,7 +509,9 @@ class UserAcspMembershipIntegrationTest {
     }
 
     @Test
-    void addAcspMemberBadRequestWhenInviteeAlreadyMember() throws Exception {
+    void addAcspMemberThrowsBadRequestWhenInviteeAlreadyMember() throws Exception {
+      when(usersService.doesUserExist(userId)).thenReturn(true);
+
       mockMvc
           .perform(
               post("/acsp-members")
@@ -492,7 +523,16 @@ class UserAcspMembershipIntegrationTest {
                       String.format(
                           "{\"user_id\":\"%s\",\"acsp_number\":\"ACSP001\",\"user_role\":\"standard\"}",
                           userId)))
-          .andExpect(status().isBadRequest());
+          .andExpect(status().isBadRequest())
+          .andExpect(
+              result ->
+                  Assertions.assertInstanceOf(
+                      BadRequestRuntimeException.class, result.getResolvedException()))
+          .andExpect(
+              result ->
+                  assertEquals(
+                      "Invitee is already an active ACSP member",
+                      result.getResolvedException().getMessage()));
 
       List<AcspMembersDao> members =
           acspMembersRepository.findByUserIdAndAcspNumber(userId, "ACSP001");
@@ -500,7 +540,7 @@ class UserAcspMembershipIntegrationTest {
     }
 
     @Test
-    void addAcspMemberForbiddenWhenStandardUserAddsAdmin() throws Exception {
+    void addAcspMemberThrowsBadRequestWhenStandardUserAddsAdmin() throws Exception {
       String newUserId = "newAdminUser";
       when(usersService.doesUserExist(newUserId)).thenReturn(true);
 
@@ -515,7 +555,15 @@ class UserAcspMembershipIntegrationTest {
                       String.format(
                           "{\"user_id\":\"%s\",\"acsp_number\":\"ACSP001\",\"user_role\":\"admin\"}",
                           newUserId)))
-          .andExpect(status().isForbidden());
+          .andExpect(status().isBadRequest())
+          .andExpect(
+              result ->
+                  assertTrue(result.getResolvedException() instanceof BadRequestRuntimeException))
+          .andExpect(
+              result ->
+                  assertEquals(
+                      "Requesting user does not have permission to add user with specified role",
+                      result.getResolvedException().getMessage()));
 
       List<AcspMembersDao> members =
           acspMembersRepository.findByUserIdAndAcspNumber(newUserId, "ACSP001");
@@ -523,7 +571,7 @@ class UserAcspMembershipIntegrationTest {
     }
 
     @Test
-    void addAcspMemberForbiddenWhenAdminAddsOwner() throws Exception {
+    void addAcspMemberThrowsBadRequestWhenAdminAddsOwner() throws Exception {
       String newUserId = "newOwnerUser";
       when(usersService.doesUserExist(newUserId)).thenReturn(true);
 
@@ -538,7 +586,15 @@ class UserAcspMembershipIntegrationTest {
                       String.format(
                           "{\"user_id\":\"%s\",\"acsp_number\":\"ACSP001\",\"user_role\":\"owner\"}",
                           newUserId)))
-          .andExpect(status().isForbidden());
+          .andExpect(status().isBadRequest())
+          .andExpect(
+              result ->
+                  assertTrue(result.getResolvedException() instanceof BadRequestRuntimeException))
+          .andExpect(
+              result ->
+                  assertEquals(
+                      "Requesting user does not have permission to add user with specified role",
+                      result.getResolvedException().getMessage()));
 
       List<AcspMembersDao> members =
           acspMembersRepository.findByUserIdAndAcspNumber(newUserId, "ACSP001");
@@ -584,12 +640,14 @@ class UserAcspMembershipIntegrationTest {
 
       List<AcspMembersDao> members =
           acspMembersRepository.findByUserIdAndAcspNumber(previouslyRemovedUserId, "ACSP001");
-      Assertions.assertEquals(2, members.size());
+      assertEquals(2, members.size());
       Assertions.assertTrue(members.stream().anyMatch(m -> m.getRemovedAt() == null));
     }
 
     @Test
     void addAcspMemberBadRequestWhenInviteeAlreadyActiveMember() throws Exception {
+      when(usersService.doesUserExist(userId)).thenReturn(true);
+
       mockMvc
           .perform(
               post("/acsp-members")
@@ -605,7 +663,7 @@ class UserAcspMembershipIntegrationTest {
 
       List<AcspMembersDao> members =
           acspMembersRepository.findByUserIdAndAcspNumber(userId, "ACSP001");
-      Assertions.assertEquals(1, members.size());
+      assertEquals(1, members.size());
       Assertions.assertNull(members.get(0).getRemovedAt());
     }
 
@@ -647,7 +705,7 @@ class UserAcspMembershipIntegrationTest {
 
       List<AcspMembersDao> members =
           acspMembersRepository.findByUserIdAndAcspNumber(newUserId, "ACSP001");
-      Assertions.assertEquals(1, members.size());
+      assertEquals(1, members.size());
       Assertions.assertNull(members.get(0).getRemovedAt());
     }
   }
