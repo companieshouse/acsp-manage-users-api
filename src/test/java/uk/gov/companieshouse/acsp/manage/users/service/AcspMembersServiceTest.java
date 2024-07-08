@@ -1,6 +1,9 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -41,6 +44,7 @@ import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
+import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPost;
 
 @ExtendWith(MockitoExtension.class)
 @Tag("unit-test")
@@ -378,6 +382,114 @@ class AcspMembersServiceTest {
           && addedAtIsSet
           && etagIsSet;
     };
+  }
+
+  @Test
+  void addAcspMember_withIndividualParameters_shouldCreateAndSaveMember() {
+    String userId = "user123";
+    String acspNumber = "ACSP001";
+    AcspMembership.UserRoleEnum userRole = AcspMembership.UserRoleEnum.ADMIN;
+    String addedByUserId = "admin456";
+
+    AcspMembersDao expectedDao = new AcspMembersDao();
+    expectedDao.setUserId(userId);
+    expectedDao.setAcspNumber(acspNumber);
+    expectedDao.setUserRole(userRole);
+    expectedDao.setAddedBy(addedByUserId);
+    expectedDao.setRemovedBy(null);
+    expectedDao.setRemovedAt(null);
+
+    when(acspMembersRepository.insert(any(AcspMembersDao.class))).thenReturn(expectedDao);
+
+    AcspMembersDao result =
+        acspMembersService.addAcspMember(userId, acspNumber, userRole, addedByUserId);
+
+    assertNotNull(result);
+    assertEquals(userId, result.getUserId());
+    assertEquals(acspNumber, result.getAcspNumber());
+    assertEquals(userRole, result.getUserRole());
+    assertEquals(addedByUserId, result.getAddedBy());
+    assertNull(result.getRemovedBy());
+    assertNull(result.getRemovedAt());
+
+    verify(acspMembersRepository)
+        .insert(
+            argThat(
+                (ArgumentMatcher<AcspMembersDao>)
+                    dao ->
+                        dao.getUserId().equals(userId)
+                            && dao.getAcspNumber().equals(acspNumber)
+                            && dao.getUserRole().equals(userRole)
+                            && dao.getAddedBy().equals(addedByUserId)
+                            && dao.getRemovedBy() == null
+                            && dao.getRemovedAt() == null
+                            && dao.getCreatedAt() != null
+                            && dao.getAddedAt() != null
+                            && dao.getEtag() != null));
+  }
+
+  @Test
+  void addAcspMember_withRequestBodyPost_shouldCreateAndSaveMember() {
+    RequestBodyPost requestBodyPost = new RequestBodyPost();
+    requestBodyPost.setUserId("user123");
+    requestBodyPost.setAcspNumber("ACSP001");
+    requestBodyPost.setUserRole(RequestBodyPost.UserRoleEnum.ADMIN);
+    String addedByUserId = "admin456";
+
+    AcspMembersDao expectedDao = new AcspMembersDao();
+    expectedDao.setUserId(requestBodyPost.getUserId());
+    expectedDao.setAcspNumber(requestBodyPost.getAcspNumber());
+    expectedDao.setUserRole(AcspMembership.UserRoleEnum.ADMIN);
+    expectedDao.setAddedBy(addedByUserId);
+    expectedDao.setRemovedBy(null);
+    expectedDao.setRemovedAt(null);
+
+    when(acspMembersRepository.insert(any(AcspMembersDao.class))).thenReturn(expectedDao);
+
+    AcspMembersDao result = acspMembersService.addAcspMember(requestBodyPost, addedByUserId);
+
+    assertNotNull(result);
+    assertEquals(requestBodyPost.getUserId(), result.getUserId());
+    assertEquals(requestBodyPost.getAcspNumber(), result.getAcspNumber());
+    assertEquals(AcspMembership.UserRoleEnum.ADMIN, result.getUserRole());
+    assertEquals(addedByUserId, result.getAddedBy());
+    assertNull(result.getRemovedBy());
+    assertNull(result.getRemovedAt());
+
+    verify(acspMembersRepository)
+        .insert(
+            argThat(
+                (ArgumentMatcher<AcspMembersDao>)
+                    dao ->
+                        dao.getUserId().equals(requestBodyPost.getUserId())
+                            && dao.getAcspNumber().equals(requestBodyPost.getAcspNumber())
+                            && dao.getUserRole().equals(AcspMembership.UserRoleEnum.ADMIN)
+                            && dao.getAddedBy().equals(addedByUserId)
+                            && dao.getRemovedBy() == null
+                            && dao.getRemovedAt() == null
+                            && dao.getCreatedAt() != null
+                            && dao.getAddedAt() != null
+                            && dao.getEtag() != null));
+  }
+
+  @Test
+  void addAcspMember_shouldGenerateUniqueEtag() {
+    String userId = "user123";
+    String acspNumber = "ACSP001";
+    AcspMembership.UserRoleEnum userRole = AcspMembership.UserRoleEnum.ADMIN;
+    String addedByUserId = "admin456";
+
+    when(acspMembersRepository.insert(any(AcspMembersDao.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    AcspMembersDao result1 =
+        acspMembersService.addAcspMember(userId, acspNumber, userRole, addedByUserId);
+    AcspMembersDao result2 =
+        acspMembersService.addAcspMember(userId, acspNumber, userRole, addedByUserId);
+
+    assertNotNull(result1.getEtag());
+    assertNotNull(result2.getEtag());
+    assertNotEquals(result1.getEtag(), result2.getEtag());
   }
 
   @Test

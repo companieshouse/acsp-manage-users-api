@@ -3,6 +3,8 @@ package uk.gov.companieshouse.acsp.manage.users.controller;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +22,6 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.InternalRequestBodyPost
 import uk.gov.companieshouse.api.acsp_manage_users.model.ResponseBodyPost;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
-
-import java.util.List;
-import java.util.Optional;
 
 @RestController
 public class UserAcspMembershipInternal implements UserAcspMembershipInternalInterface {

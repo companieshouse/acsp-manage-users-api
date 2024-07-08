@@ -12,12 +12,14 @@ public class AcspMembershipService {
   private final AcspMembersRepository acspMembersRepository;
   private final AcspMembershipMapper acspMembershipMapper;
 
-  public AcspMembershipService(final AcspMembersRepository acspMembersRepository, final AcspMembershipMapper acspMembershipMapper) {
+  public AcspMembershipService(
+      final AcspMembersRepository acspMembersRepository,
+      final AcspMembershipMapper acspMembershipMapper) {
     this.acspMembersRepository = acspMembersRepository;
     this.acspMembershipMapper = acspMembershipMapper;
   }
+
   public Optional<AcspMembership> fetchAcspMembership(String id) {
-    return acspMembersRepository.findById(id)
-            .map(acspMembershipMapper::daoToDto);
+    return acspMembersRepository.findById(id).map(acspMembershipMapper::daoToDto);
   }
 }

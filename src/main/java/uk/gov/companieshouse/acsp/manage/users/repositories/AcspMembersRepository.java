@@ -1,9 +1,10 @@
 package uk.gov.companieshouse.acsp.manage.users.repositories;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import java.util.List;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -34,4 +35,14 @@ public interface AcspMembersRepository extends MongoRepository<AcspMembersDao, S
 
   @Query(value = "{ 'user_id': ?0, 'removed_by': { $exists: false } }")
   List<AcspMembersDao> fetchActiveAcspMembersByUserId(final String userId);
+
+  @Query(value = "{ 'user_id': ?0, 'removed_by': { $exists: false } }")
+  Optional<AcspMembersDao> fetchActiveAcspMemberByUserId(final String userId);
+
+  @Query(value = "{ 'user_id': ?0, 'acsp_number': ?1, 'removed_by': { $exists: false } }")
+  Optional<AcspMembersDao> fetchActiveAcspMemberByUserIdAndAcspNumber(
+      final String userId, final String acspNumber);
+
+  @Query(value = "{ 'user_id': ?0, 'acsp_number': ?1 }")
+  List<AcspMembersDao> findByUserIdAndAcspNumber(final String userId, final String acspNumber);
 }

@@ -1,5 +1,10 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -18,12 +23,6 @@ import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.accounts.user.model.UsersList;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 @WebMvcTest(UserAcspMembershipInternal.class)
 @Tag("unit-test")
@@ -73,8 +72,7 @@ class UserAcspMembershipInternalTest {
     final var acspMembership = new AcspMembership();
     acspMembership.setAcspNumber(acspNumber);
     Mockito.when(usersService.searchUserDetails(Mockito.any())).thenReturn(users);
-    Mockito.when(
-            acspMembersService.fetchAcspMemberships(user1, false))
+    Mockito.when(acspMembersService.fetchAcspMemberships(user1, false))
         .thenReturn(List.of(acspMembership));
 
     // When

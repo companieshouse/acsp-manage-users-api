@@ -58,4 +58,3 @@ class AcspMembershipServiceTest {
     assertTrue(association.isEmpty());
   }
 }
-
