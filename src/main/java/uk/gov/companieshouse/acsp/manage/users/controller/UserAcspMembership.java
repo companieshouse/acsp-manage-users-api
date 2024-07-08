@@ -36,6 +36,11 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
       "Please check the request and try again";
   private static final Logger LOG =
       LoggerFactory.getLogger(StaticPropertyUtil.APPLICATION_NAMESPACE);
+
+  private static final String ACSP_NUMBER_KEY = "acspNumber";
+  private static final String REQUESTING_USER_ID_KEY = "requestingUserId";
+  private static final String INVITEE_USER_ID_KEY = "inviteeUserId";
+
   private final AcspMembersService acspMembersService;
   private final AcspDataService acspDataService;
   private final AcspMembershipService acspMembershipService;
@@ -70,7 +75,8 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
       LOG.infoContext(
           xRequestId,
           "Requesting user is not an active ACSP member",
-          new HashMap<>(Map.of("requestingUserId", requestingUserId, "acspNumber", acspNumber)));
+          new HashMap<>(
+              Map.of(REQUESTING_USER_ID_KEY, requestingUserId, ACSP_NUMBER_KEY, acspNumber)));
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
@@ -79,7 +85,8 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
       LOG.infoContext(
           xRequestId,
           "ACSP is current deauthorised, cannot add users",
-          new HashMap<>(Map.of("requestingUserId", requestingUserId, "acspNumber", acspNumber)));
+          new HashMap<>(
+              Map.of(REQUESTING_USER_ID_KEY, requestingUserId, ACSP_NUMBER_KEY, acspNumber)));
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
@@ -87,25 +94,25 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
     LOG.debugContext(
         xRequestId,
         "Checking if invitee user exists",
-        new HashMap<>(Map.of("inviteeUserId", inviteeUserId)));
+        new HashMap<>(Map.of(INVITEE_USER_ID_KEY, inviteeUserId)));
 
     if (!usersService.doesUserExist(inviteeUserId)) {
       LOG.infoContext(
           xRequestId,
           "Invitee user does not exist",
-          new HashMap<>(Map.of("inviteeUserId", inviteeUserId)));
+          new HashMap<>(Map.of(INVITEE_USER_ID_KEY, inviteeUserId)));
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
     LOG.debugContext(
         xRequestId,
         "Checking if invitee is already an active ACSP member",
-        new HashMap<>(Map.of("inviteeUserId", inviteeUserId)));
+        new HashMap<>(Map.of(INVITEE_USER_ID_KEY, inviteeUserId)));
     if (acspMembersService.fetchActiveAcspMember(inviteeUserId).isPresent()) {
       LOG.infoContext(
           xRequestId,
           "Invitee is already an active ACSP member",
-          new HashMap<>(Map.of("inviteeUserId", inviteeUserId)));
+          new HashMap<>(Map.of(INVITEE_USER_ID_KEY, inviteeUserId)));
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
@@ -139,9 +146,12 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
         "Adding new ACSP member",
         new HashMap<>(
             Map.of(
-                "inviteeUserId", inviteeUserId,
-                "acspNumber", requestBodyPost.getAcspNumber(),
-                "userRole", requestBodyPost.getUserRole())));
+                INVITEE_USER_ID_KEY,
+                inviteeUserId,
+                ACSP_NUMBER_KEY,
+                requestBodyPost.getAcspNumber(),
+                "userRole",
+                requestBodyPost.getUserRole())));
 
     final AcspMembersDao addedAcspMembership =
         acspMembersService.addAcspMember(requestBodyPost, inviteeUserId);
@@ -154,7 +164,10 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
         "Successfully added new ACSP member",
         new HashMap<>(
             Map.of(
-                "acspMembershipId", addedAcspMembership.getId(), "inviteeUserId", inviteeUserId)));
+                "acspMembershipId",
+                addedAcspMembership.getId(),
+                INVITEE_USER_ID_KEY,
+                inviteeUserId)));
 
     return new ResponseEntity<>(responseBodyPost, HttpStatus.CREATED);
   }
