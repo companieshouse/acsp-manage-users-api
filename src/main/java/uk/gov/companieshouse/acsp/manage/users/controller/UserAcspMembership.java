@@ -1,8 +1,5 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +20,9 @@ import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.acsp.manage.users.utils.UserRoleMapperUtil;
 import uk.gov.companieshouse.api.acsp_manage_users.api.UserAcspMembershipInterface;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch;
+import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.ActionEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPost;
 import uk.gov.companieshouse.api.acsp_manage_users.model.ResponseBodyPost;
 import uk.gov.companieshouse.logging.Logger;
@@ -211,11 +210,68 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
     return new ResponseEntity<>(memberships, HttpStatus.OK);
   }
 
-  @Override
-  public ResponseEntity<Void> updateAcspMembershipForId(
-      @NotNull String xRequestId,
-      @Pattern(regexp = "^[a-zA-Z0-9]*$") String id,
-      @Valid RequestBodyPatch requestBodyPatch) {
-    return null; // TODO(https://companieshouse.atlassian.net/browse/IDVA6-1147)
+  private void toBadRequestWhenActionIsNotPermitted( final String xRequestId, final AcspMembersDao requestingAcspMember, final AcspMembersDao targetAcspMembership ){
+    final String requestingUserId = requestingAcspMember.getUserId();
+    final UserRoleEnum requestingUserRole = requestingAcspMember.getUserRole();
+    final String targetUserId = targetAcspMembership.getUserId();
+    final UserRoleEnum targetUserRole = targetAcspMembership.getUserRole();
+
+    if ( requestingUserRole.equals( UserRoleEnum.STANDARD ) ){
+      LOG.error( String.format( "%s: Requesting user %s has a standard role", xRequestId, requestingUserId ) );
+      throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
+    }
+
+    if ( requestingUserRole.equals( UserRoleEnum.ADMIN ) && targetUserRole.equals( UserRoleEnum.OWNER ) ){
+      LOG.error( String.format( "%s: Requesting user %s has an admin role, and target user %s has an owner role", xRequestId, requestingUserId, targetUserId ) );
+      throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
+    }
+
+    if ( targetUserRole.equals( UserRoleEnum.OWNER ) && ( targetUserId.equals( requestingUserId ) ) ){
+      LOG.error( String.format( "%s: Requesting user %s is an owner and is attempting to update themselves", xRequestId, requestingUserId ) );
+      throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
+    }
   }
+
+    @Override
+    public ResponseEntity<Void> updateAcspMembershipForId( final String xRequestId, final String targetAcspMemberId, final RequestBodyPatch requestBodyPatch ) {
+      final var action = requestBodyPatch.getAction();
+      final var targetUserNewRole = requestBodyPatch.getUserRole();
+
+      LOG.infoContext( xRequestId, String.format( "Attempting to perform %s operation on AcspMember %s", action, targetAcspMemberId ), null );
+
+      final var targetAcspMembership =
+      acspMembersService.fetchAcspMembersDao( targetAcspMemberId )
+                        .orElseThrow( () -> {
+                            LOG.error( String.format( "%s: AcspMember %s does not exist", xRequestId, targetAcspMemberId ) );
+                            return new NotFoundRuntimeException( StaticPropertyUtil.APPLICATION_NAMESPACE, PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
+                        } );
+
+      final var requestingUserId = UserContext.getLoggedUser().getUserId();
+      final var requestingAcspMember =
+      acspMembersService.fetchAcspMembership( targetAcspMembership.getAcspNumber(), requestingUserId )
+                        .orElseThrow( () -> {
+                            LOG.error( String.format( "%s: AcspMember where user_id=%s and acsp_number=%s does not exist", xRequestId, requestingUserId, targetAcspMembership.getAcspNumber() ) );
+                            return new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
+                        } );
+
+      toBadRequestWhenActionIsNotPermitted( xRequestId, requestingAcspMember, targetAcspMembership );
+
+      if ( action.equals( ActionEnum.EDIT_ROLE ) ){
+        Optional.ofNullable( targetUserNewRole )
+                .filter( role -> !role.equals( RequestBodyPatch.UserRoleEnum.OWNER ) )
+                .orElseThrow( () -> {
+                    LOG.error( String.format( "%s: role is null or owner", xRequestId ) );
+                    return new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
+                } );
+        acspMembersService.updateRole( targetAcspMemberId, targetUserNewRole.getValue() );
+      }
+
+      if ( action.equals( ActionEnum.REMOVE_MEMBER ) ){
+        acspMembersService.removeMember( targetAcspMemberId, requestingUserId );
+      }
+
+      return new ResponseEntity<>( HttpStatus.OK );
+    }
+
 }
+

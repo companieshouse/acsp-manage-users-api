@@ -3,14 +3,17 @@ package uk.gov.companieshouse.acsp.manage.users.service;
 import static uk.gov.companieshouse.GenerateEtagUtil.generateEtag;
 
 import java.time.LocalDateTime;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembersMapper;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipListMapper;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
@@ -151,4 +154,52 @@ public class AcspMembersService {
     acspMembersDao.setEtag(generateEtag());
     return acspMembersRepository.save(acspMembersDao);
   }
+
+    @Transactional( readOnly = true )
+    public Optional<AcspMembersDao> fetchAcspMembersDao( final String acspMemberId ){
+        return acspMembersRepository.findById( acspMemberId );
+    }
+
+    @Transactional( readOnly = true )
+    public Optional<AcspMembersDao> fetchAcspMembership( final String acspNumber, final String userId ){
+        return acspMembersRepository.fetchAcspMembership( acspNumber, userId );
+    }
+
+    @Transactional
+    public void updateRole( final String acspMemberId, final String userRole ){
+        if ( Objects.isNull( acspMemberId ) ){
+            LOG.error( "acspMemberId is null" );
+            throw new IllegalArgumentException( "acspMemberId is null" );
+        }
+
+        final var update = new Update()
+                .set( "user_role", UserRoleEnum.fromValue( userRole ) )
+                .set( "etag", generateEtag() );
+
+        final var numRecordsUpdated = acspMembersRepository.updateAcspMembership( acspMemberId, update );
+        if ( numRecordsUpdated == 0 ){
+            LOG.error( String.format( "Failed to set the role of AcspMember %s to %s", acspMemberId, userRole ) );
+            throw new InternalServerErrorRuntimeException( String.format( "Failed to set the role of AcspMember %s to %s", acspMemberId, userRole ) );
+        }
+    }
+
+    @Transactional
+    public void removeMember( final String acspMemberId, final String removedByUserId ){
+        if ( Objects.isNull( acspMemberId ) || Objects.isNull( removedByUserId ) ){
+            LOG.error( "acspMemberId or removedByUserId is null" );
+            throw new IllegalArgumentException( "acspMemberId or removedByUserId is null" );
+        }
+
+        final var update = new Update()
+                .set( "removed_by", removedByUserId )
+                .set( "removed_at", LocalDateTime.now() )
+                .set( "etag", generateEtag() );
+
+        final var numRecordsUpdated = acspMembersRepository.updateAcspMembership( acspMemberId, update );
+        if ( numRecordsUpdated == 0 ){
+            LOG.error( String.format( "Failed to remove AcspMember %s", acspMemberId ) );
+            throw new InternalServerErrorRuntimeException( String.format( "Failed to remove AcspMember %s", acspMemberId ) );
+        }
+    }
+
 }
