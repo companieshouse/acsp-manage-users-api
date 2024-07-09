@@ -923,7 +923,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT002", "WIT004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "WIT002" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "WITA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/WIT002" )
@@ -970,7 +970,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT001", "WIT004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "WIT001" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "WITA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ","WITA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/WIT001" )
@@ -988,7 +988,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT002", "WIT004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "WIT002" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "WITA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ","WITA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/WIT002" )
@@ -1006,7 +1006,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT003", "WIT004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "WIT003" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "WITA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/WIT003" )
@@ -1024,7 +1024,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI001", "NEI004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "NEI001" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "NEIA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "NEIA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/NEI001" )
@@ -1042,7 +1042,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI002", "NEI004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "NEI002" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "NEIA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "NEIA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/NEI002" )
@@ -1060,7 +1060,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI003", "NEI004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "NEI003" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "NEIA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber(  "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "NEIA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/NEI003" )
@@ -1078,7 +1078,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME001", "XME004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "XME001" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "XMEA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber(  "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "XMEA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/XME001" )
@@ -1096,7 +1096,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME002", "XME004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "XME002" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "XMEA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "XMEA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/XME002" )
@@ -1114,7 +1114,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME003", "XME004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "XME003" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "XMEA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "XMEA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/XME003" )
@@ -1132,7 +1132,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT001", "WIT004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "WIT001" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "WITA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/WIT001" )
@@ -1150,7 +1150,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT002", "WIT004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "WIT002" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "WITA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/WIT002" )
@@ -1168,7 +1168,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT003", "WIT004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "WIT003" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "WITA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber("67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/WIT003" )
@@ -1186,7 +1186,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI001", "NEI004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "NEI001" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "NEIA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber("67ZeMsvAEgkBWs7tNKacdrPvOmQ", "NEIA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/NEI001" )
@@ -1204,7 +1204,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI002", "NEI004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "NEI002" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "NEIA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber(  "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "\"NEIA001\"" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/NEI002" )
@@ -1222,7 +1222,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI003", "NEI004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "NEI003" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "NEIA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "NEIA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/NEI003" )
@@ -1240,7 +1240,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME001", "XME004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "XME001" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "XMEA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "XMEA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/XME001" )
@@ -1258,7 +1258,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME002", "XME004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "XME002" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "XMEA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "XMEA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/XME002" )
@@ -1276,7 +1276,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME003", "XME004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "XME003" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "XMEA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "XMEA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/XME003" )
@@ -1294,7 +1294,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT001", "WIT004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "WIT001" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "WITA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/WIT001" )
@@ -1312,7 +1312,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT002", "WIT004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "WIT002" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "WITA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/WIT002" )
@@ -1330,7 +1330,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT003", "WIT004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "WIT003" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "WITA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/WIT003" )
@@ -1348,7 +1348,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI001", "NEI004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "NEI001" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "NEIA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "NEIA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/NEI001" )
@@ -1366,7 +1366,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI002", "NEI004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "NEI002" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "NEIA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber(  "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "NEIA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/NEI002" )
@@ -1384,7 +1384,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI003", "NEI004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "NEI003" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "NEIA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ","NEIA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/NEI003" )
@@ -1402,7 +1402,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME001", "XME004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "XME001" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "XMEA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "XMEA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/XME001" )
@@ -1420,7 +1420,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME002", "XME004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "XME002" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "XMEA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "XMEA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/XME002" )
@@ -1438,7 +1438,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME003", "XME004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "XME003" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "XMEA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber("67ZeMsvAEgkBWs7tNKacdrPvOmQ", "XMEA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/XME003" )
@@ -1456,7 +1456,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT001", "WIT004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "WIT001" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "WITA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/WIT001" )
@@ -1474,7 +1474,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT002", "WIT004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "WIT002" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "WITA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" , "WITA001");
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/WIT002" )
@@ -1492,7 +1492,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT003", "WIT004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "WIT003" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "WITA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/WIT003" )
@@ -1510,7 +1510,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI001", "NEI004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "NEI001" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "NEIA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "NEIA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/NEI001" )
@@ -1528,7 +1528,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI002", "NEI004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "NEI002" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "NEIA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "NEIA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/NEI002" )
@@ -1546,7 +1546,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI003", "NEI004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "NEI003" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "NEIA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "NEIA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/NEI003" )
@@ -1564,7 +1564,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME001", "XME004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "XME001" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "XMEA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "XMEA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/XME001" )
@@ -1582,7 +1582,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME002", "XME004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "XME002" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "XMEA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" , "XMEA001");
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/XME002" )
@@ -1600,7 +1600,7 @@ class UserAcspMembershipTest {
     final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME003", "XME004" );
 
     Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchAcspMembersDao( "XME003" );
-    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchAcspMembership( "XMEA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber(  "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "XMEA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/XME003" )
@@ -1618,7 +1618,7 @@ class UserAcspMembershipTest {
     final var acspMemberDao = testDataManager.fetchAcspMembersDaos( "WIT004" ).getFirst();
 
     Mockito.doReturn( Optional.of( acspMemberDao ) ).when( acspMembersService ).fetchAcspMembersDao( "WIT004" );
-    Mockito.doReturn( Optional.of( acspMemberDao ) ).when( acspMembersService ).fetchAcspMembership( "WITA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDao ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/WIT004" )
@@ -1636,7 +1636,7 @@ class UserAcspMembershipTest {
     final var acspMemberDao = testDataManager.fetchAcspMembersDaos( "WIT004" ).getFirst();
 
     Mockito.doReturn( Optional.of( acspMemberDao ) ).when( acspMembersService ).fetchAcspMembersDao( "WIT004" );
-    Mockito.doReturn( Optional.of( acspMemberDao ) ).when( acspMembersService ).fetchAcspMembership( "WITA001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    Mockito.doReturn( Optional.of( acspMemberDao ) ).when( acspMembersService ).fetchActiveAcspMemberByUserIdAndAcspNumber( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
     Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
     mockMvc.perform( patch( "/acsp-members/WIT004" )

@@ -248,9 +248,9 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
 
       final var requestingUserId = UserContext.getLoggedUser().getUserId();
       final var requestingAcspMember =
-      acspMembersService.fetchAcspMembership( targetAcspMembership.getAcspNumber(), requestingUserId )
+      acspMembersService.fetchActiveAcspMemberByUserIdAndAcspNumber( requestingUserId, targetAcspMembership.getAcspNumber() )
                         .orElseThrow( () -> {
-                            LOG.error( String.format( "%s: AcspMember where user_id=%s and acsp_number=%s does not exist", xRequestId, requestingUserId, targetAcspMembership.getAcspNumber() ) );
+                            LOG.error( String.format( "%s: Active AcspMember where user_id=%s and acsp_number=%s does not exist", xRequestId, requestingUserId, targetAcspMembership.getAcspNumber() ) );
                             return new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
                         } );
 
