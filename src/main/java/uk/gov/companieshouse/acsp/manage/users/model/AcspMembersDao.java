@@ -6,14 +6,12 @@ import java.util.Objects;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 
 @Document( "acsp_members" )
-@CompoundIndex( name = "acsp_user_idx", def = "{ 'acsp_number': 1, 'user_id': 1 }", unique = true )
 public class AcspMembersDao {
 
     @Id
