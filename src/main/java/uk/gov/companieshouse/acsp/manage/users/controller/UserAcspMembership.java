@@ -210,23 +210,23 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
     return new ResponseEntity<>(memberships, HttpStatus.OK);
   }
 
-  private void toBadRequestWhenActionIsNotPermitted( final String xRequestId, final AcspMembersDao requestingAcspMember, final AcspMembersDao targetAcspMembership ){
+  private void throwBadRequestWhenActionIsNotPermitted( final String xRequestId, final AcspMembersDao requestingAcspMember, final AcspMembersDao targetAcspMembership ){
     final String requestingUserId = requestingAcspMember.getUserId();
     final UserRoleEnum requestingUserRole = requestingAcspMember.getUserRole();
     final String targetUserId = targetAcspMembership.getUserId();
     final UserRoleEnum targetUserRole = targetAcspMembership.getUserRole();
 
-    if ( requestingUserRole.equals( UserRoleEnum.STANDARD ) ){
+    if ( UserRoleEnum.STANDARD.equals( requestingUserRole ) ){
       LOG.error( String.format( "%s: Requesting user %s has a standard role", xRequestId, requestingUserId ) );
       throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
     }
 
-    if ( requestingUserRole.equals( UserRoleEnum.ADMIN ) && targetUserRole.equals( UserRoleEnum.OWNER ) ){
+    if ( UserRoleEnum.ADMIN.equals( requestingUserRole ) && UserRoleEnum.OWNER.equals( targetUserRole ) ){
       LOG.error( String.format( "%s: Requesting user %s has an admin role, and target user %s has an owner role", xRequestId, requestingUserId, targetUserId ) );
       throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
     }
 
-    if ( targetUserRole.equals( UserRoleEnum.OWNER ) && ( targetUserId.equals( requestingUserId ) ) ){
+    if ( UserRoleEnum.OWNER.equals( targetUserRole ) && ( targetUserId.equals( requestingUserId ) ) ){
       LOG.error( String.format( "%s: Requesting user %s is an owner and is attempting to update themselves", xRequestId, requestingUserId ) );
       throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
     }
@@ -254,7 +254,7 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
                             return new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
                         } );
 
-      toBadRequestWhenActionIsNotPermitted( xRequestId, requestingAcspMember, targetAcspMembership );
+      throwBadRequestWhenActionIsNotPermitted( xRequestId, requestingAcspMember, targetAcspMembership );
 
       if ( action.equals( ActionEnum.EDIT_ROLE ) ){
         Optional.ofNullable( targetUserNewRole )
