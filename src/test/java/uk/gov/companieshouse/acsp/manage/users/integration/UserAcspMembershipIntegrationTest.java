@@ -4,8 +4,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static uk.gov.companieshouse.GenerateEtagUtil.generateEtag;
 
@@ -13,8 +13,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,12 +29,12 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
+import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
@@ -1057,543 +1061,130 @@ class UserAcspMembershipIntegrationTest {
             .andExpect( status().isBadRequest() );
   }
 
-  @Test
-  void updateAcspMembershipForIdWhereOwnerAttemptsToChangeOwnerToOwnerReturnsBadRequest() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT001", "WIT004" );
+  private static Stream<Arguments> membershipUpdateScenarios() {
+    // actorRole, targetRole, newRole, shouldSucceed, expectedStatus
+    return Stream.of(
+        // Owner actions
+        Arguments.of("owner", "owner", "admin", true, status().isOk()),
+        Arguments.of("owner", "owner", "standard", true, status().isOk()),
+        Arguments.of("owner", "owner", "owner", false, status().isBadRequest()),
+        Arguments.of("owner", "admin", "standard", true, status().isOk()),
+        Arguments.of("owner", "admin", "admin", true, status().isOk()),
+        Arguments.of("owner", "admin", "owner", false, status().isBadRequest()),
+        Arguments.of("owner", "standard", "admin", true, status().isOk()),
+        Arguments.of("owner", "standard", "standard", true, status().isOk()),
+        Arguments.of("owner", "standard", "owner", false, status().isBadRequest()),
 
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+        // Admin actions
+        Arguments.of("admin", "owner", "standard", false, status().isBadRequest()),
+        Arguments.of("admin", "owner", "admin", false, status().isBadRequest()),
+        Arguments.of("admin", "owner", "owner", false, status().isBadRequest()),
+        Arguments.of("admin", "admin", "standard", true, status().isOk()),
+        Arguments.of("admin", "admin", "admin", true, status().isOk()),
+        Arguments.of("admin", "admin", "owner", false, status().isBadRequest()),
+        Arguments.of("admin", "standard", "admin", true, status().isOk()),
+        Arguments.of("admin", "standard", "standard", true, status().isOk()),
+        Arguments.of("admin", "standard", "owner", false, status().isBadRequest()),
 
-    mockMvc.perform( patch( "/acsp-members/WIT001" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"owner\"}" ) )
-            .andExpect( status().isBadRequest() );
+        // Standard member actions
+        Arguments.of("standard", "owner", "admin", false, status().isBadRequest()),
+        Arguments.of("standard", "owner", "standard", false, status().isBadRequest()),
+        Arguments.of("standard", "owner", "owner", false, status().isBadRequest()),
+        Arguments.of("standard", "admin", "standard", false, status().isBadRequest()),
+        Arguments.of("standard", "admin", "admin", false, status().isBadRequest()),
+        Arguments.of("standard", "admin", "owner", false, status().isBadRequest()),
+        Arguments.of("standard", "standard", "admin", false, status().isBadRequest()),
+        Arguments.of("standard", "standard", "standard", false, status().isBadRequest()),
+        Arguments.of("standard", "standard", "owner", false, status().isBadRequest()));
   }
 
-  @Test
-  void updateAcspMembershipForIdWhereOwnerAttemptsToChangeAdminToOwnerReturnsBadRequest() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT002", "WIT004" );
+  @ParameterizedTest
+  @MethodSource("membershipUpdateScenarios")
+  void testUpdateAcspMembershipScenarios(
+      String actorRole,
+      String targetRole,
+      String newRole,
+      boolean shouldSucceed,
+      ResultMatcher expectedStatus)
+      throws Exception {
+    final var actingUser = new User();
+    actingUser.setUserId("actor-user-id");
 
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    final var actingAcspMember = new AcspMembersDao();
+    actingAcspMember.setId("actorid");
+    actingAcspMember.setAcspNumber("acsp-number-for-updating-role");
+    actingAcspMember.setUserId(actingUser.getUserId());
+    actingAcspMember.setUserRole(UserRoleEnum.fromValue(actorRole));
+    actingAcspMember.setCreatedAt(LocalDateTime.now().minusYears(20));
+    actingAcspMember.setAddedAt(LocalDateTime.now().minusYears(20));
+    actingAcspMember.setEtag(generateEtag());
 
-    mockMvc.perform( patch( "/acsp-members/WIT002" )
+    final var targetAcspMember = new AcspMembersDao();
+    targetAcspMember.setId("targetid");
+    targetAcspMember.setAcspNumber("acsp-number-for-updating-role");
+    targetAcspMember.setUserId("target-user-id");
+    targetAcspMember.setUserRole(UserRoleEnum.fromValue(targetRole));
+    targetAcspMember.setCreatedAt(LocalDateTime.now().minusYears(20));
+    targetAcspMember.setAddedAt(LocalDateTime.now().minusYears(20));
+    targetAcspMember.setEtag(generateEtag());
+
+    acspMembersRepository.insert(List.of(actingAcspMember, targetAcspMember));
+    Mockito.doReturn(actingUser).when(usersService).fetchUserDetails(actingAcspMember.getUserId());
+
+    var response =
+        mockMvc
+            .perform(
+                patch("/acsp-members/{id}", targetAcspMember.getId())
                     .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
+                    .header("Eric-identity", actingUser.getUserId())
                     .header("ERIC-Identity-Type", "oauth2")
                     .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"owner\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereOwnerAttemptsToChangeStandardToOwnerReturnsBadRequest() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT003", "WIT004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/WIT003" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"owner\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereAdminAttemptsToChangeOwnerToOwnerReturnsBadRequest() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI001", "NEI004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/NEI001" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"owner\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereAdminAttemptsToChangeAdminToOwnerReturnsBadRequest() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI002", "NEI004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/NEI002" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"owner\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereAdminAttemptsToChangeStandardToOwnerReturnsBadRequest() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI003", "NEI004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/NEI003" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"owner\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereStandardAttemptsToChangeOwnerToOwnerReturnsBadRequest() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME001", "XME004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/XME001" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"owner\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereStandardAttemptsToChangeAdminToOwnerReturnsBadRequest() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME002", "XME004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/XME002" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"owner\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereStandardAttemptsToChangeStandardToOwnerReturnsBadRequest() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME003", "XME004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/XME003" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"owner\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereOwnerAttemptsToChangeOwnerToAdminSucceeds() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT001", "WIT004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/WIT001" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"admin\"}" ) )
-            .andExpect( status().isOk() );
-
-    final var updatedAcspMembersDao = acspMembersRepository.findById( "WIT001" ).get();
-
-    Assertions.assertEquals( UserRoleEnum.ADMIN, updatedAcspMembersDao.getUserRole() );
-    Assertions.assertNotEquals( acspMemberDaos.getFirst().getEtag(), updatedAcspMembersDao.getEtag() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereOwnerAttemptsToChangeAdminToAdminSucceeds() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT002", "WIT004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/WIT002" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"admin\"}" ) )
-            .andExpect( status().isOk() );
-
-    final var updatedAcspMembersDao = acspMembersRepository.findById( "WIT002" ).get();
-
-    Assertions.assertEquals( UserRoleEnum.ADMIN, updatedAcspMembersDao.getUserRole() );
-    Assertions.assertNotEquals( acspMemberDaos.getFirst().getEtag(), updatedAcspMembersDao.getEtag() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereOwnerAttemptsToChangeStandardToAdminSucceeds() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT003", "WIT004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/WIT003" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"admin\"}" ) )
-            .andExpect( status().isOk() );
-
-    final var updatedAcspMembersDao = acspMembersRepository.findById( "WIT003" ).get();
-
-    Assertions.assertEquals( UserRoleEnum.ADMIN, updatedAcspMembersDao.getUserRole() );
-    Assertions.assertNotEquals( acspMemberDaos.getFirst().getEtag(), updatedAcspMembersDao.getEtag() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereAdminAttemptsToChangeOwnerToAdminReturnsBadRequest() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI001", "NEI004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/NEI001" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"admin\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereAdminAttemptsToChangeAdminToAdminSucceeds() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI002", "NEI004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/NEI002" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"admin\"}" ) )
-            .andExpect( status().isOk() );
-
-    final var updatedAcspMembersDao = acspMembersRepository.findById( "NEI002" ).get();
-
-    Assertions.assertEquals( UserRoleEnum.ADMIN, updatedAcspMembersDao.getUserRole() );
-    Assertions.assertNotEquals( acspMemberDaos.getFirst().getEtag(), updatedAcspMembersDao.getEtag() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereAdminAttemptsToChangeStandardToAdminSucceeds() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI003", "NEI004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/NEI003" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"admin\"}" ) )
-            .andExpect( status().isOk() );
-
-    final var updatedAcspMembersDao = acspMembersRepository.findById( "NEI003" ).get();
-
-    Assertions.assertEquals( UserRoleEnum.ADMIN, updatedAcspMembersDao.getUserRole() );
-    Assertions.assertNotEquals( acspMemberDaos.getFirst().getEtag(), updatedAcspMembersDao.getEtag() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereStandardAttemptsToChangeOwnerToAdminReturnsBadRequest() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME001", "XME004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/XME001" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"admin\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereStandardAttemptsToChangeAdminToAdminReturnsBadRequest() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME002", "XME004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/XME002" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"admin\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereStandardAttemptsToChangeStandardToAdminReturnsBadRequest() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME003", "XME004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/XME003" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"admin\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereOwnerAttemptsToChangeOwnerToStandardSucceeds() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT001", "WIT004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/WIT001" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"standard\"}" ) )
-            .andExpect( status().isOk() );
-
-    final var updatedAcspMembersDao = acspMembersRepository.findById( "WIT001" ).get();
-
-    Assertions.assertEquals( UserRoleEnum.STANDARD, updatedAcspMembersDao.getUserRole() );
-    Assertions.assertNotEquals( acspMemberDaos.getFirst().getEtag(), updatedAcspMembersDao.getEtag() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereOwnerAttemptsToChangeAdminToStandardSucceeds() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT002", "WIT004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/WIT002" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"standard\"}" ) )
-            .andExpect( status().isOk() );
-
-    final var updatedAcspMembersDao = acspMembersRepository.findById( "WIT002" ).get();
-
-    Assertions.assertEquals( UserRoleEnum.STANDARD, updatedAcspMembersDao.getUserRole() );
-    Assertions.assertNotEquals( acspMemberDaos.getFirst().getEtag(), updatedAcspMembersDao.getEtag() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereOwnerAttemptsToChangeStandardToStandardSucceeds() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT003", "WIT004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/WIT003" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"standard\"}" ) )
-            .andExpect( status().isOk() );
-
-    final var updatedAcspMembersDao = acspMembersRepository.findById( "WIT003" ).get();
-
-    Assertions.assertEquals( UserRoleEnum.STANDARD, updatedAcspMembersDao.getUserRole() );
-    Assertions.assertNotEquals( acspMemberDaos.getFirst().getEtag(), updatedAcspMembersDao.getEtag() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereAdminAttemptsToChangeOwnerToStandardSucceeds() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI001", "NEI004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/NEI001" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"standard\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereAdminAttemptsToChangeAdminToStandardSucceeds() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI002", "NEI004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/NEI002" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"standard\"}" ) )
-            .andExpect( status().isOk() );
-
-    final var updatedAcspMembersDao = acspMembersRepository.findById( "NEI002" ).get();
-
-    Assertions.assertEquals( UserRoleEnum.STANDARD, updatedAcspMembersDao.getUserRole() );
-    Assertions.assertNotEquals( acspMemberDaos.getFirst().getEtag(), updatedAcspMembersDao.getEtag() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereAdminAttemptsToChangeStandardToStandardSucceeds() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI003", "NEI004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/NEI003" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"standard\"}" ) )
-            .andExpect( status().isOk() );
-
-    final var updatedAcspMembersDao = acspMembersRepository.findById( "NEI003" ).get();
-
-    Assertions.assertEquals( UserRoleEnum.STANDARD, updatedAcspMembersDao.getUserRole() );
-    Assertions.assertNotEquals( acspMemberDaos.getFirst().getEtag(), updatedAcspMembersDao.getEtag() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereStandardAttemptsToChangeOwnerToStandardReturnsBadRequest() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME001", "XME004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/XME001" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"standard\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereStandardAttemptsToChangeAdminToStandardReturnsBadRequest() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME002", "XME004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/XME002" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"standard\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereStandardAttemptsToChangeStandardToStandardReturnsBadRequest() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME003", "XME004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/XME003" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"standard\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdReturnsBadRequestWhenOwnerAttemptsToRemoveThemselves() throws Exception {
-    acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/WIT004" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"remove_member\"}" ) )
-            .andExpect( status().isBadRequest() );
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        String.format("{\"action\":\"edit_role\",\"user_role\":\"%s\"}", newRole)))
+            .andExpect(expectedStatus)
+            .andReturn();
+
+    if (shouldSucceed) {
+      AcspMembersDao updatedMember =
+          acspMembersRepository.findById(targetAcspMember.getId()).orElseThrow();
+      assertEquals(UserRoleEnum.valueOf(newRole.toUpperCase()), updatedMember.getUserRole());
+    } else {
+      assertEquals(
+          "{\"errors\":[{\"error\":\"Please check the request and try again\",\"type\":\"ch:service\"}]}",
+          response.getResponse().getContentAsString());
+    }
   }
 
   @Test
   void updateAcspMembershipForIdReturnsBadRequestWhenOwnerAttemptsToChangeTheirOwnRole() throws Exception {
-    acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos(  "WIT004" ) );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+    final var actingUser = new User();
+    actingUser.setUserId("self-change-user-id");
 
-    mockMvc.perform( patch( "/acsp-members/WIT004" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
+    final var actingAcspMember = new AcspMembersDao();
+    actingAcspMember.setId("selfchangeid");
+    actingAcspMember.setAcspNumber("acsp-number-self-change");
+    actingAcspMember.setUserId(actingUser.getUserId());
+    actingAcspMember.setUserRole(UserRoleEnum.OWNER);
+    actingAcspMember.setCreatedAt(LocalDateTime.now().minusYears(1));
+    actingAcspMember.setAddedAt(LocalDateTime.now().minusYears(1));
+    actingAcspMember.setEtag(generateEtag());
+
+    acspMembersRepository.insert(actingAcspMember);
+    Mockito.doReturn(actingUser).when(usersService).fetchUserDetails(actingAcspMember.getUserId());
+
+    mockMvc.perform(patch("/acsp-members/{id}", actingAcspMember.getId())
+                    .header("X-Request-Id", "self-change-request-id")
+                    .header("Eric-identity", actingUser.getUserId())
                     .header("ERIC-Identity-Type", "oauth2")
                     .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\", \"user_role\":\"standard\" }" ) )
-            .andExpect( status().isBadRequest() );
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"action\":\"edit_role\",\"user_role\":\"standard\"}"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().json("{\"errors\":[{\"error\":\"Please check the request and try again\",\"type\":\"ch:service\"}]}"));
+
+    AcspMembersDao unchangedMember = acspMembersRepository.findById(actingAcspMember.getId()).orElseThrow();
+    assertEquals(UserRoleEnum.OWNER, unchangedMember.getUserRole());
   }
 
   @AfterEach
