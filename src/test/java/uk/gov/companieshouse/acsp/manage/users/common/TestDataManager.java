@@ -320,6 +320,168 @@ public class TestDataManager {
             return acspMembersDao;
         };
         acspMembersDaoSuppliers.put( "COM016", ComedyHenningAcspMembersDao );
+
+        final Supplier<AcspMembersDao> WitcherGeraltAcspMembersDao = () -> {
+            final var acspMembersDao = new AcspMembersDao();
+            acspMembersDao.setId( "WIT001" );
+            acspMembersDao.setAcspNumber( "WITA001" );
+            acspMembersDao.setUserId( "WITU001" );
+            acspMembersDao.setUserRole( UserRoleEnum.OWNER );
+            acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 20 ) );
+            acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 20 ) );
+            acspMembersDao.setEtag( generateEtag() );
+            return acspMembersDao;
+        };
+        acspMembersDaoSuppliers.put( "WIT001", WitcherGeraltAcspMembersDao );
+
+        final Supplier<AcspMembersDao> WitcherYenneferAcspMembersDao = () -> {
+            final var acspMembersDao = new AcspMembersDao();
+            acspMembersDao.setId( "WIT002" );
+            acspMembersDao.setAcspNumber( "WITA001" );
+            acspMembersDao.setUserId( "WITU002" );
+            acspMembersDao.setUserRole( UserRoleEnum.ADMIN );
+            acspMembersDao.setCreatedAt( LocalDateTime.now().minusMonths( 11 ) );
+            acspMembersDao.setAddedAt( LocalDateTime.now().minusMonths( 11 ) );
+            acspMembersDao.setAddedBy( "WITU001" );
+            acspMembersDao.setEtag( generateEtag() );
+            return acspMembersDao;
+        };
+        acspMembersDaoSuppliers.put( "WIT002", WitcherYenneferAcspMembersDao );
+
+        final Supplier<AcspMembersDao> WitcherDandelionAcspMembersDao = () -> {
+            final var acspMembersDao = new AcspMembersDao();
+            acspMembersDao.setId( "WIT003" );
+            acspMembersDao.setAcspNumber( "WITA001" );
+            acspMembersDao.setUserId( "WITU003" );
+            acspMembersDao.setUserRole( UserRoleEnum.STANDARD );
+            acspMembersDao.setCreatedAt( LocalDateTime.now().minusMonths( 10 ) );
+            acspMembersDao.setAddedAt( LocalDateTime.now().minusMonths( 10 ) );
+            acspMembersDao.setAddedBy( "WITU002" );
+            acspMembersDao.setEtag( generateEtag() );
+            return acspMembersDao;
+        };
+        acspMembersDaoSuppliers.put( "WIT003", WitcherDandelionAcspMembersDao );
+
+        final Supplier<AcspMembersDao> WitcherDemoAcspMembersDao = () -> {
+            final var acspMembersDao = new AcspMembersDao();
+            acspMembersDao.setId( "WIT004" );
+            acspMembersDao.setAcspNumber( "WITA001" );
+            acspMembersDao.setUserId( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+            acspMembersDao.setUserRole( UserRoleEnum.OWNER );
+            acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 21 ) );
+            acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 21 ) );
+            acspMembersDao.setEtag( generateEtag() );
+            return acspMembersDao;
+        };
+        acspMembersDaoSuppliers.put( "WIT004", WitcherDemoAcspMembersDao );
+
+        final Supplier<AcspMembersDao> NeighboursKarlAcspMembersDao = () -> {
+            final var acspMembersDao = new AcspMembersDao();
+            acspMembersDao.setId( "NEI001" );
+            acspMembersDao.setAcspNumber( "NEIA001" );
+            acspMembersDao.setUserId( "NEIU001" );
+            acspMembersDao.setUserRole( UserRoleEnum.OWNER );
+            acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 25 ) );
+            acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 25 ) );
+            acspMembersDao.setEtag( generateEtag() );
+            return acspMembersDao;
+        };
+        acspMembersDaoSuppliers.put( "NEI001", NeighboursKarlAcspMembersDao );
+
+        final Supplier<AcspMembersDao> NeighboursHaroldAcspMembersDao = () -> {
+            final var acspMembersDao = new AcspMembersDao();
+            acspMembersDao.setId( "NEI002" );
+            acspMembersDao.setAcspNumber( "NEIA001" );
+            acspMembersDao.setUserId( "NEIU002" );
+            acspMembersDao.setUserRole( UserRoleEnum.ADMIN );
+            acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 11 ) );
+            acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 11 ) );
+            acspMembersDao.setAddedBy( "NEIU001" );
+            acspMembersDao.setEtag( generateEtag() );
+            return acspMembersDao;
+        };
+        acspMembersDaoSuppliers.put( "NEI002", NeighboursHaroldAcspMembersDao );
+
+        final Supplier<AcspMembersDao> NeighboursToadieAcspMembersDao = () -> {
+            final var acspMembersDao = new AcspMembersDao();
+            acspMembersDao.setId( "NEI003" );
+            acspMembersDao.setAcspNumber( "NEIA001" );
+            acspMembersDao.setUserId( "NEIU003" );
+            acspMembersDao.setUserRole( UserRoleEnum.STANDARD );
+            acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 4 ) );
+            acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 4 ) );
+            acspMembersDao.setAddedBy( "NEIU002" );
+            acspMembersDao.setEtag( generateEtag() );
+            return acspMembersDao;
+        };
+        acspMembersDaoSuppliers.put( "NEI003", NeighboursToadieAcspMembersDao );
+
+        final Supplier<AcspMembersDao> NeighboursDemoAcspMembersDao = () -> {
+            final var acspMembersDao = new AcspMembersDao();
+            acspMembersDao.setId( "NEI004" );
+            acspMembersDao.setAcspNumber( "NEIA001" );
+            acspMembersDao.setUserId( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+            acspMembersDao.setUserRole( UserRoleEnum.ADMIN );
+            acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 26 ) );
+            acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 26 ) );
+            acspMembersDao.setEtag( generateEtag() );
+            return acspMembersDao;
+        };
+        acspMembersDaoSuppliers.put( "NEI004", NeighboursDemoAcspMembersDao );
+
+        final Supplier<AcspMembersDao> XmenWolverineAcspMembersDao = () -> {
+            final var acspMembersDao = new AcspMembersDao();
+            acspMembersDao.setId( "XME001" );
+            acspMembersDao.setAcspNumber( "XMEA001" );
+            acspMembersDao.setUserId( "XMEU001" );
+            acspMembersDao.setUserRole( UserRoleEnum.OWNER );
+            acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 14 ) );
+            acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 14 ) );
+            acspMembersDao.setEtag( generateEtag() );
+            return acspMembersDao;
+        };
+        acspMembersDaoSuppliers.put( "XME001", XmenWolverineAcspMembersDao );
+
+        final Supplier<AcspMembersDao> XmenCyclopsAcspMembersDao = () -> {
+            final var acspMembersDao = new AcspMembersDao();
+            acspMembersDao.setId( "XME002" );
+            acspMembersDao.setAcspNumber( "XMEA001" );
+            acspMembersDao.setUserId( "XMEU002" );
+            acspMembersDao.setUserRole( UserRoleEnum.ADMIN );
+            acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 11 ) );
+            acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 11 ) );
+            acspMembersDao.setAddedBy( "XMEU001" );
+            acspMembersDao.setEtag( generateEtag() );
+            return acspMembersDao;
+        };
+        acspMembersDaoSuppliers.put( "XME002", XmenCyclopsAcspMembersDao );
+
+        final Supplier<AcspMembersDao> XmenGambitAcspMembersDao = () -> {
+            final var acspMembersDao = new AcspMembersDao();
+            acspMembersDao.setId( "XME003" );
+            acspMembersDao.setAcspNumber( "XMEA001" );
+            acspMembersDao.setUserId( "XMEU003" );
+            acspMembersDao.setUserRole( UserRoleEnum.STANDARD );
+            acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 4 ) );
+            acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 4 ) );
+            acspMembersDao.setAddedBy( "XMEU002" );
+            acspMembersDao.setEtag( generateEtag() );
+            return acspMembersDao;
+        };
+        acspMembersDaoSuppliers.put( "XME003", XmenGambitAcspMembersDao );
+
+        final Supplier<AcspMembersDao> XmenDemoAcspMembersDao = () -> {
+            final var acspMembersDao = new AcspMembersDao();
+            acspMembersDao.setId( "XME004" );
+            acspMembersDao.setAcspNumber( "XMEA001" );
+            acspMembersDao.setUserId( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+            acspMembersDao.setUserRole( UserRoleEnum.STANDARD );
+            acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 15 ) );
+            acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 15 ) );
+            acspMembersDao.setEtag( generateEtag() );
+            return acspMembersDao;
+        };
+        acspMembersDaoSuppliers.put( "XME004", XmenDemoAcspMembersDao );
     }
 
     private void instantiateUserDtoSuppliers(){
@@ -476,6 +638,92 @@ public class TestDataManager {
         };
         userDtoSuppliers.put( "COMU016", henningUserDto );
 
+        final Supplier<User> geraltUserDto = () -> {
+            final var userDto = new User();
+            userDto.setUserId( "WITU001" );
+            userDto.setEmail( "geralt@witcher.com" );
+            userDto.setDisplayName( "Geralt of Rivia" );
+            return userDto;
+        };
+        userDtoSuppliers.put( "WITU001", geraltUserDto );
+
+        final Supplier<User> yenneferUserDto = () -> {
+            final var userDto = new User();
+            userDto.setUserId( "WITU002" );
+            userDto.setEmail( "yennefer@witcher.com" );
+            userDto.setDisplayName( "Yennefer of Vengerberg" );
+            return userDto;
+        };
+        userDtoSuppliers.put( "WITU002", yenneferUserDto );
+
+        final Supplier<User> dandelionUserDto = () -> {
+            final var userDto = new User();
+            userDto.setUserId( "WITU003" );
+            userDto.setEmail( "dandelion@witcher.com" );
+            return userDto;
+        };
+        userDtoSuppliers.put( "WITU003", dandelionUserDto );
+
+        final Supplier<User> karlUserDto = () -> {
+            final var userDto = new User();
+            userDto.setUserId( "NEIU001" );
+            userDto.setEmail( "karl.kennedy@neighbours.com" );
+            return userDto;
+        };
+        userDtoSuppliers.put( "NEIU001", karlUserDto );
+
+        final Supplier<User> haroldUserDto = () -> {
+            final var userDto = new User();
+            userDto.setUserId( "NEIU002" );
+            userDto.setEmail( "harold.bishop@neighbours.com" );
+            userDto.setDisplayName( "Harold Bishop" );
+            return userDto;
+        };
+        userDtoSuppliers.put( "NEIU002", haroldUserDto );
+
+        final Supplier<User> toadieUserDto = () -> {
+            final var userDto = new User();
+            userDto.setUserId( "NEIU003" );
+            userDto.setEmail( "toadie@neighbours.com" );
+            userDto.setDisplayName( "Toadie" );
+            return userDto;
+        };
+        userDtoSuppliers.put( "NEIU003", toadieUserDto );
+
+        final Supplier<User> wolverineUserDto = () -> {
+            final var userDto = new User();
+            userDto.setUserId( "XMEU001" );
+            userDto.setEmail( "wolverine@xmen.com" );
+            userDto.setDisplayName( "Wolverine" );
+            return userDto;
+        };
+        userDtoSuppliers.put( "XMEU001", wolverineUserDto );
+
+        final Supplier<User> cyclopsUserDto = () -> {
+            final var userDto = new User();
+            userDto.setUserId( "XMEU002" );
+            userDto.setEmail( "cyclops@xmen.com" );
+            return userDto;
+        };
+        userDtoSuppliers.put( "XMEU002", cyclopsUserDto );
+
+        final Supplier<User> gambitUserDto = () -> {
+            final var userDto = new User();
+            userDto.setUserId( "XMEU003" );
+            userDto.setEmail( "gambit@xmen.com" );
+            userDto.setDisplayName( "Gambit" );
+            return userDto;
+        };
+        userDtoSuppliers.put( "XMEU003", gambitUserDto );
+
+        final Supplier<User> demoUserDto = () -> {
+            final var userDto = new User();
+            userDto.setUserId( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+            userDto.setEmail( "demo@ch.gov.uk" );
+            return userDto;
+        };
+        userDtoSuppliers.put( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", demoUserDto );
+
     }
 
     private void instantiateAcspDataDaoSuppliers(){
@@ -505,6 +753,33 @@ public class TestDataManager {
             return acspDataDao;
         };
         acspDataDaoSuppliers.put( "COMA001", comedyAcspDataDao );
+
+        final Supplier<AcspDataDao> witcherDataDao = () -> {
+            final var acspDataDao = new AcspDataDao();
+            acspDataDao.setId("WITA001");
+            acspDataDao.setAcspName( "Witcher" );
+            acspDataDao.setAcspStatus( "active" );
+            return acspDataDao;
+        };
+        acspDataDaoSuppliers.put( "WITA001", witcherDataDao );
+
+        final Supplier<AcspDataDao> neighboursDataDao = () -> {
+            final var acspDataDao = new AcspDataDao();
+            acspDataDao.setId("NEIA001");
+            acspDataDao.setAcspName( "Neighbours" );
+            acspDataDao.setAcspStatus( "active" );
+            return acspDataDao;
+        };
+        acspDataDaoSuppliers.put( "NEIA001", neighboursDataDao );
+
+        final Supplier<AcspDataDao> xmenDataDao = () -> {
+            final var acspDataDao = new AcspDataDao();
+            acspDataDao.setId("XMEA001");
+            acspDataDao.setAcspName( "XMen" );
+            acspDataDao.setAcspStatus( "active" );
+            return acspDataDao;
+        };
+        acspDataDaoSuppliers.put( "XMEA001", xmenDataDao );
     }
 
     private TestDataManager(){

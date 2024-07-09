@@ -13,6 +13,7 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Update;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -130,6 +131,49 @@ class AcspMembersRepositoryTest {
 
         Assertions.assertEquals( 3, acspMemberIds.size() );
         Assertions.assertTrue( acspMemberIds.containsAll( Set.of( "COM004", "COM005", "COM006" ) ) );
+    }
+
+    @Test
+    void fetchAcspMembershipWithNullOrMalformedOrNonexistentAcspNumberOrUserIdReturnsEmptyOptional(){
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001" ) );
+        Assertions.assertFalse( acspMembersRepository.fetchAcspMembership( null, "TSU001" ).isPresent() );
+        Assertions.assertFalse( acspMembersRepository.fetchAcspMembership( "££££££", "TSU001" ).isPresent() );
+        Assertions.assertFalse( acspMembersRepository.fetchAcspMembership( "TS002", "TSU001" ).isPresent() );
+        Assertions.assertFalse( acspMembersRepository.fetchAcspMembership( "TSA001", null ).isPresent() );
+        Assertions.assertFalse( acspMembersRepository.fetchAcspMembership( "TSA001", "£££" ).isPresent() );
+        Assertions.assertFalse( acspMembersRepository.fetchAcspMembership( "TSA001", "TSU002" ).isPresent() );
+    }
+
+    @Test
+    void fetchAcspMembershipRetrievesMembership(){
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001" ) );
+        Assertions.assertTrue( acspMembersRepository.fetchAcspMembership( "TSA001", "TSU001" ).isPresent() );
+    }
+
+    @Test
+    void updateAcspMembershipWithNullOrMalformedOrNonexistentAcspMemberIdDoesNotPerformUpdate(){
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001" ) );
+
+        final var update = new Update().set( "user_role", UserRoleEnum.ADMIN );
+
+        Assertions.assertEquals( 0, acspMembersRepository.updateAcspMembership( null, update ) );
+        Assertions.assertEquals( 0, acspMembersRepository.updateAcspMembership( "£££", update ) );
+        Assertions.assertEquals( 0, acspMembersRepository.updateAcspMembership( "TS002", update ) );
+    }
+
+    @Test
+    void updateAcspMembershipWithNullUpdateThrowsIllegalStateException(){
+        Assertions.assertThrows( IllegalStateException.class, () -> acspMembersRepository.updateAcspMembership( "TS001", null ) );
+    }
+
+    @Test
+    void updateAcspMembershipUpdatesMembership(){
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001" ) );
+
+        final var update = new Update().set( "user_role", UserRoleEnum.ADMIN );
+        acspMembersRepository.updateAcspMembership( "TS001", update );
+
+        Assertions.assertEquals( UserRoleEnum.ADMIN, acspMembersRepository.findById( "TS001" ).get().getUserRole() );
     }
 
     @AfterEach
