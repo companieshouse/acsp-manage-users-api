@@ -257,13 +257,15 @@ public class UserAcspMembership implements UserAcspMembershipInterface {
       throwBadRequestWhenActionIsNotPermitted( xRequestId, requestingAcspMember, targetAcspMembership );
 
       if ( action.equals( ActionEnum.EDIT_ROLE ) ){
+        final var newRole =
         Optional.ofNullable( targetUserNewRole )
                 .filter( role -> !role.equals( RequestBodyPatch.UserRoleEnum.OWNER ) )
                 .orElseThrow( () -> {
                     LOG.error( String.format( "%s: role is null or owner", xRequestId ) );
-                    return new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
-                } );
-        acspMembersService.updateRole( targetAcspMemberId, targetUserNewRole.getValue() );
+                    return new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN ); } )
+                .getValue();
+
+        acspMembersService.updateRole( targetAcspMemberId, newRole );
       }
 
       if ( action.equals( ActionEnum.REMOVE_MEMBER ) ){
