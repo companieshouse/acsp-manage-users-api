@@ -567,7 +567,7 @@ class AcspMembersServiceTest {
 
     @Test
     void updateRoleWithNullAcspMemberIdOrNullOrMalformedUserRoleThrowsIllegalArgumentException(){
-        Assertions.assertThrows( IllegalArgumentException.class, () -> acspMembersService.updateRole( null, UserRoleEnum.STANDARD.getValue() ) );
+        Assertions.assertThrows( IllegalArgumentException.class, () -> acspMembersService.updateRole( null, "standard" ) );
         Assertions.assertThrows( IllegalArgumentException.class, () -> acspMembersService.updateRole( "TS001", null ) );
         Assertions.assertThrows( IllegalArgumentException.class, () -> acspMembersService.updateRole( "TS001", "Hippy" ) );
     }
@@ -576,8 +576,8 @@ class AcspMembersServiceTest {
     void updateRoleWithMalformedOrNonexistentAcspMemberIdThrowsInternalServerErrorRuntimeException(){
         Mockito.doReturn( 0 ).when( acspMembersRepository ).updateAcspMembership( anyString(), any( Update.class ) );
 
-        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspMembersService.updateRole( "£££", UserRoleEnum.STANDARD.getValue() ) );
-        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspMembersService.updateRole( "TS002", UserRoleEnum.STANDARD.getValue() ) );
+        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspMembersService.updateRole( "£££", "standard" ) );
+        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspMembersService.updateRole( "TS002", "standard" ) );
     }
 
     @Test
