@@ -2,6 +2,8 @@ package uk.gov.companieshouse.acsp.manage.users.integration;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -724,467 +726,416 @@ class UserAcspMembershipIntegrationTest {
     }
   }
 
-  @Test
-  void updateAcspMembershipForIdWithNullXRequestIdReturnsBadRequest() throws Exception {
-    mockMvc.perform( patch( "/acsp-members/WIT002" )
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"remove_member\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
+  @Nested
+  @DisplayName("PATCH /acsp-members Tests")
+  class PatchAcspMembershipTests {
 
-  @Test
-  void updateAcspMembershipForIdWithMalformedTargetAcspMemberIdReturnsBadRequest() throws Exception {
-    mockMvc.perform( patch( "/acsp-members/£" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"remove_member\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWithNonexistentTargetAcspMemberIdReturnsNotFound() throws Exception {
-    acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/WIT002" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"remove_member\"}" ) )
-            .andExpect( status().isNotFound() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWithoutRequestBodyReturnsBadRequest() throws Exception {
-    mockMvc.perform( patch( "/acsp-members/WIT002" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWithoutActionReturnsBadRequest() throws Exception {
-    mockMvc.perform( patch( "/acsp-members/WIT002" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWithMalformedActionReturnsBadRequest() throws Exception {
-    mockMvc.perform( patch( "/acsp-members/WIT002" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"dance\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWithoutEricIdentityReturnsUnauthorised() throws Exception {
-    mockMvc.perform( patch( "/acsp-members/WIT002" )
-                    .header("X-Request-Id", "theId123")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"remove_member\"}" ) )
-            .andExpect( status().isUnauthorized() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWithMalformedEricIdentityReturnsForbidden() throws Exception {
-    Mockito.doThrow( new NotFoundRuntimeException( "acsp-manage-users-api", "Cannot find user" ) ).when( usersService ).fetchUserDetails( "£££" );
-
-    mockMvc.perform( patch( "/acsp-members/WIT002" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "£££")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"remove_member\"}" ) )
-            .andExpect( status().isForbidden() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWithNonexistentEricIdentityReturnsForbidden() throws Exception {
-    Mockito.doThrow( new NotFoundRuntimeException( "acsp-manage-users-api", "Cannot find user" ) ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/WIT002" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"remove_member\"}" ) )
-            .andExpect( status().isForbidden() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereActionIsEditRoleButUserRoleIsNullReturnsBadRequest() throws Exception {
-    acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT002", "WIT004" ) );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/WIT002" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereActionIsEditRoleAndUserRoleIsMalformedReturnsBadRequest() throws Exception {
-    mockMvc.perform( patch( "/acsp-members/WIT002" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"edit_role\",\"user_role\":\"chef\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereAssociationBetweenEricIdentityAndAcspDoesNotExistReturnsBadRequest() throws Exception {
-    acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT002" ) );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/WIT002" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"remove_member\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereOwnerAttemptsToRemoveOwnerSucceeds() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT001", "WIT004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/WIT001" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"remove_member\"}" ) )
-            .andExpect( status().isOk() );
-
-    final var updatedAcspMember = acspMembersRepository.findById( "WIT001" ).get();
-
-    Assertions.assertNotNull( updatedAcspMember.getRemovedAt() );
-    Assertions.assertEquals("67ZeMsvAEgkBWs7tNKacdrPvOmQ", updatedAcspMember.getRemovedBy() );
-    Assertions.assertNotEquals( acspMemberDaos.getFirst().getEtag(), updatedAcspMember.getEtag() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereOwnerAttemptsToRemoveAdminSucceeds() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT002", "WIT004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/WIT002" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"remove_member\"}" ) )
-            .andExpect( status().isOk() );
-
-    final var updatedAcspMember = acspMembersRepository.findById( "WIT002" ).get();
-
-    Assertions.assertNotNull( updatedAcspMember.getRemovedAt() );
-    Assertions.assertEquals("67ZeMsvAEgkBWs7tNKacdrPvOmQ", updatedAcspMember.getRemovedBy() );
-    Assertions.assertNotEquals( acspMemberDaos.getFirst().getEtag(), updatedAcspMember.getEtag() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereOwnerAttemptsToRemoveStandardSucceeds() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT003", "WIT004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/WIT003" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"remove_member\"}" ) )
-            .andExpect( status().isOk() );
-
-    final var updatedAcspMember = acspMembersRepository.findById( "WIT003" ).get();
-
-    Assertions.assertNotNull( updatedAcspMember.getRemovedAt() );
-    Assertions.assertEquals("67ZeMsvAEgkBWs7tNKacdrPvOmQ", updatedAcspMember.getRemovedBy() );
-    Assertions.assertNotEquals( acspMemberDaos.getFirst().getEtag(), updatedAcspMember.getEtag() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereAdminAttemptsToRemoveOwnerReturnsBadRequest() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI001", "NEI004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/NEI001" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"remove_member\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereAdminAttemptsToRemoveAdminSucceeds() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI002", "NEI004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/NEI002" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"remove_member\"}" ) )
-            .andExpect( status().isOk() );
-
-    final var updatedAcspMember = acspMembersRepository.findById( "NEI002" ).get();
-
-    Assertions.assertNotNull( updatedAcspMember.getRemovedAt() );
-    Assertions.assertEquals("67ZeMsvAEgkBWs7tNKacdrPvOmQ", updatedAcspMember.getRemovedBy() );
-    Assertions.assertNotEquals( acspMemberDaos.getFirst().getEtag(), updatedAcspMember.getEtag() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereAdminAttemptsToRemoveStandardSucceeds() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "NEI003", "NEI004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/NEI003" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"remove_member\"}" ) )
-            .andExpect( status().isOk() );
-
-    final var updatedAcspMember = acspMembersRepository.findById( "NEI003" ).get();
-
-    Assertions.assertNotNull( updatedAcspMember.getRemovedAt() );
-    Assertions.assertEquals("67ZeMsvAEgkBWs7tNKacdrPvOmQ", updatedAcspMember.getRemovedBy() );
-    Assertions.assertNotEquals( acspMemberDaos.getFirst().getEtag(), updatedAcspMember.getEtag() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereStandardAttemptsToRemoveOwnerReturnsBadRequest() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME001", "XME004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/XME001" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"remove_member\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereStandardAttemptsToRemoveAdminReturnsBadRequest() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME002", "XME004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/XME002" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"remove_member\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  @Test
-  void updateAcspMembershipForIdWhereStandardAttemptsToRemoveStandardReturnsBadRequest() throws Exception {
-    final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME003", "XME004" );
-
-    acspMembersRepository.insert( acspMemberDaos );
-    Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-    mockMvc.perform( patch( "/acsp-members/XME003" )
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType( MediaType.APPLICATION_JSON )
-                    .content( "{\"action\":\"remove_member\"}" ) )
-            .andExpect( status().isBadRequest() );
-  }
-
-  private static Stream<Arguments> membershipUpdateScenarios() {
-    // actorRole, targetRole, newRole, shouldSucceed, expectedStatus
-    return Stream.of(
-        // Owner actions
-        Arguments.of("owner", "owner", "admin", true, status().isOk()),
-        Arguments.of("owner", "owner", "standard", true, status().isOk()),
-        Arguments.of("owner", "owner", "owner", false, status().isBadRequest()),
-        Arguments.of("owner", "admin", "standard", true, status().isOk()),
-        Arguments.of("owner", "admin", "admin", true, status().isOk()),
-        Arguments.of("owner", "admin", "owner", false, status().isBadRequest()),
-        Arguments.of("owner", "standard", "admin", true, status().isOk()),
-        Arguments.of("owner", "standard", "standard", true, status().isOk()),
-        Arguments.of("owner", "standard", "owner", false, status().isBadRequest()),
-
-        // Admin actions
-        Arguments.of("admin", "owner", "standard", false, status().isBadRequest()),
-        Arguments.of("admin", "owner", "admin", false, status().isBadRequest()),
-        Arguments.of("admin", "owner", "owner", false, status().isBadRequest()),
-        Arguments.of("admin", "admin", "standard", true, status().isOk()),
-        Arguments.of("admin", "admin", "admin", true, status().isOk()),
-        Arguments.of("admin", "admin", "owner", false, status().isBadRequest()),
-        Arguments.of("admin", "standard", "admin", true, status().isOk()),
-        Arguments.of("admin", "standard", "standard", true, status().isOk()),
-        Arguments.of("admin", "standard", "owner", false, status().isBadRequest()),
-
-        // Standard member actions
-        Arguments.of("standard", "owner", "admin", false, status().isBadRequest()),
-        Arguments.of("standard", "owner", "standard", false, status().isBadRequest()),
-        Arguments.of("standard", "owner", "owner", false, status().isBadRequest()),
-        Arguments.of("standard", "admin", "standard", false, status().isBadRequest()),
-        Arguments.of("standard", "admin", "admin", false, status().isBadRequest()),
-        Arguments.of("standard", "admin", "owner", false, status().isBadRequest()),
-        Arguments.of("standard", "standard", "admin", false, status().isBadRequest()),
-        Arguments.of("standard", "standard", "standard", false, status().isBadRequest()),
-        Arguments.of("standard", "standard", "owner", false, status().isBadRequest()));
-  }
-
-  @ParameterizedTest
-  @MethodSource("membershipUpdateScenarios")
-  void testUpdateAcspMembershipScenarios(
-      String actorRole,
-      String targetRole,
-      String newRole,
-      boolean shouldSucceed,
-      ResultMatcher expectedStatus)
-      throws Exception {
-    final var actingUser = new User();
-    actingUser.setUserId("actor-user-id");
-
-    final var actingAcspMember = new AcspMembersDao();
-    actingAcspMember.setId("actorid");
-    actingAcspMember.setAcspNumber("acsp-number-for-updating-role");
-    actingAcspMember.setUserId(actingUser.getUserId());
-    actingAcspMember.setUserRole(UserRoleEnum.fromValue(actorRole));
-    actingAcspMember.setCreatedAt(LocalDateTime.now().minusYears(20));
-    actingAcspMember.setAddedAt(LocalDateTime.now().minusYears(20));
-    actingAcspMember.setEtag(generateEtag());
-
-    final var targetAcspMember = new AcspMembersDao();
-    targetAcspMember.setId("targetid");
-    targetAcspMember.setAcspNumber("acsp-number-for-updating-role");
-    targetAcspMember.setUserId("target-user-id");
-    targetAcspMember.setUserRole(UserRoleEnum.fromValue(targetRole));
-    targetAcspMember.setCreatedAt(LocalDateTime.now().minusYears(20));
-    targetAcspMember.setAddedAt(LocalDateTime.now().minusYears(20));
-    targetAcspMember.setEtag(generateEtag());
-
-    acspMembersRepository.insert(List.of(actingAcspMember, targetAcspMember));
-    Mockito.doReturn(actingUser).when(usersService).fetchUserDetails(actingAcspMember.getUserId());
-
-    var response =
-        mockMvc
-            .perform(
-                patch("/acsp-members/{id}", targetAcspMember.getId())
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", actingUser.getUserId())
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(
-                        String.format("{\"action\":\"edit_role\",\"user_role\":\"%s\"}", newRole)))
-            .andExpect(expectedStatus)
-            .andReturn();
-
-    if (shouldSucceed) {
-      AcspMembersDao updatedMember =
-          acspMembersRepository.findById(targetAcspMember.getId()).orElseThrow();
-      assertEquals(UserRoleEnum.valueOf(newRole.toUpperCase()), updatedMember.getUserRole());
-    } else {
-      assertEquals(
-          "{\"errors\":[{\"error\":\"Please check the request and try again\",\"type\":\"ch:service\"}]}",
-          response.getResponse().getContentAsString());
+    @Test
+    void updateAcspMembershipForIdWithNullXRequestIdReturnsBadRequest() throws Exception {
+      mockMvc
+          .perform(
+              patch("/acsp-members/WIT002")
+                  .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .header("ERIC-Authorised-Key-Roles", "*")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"action\":\"remove_member\"}"))
+          .andExpect(status().isBadRequest());
     }
-  }
 
-  @Test
-  void updateAcspMembershipForIdReturnsBadRequestWhenOwnerAttemptsToChangeTheirOwnRole() throws Exception {
-    final var actingUser = new User();
-    actingUser.setUserId("self-change-user-id");
+    @Test
+    void updateAcspMembershipForIdWithMalformedTargetAcspMemberIdReturnsBadRequest()
+        throws Exception {
+      mockMvc
+          .perform(
+              patch("/acsp-members/£")
+                  .header("X-Request-Id", "theId123")
+                  .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .header("ERIC-Authorised-Key-Roles", "*")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"action\":\"remove_member\"}"))
+          .andExpect(status().isBadRequest());
+    }
 
-    final var actingAcspMember = new AcspMembersDao();
-    actingAcspMember.setId("selfchangeid");
-    actingAcspMember.setAcspNumber("acsp-number-self-change");
-    actingAcspMember.setUserId(actingUser.getUserId());
-    actingAcspMember.setUserRole(UserRoleEnum.OWNER);
-    actingAcspMember.setCreatedAt(LocalDateTime.now().minusYears(1));
-    actingAcspMember.setAddedAt(LocalDateTime.now().minusYears(1));
-    actingAcspMember.setEtag(generateEtag());
+    @Test
+    void updateAcspMembershipForIdWithNonexistentTargetAcspMemberIdReturnsNotFound()
+        throws Exception {
+      acspMembersRepository.insert(testDataManager.fetchAcspMembersDaos("WIT004"));
+      Mockito.doReturn(testDataManager.fetchUserDtos("67ZeMsvAEgkBWs7tNKacdrPvOmQ").getFirst())
+          .when(usersService)
+          .fetchUserDetails("67ZeMsvAEgkBWs7tNKacdrPvOmQ");
 
-    acspMembersRepository.insert(actingAcspMember);
-    Mockito.doReturn(actingUser).when(usersService).fetchUserDetails(actingAcspMember.getUserId());
+      mockMvc
+          .perform(
+              patch("/acsp-members/WIT002")
+                  .header("X-Request-Id", "theId123")
+                  .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .header("ERIC-Authorised-Key-Roles", "*")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"action\":\"remove_member\"}"))
+          .andExpect(status().isNotFound());
+    }
 
-    mockMvc.perform(patch("/acsp-members/{id}", actingAcspMember.getId())
-                    .header("X-Request-Id", "self-change-request-id")
-                    .header("Eric-identity", actingUser.getUserId())
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("{\"action\":\"edit_role\",\"user_role\":\"standard\"}"))
-            .andExpect(status().isBadRequest())
-            .andExpect(content().json("{\"errors\":[{\"error\":\"Please check the request and try again\",\"type\":\"ch:service\"}]}"));
+    @Test
+    void updateAcspMembershipForIdWithoutRequestBodyReturnsBadRequest() throws Exception {
+      mockMvc
+          .perform(
+              patch("/acsp-members/WIT002")
+                  .header("X-Request-Id", "theId123")
+                  .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .header("ERIC-Authorised-Key-Roles", "*")
+                  .contentType(MediaType.APPLICATION_JSON))
+          .andExpect(status().isBadRequest());
+    }
 
-    AcspMembersDao unchangedMember = acspMembersRepository.findById(actingAcspMember.getId()).orElseThrow();
-    assertEquals(UserRoleEnum.OWNER, unchangedMember.getUserRole());
+    @Test
+    void updateAcspMembershipForIdWithoutActionReturnsBadRequest() throws Exception {
+      mockMvc
+          .perform(
+              patch("/acsp-members/WIT002")
+                  .header("X-Request-Id", "theId123")
+                  .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .header("ERIC-Authorised-Key-Roles", "*")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{}"))
+          .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateAcspMembershipForIdWithMalformedActionReturnsBadRequest() throws Exception {
+      mockMvc
+          .perform(
+              patch("/acsp-members/WIT002")
+                  .header("X-Request-Id", "theId123")
+                  .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .header("ERIC-Authorised-Key-Roles", "*")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"action\":\"dance\"}"))
+          .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateAcspMembershipForIdWithoutEricIdentityReturnsUnauthorised() throws Exception {
+      mockMvc
+          .perform(
+              patch("/acsp-members/WIT002")
+                  .header("X-Request-Id", "theId123")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .header("ERIC-Authorised-Key-Roles", "*")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"action\":\"remove_member\"}"))
+          .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void updateAcspMembershipForIdWithMalformedEricIdentityReturnsForbidden() throws Exception {
+      Mockito.doThrow(new NotFoundRuntimeException("acsp-manage-users-api", "Cannot find user"))
+          .when(usersService)
+          .fetchUserDetails("£££");
+
+      mockMvc
+          .perform(
+              patch("/acsp-members/WIT002")
+                  .header("X-Request-Id", "theId123")
+                  .header("Eric-identity", "£££")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .header("ERIC-Authorised-Key-Roles", "*")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"action\":\"remove_member\"}"))
+          .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void updateAcspMembershipForIdWithNonexistentEricIdentityReturnsForbidden() throws Exception {
+      Mockito.doThrow(new NotFoundRuntimeException("acsp-manage-users-api", "Cannot find user"))
+          .when(usersService)
+          .fetchUserDetails("67ZeMsvAEgkBWs7tNKacdrPvOmQ");
+
+      mockMvc
+          .perform(
+              patch("/acsp-members/WIT002")
+                  .header("X-Request-Id", "theId123")
+                  .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .header("ERIC-Authorised-Key-Roles", "*")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"action\":\"remove_member\"}"))
+          .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void updateAcspMembershipForIdWhereActionIsEditRoleButUserRoleIsNullReturnsBadRequest()
+        throws Exception {
+      acspMembersRepository.insert(testDataManager.fetchAcspMembersDaos("WIT002", "WIT004"));
+      Mockito.doReturn(testDataManager.fetchUserDtos("67ZeMsvAEgkBWs7tNKacdrPvOmQ").getFirst())
+          .when(usersService)
+          .fetchUserDetails("67ZeMsvAEgkBWs7tNKacdrPvOmQ");
+
+      mockMvc
+          .perform(
+              patch("/acsp-members/WIT002")
+                  .header("X-Request-Id", "theId123")
+                  .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .header("ERIC-Authorised-Key-Roles", "*")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"action\":\"edit_role\"}"))
+          .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateAcspMembershipForIdWhereActionIsEditRoleAndUserRoleIsMalformedReturnsBadRequest()
+        throws Exception {
+      mockMvc
+          .perform(
+              patch("/acsp-members/WIT002")
+                  .header("X-Request-Id", "theId123")
+                  .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .header("ERIC-Authorised-Key-Roles", "*")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"action\":\"edit_role\",\"user_role\":\"chef\"}"))
+          .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void
+        updateAcspMembershipForIdWhereAssociationBetweenEricIdentityAndAcspDoesNotExistReturnsBadRequest()
+            throws Exception {
+      acspMembersRepository.insert(testDataManager.fetchAcspMembersDaos("WIT002"));
+      Mockito.doReturn(testDataManager.fetchUserDtos("67ZeMsvAEgkBWs7tNKacdrPvOmQ").getFirst())
+          .when(usersService)
+          .fetchUserDetails("67ZeMsvAEgkBWs7tNKacdrPvOmQ");
+
+      mockMvc
+          .perform(
+              patch("/acsp-members/WIT002")
+                  .header("X-Request-Id", "theId123")
+                  .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .header("ERIC-Authorised-Key-Roles", "*")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"action\":\"remove_member\"}"))
+          .andExpect(status().isBadRequest());
+    }
+
+    private static Stream<Arguments> membershipRemovalScenarios() {
+      return Stream.of(
+          // Owner actions
+          Arguments.of("owner", "owner", true, status().isOk()),
+          Arguments.of("owner", "admin", true, status().isOk()),
+          Arguments.of("owner", "standard", true, status().isOk()),
+
+          // Admin actions
+          Arguments.of("admin", "owner", false, status().isBadRequest()),
+          Arguments.of("admin", "admin", true, status().isOk()),
+          Arguments.of("admin", "standard", true, status().isOk()),
+
+          // Standard member actions
+          Arguments.of("standard", "owner", false, status().isBadRequest()),
+          Arguments.of("standard", "admin", false, status().isBadRequest()),
+          Arguments.of("standard", "standard", false, status().isBadRequest()));
+    }
+
+    @ParameterizedTest
+    @MethodSource("membershipRemovalScenarios")
+    void testUpdateAcspMembershipRemovalScenarios(
+        String actorRole, String targetRole, boolean shouldSucceed, ResultMatcher expectedStatus)
+        throws Exception {
+
+      final var actingUser = new User();
+      actingUser.setUserId("actor-user-id");
+
+      final var actingAcspMember = new AcspMembersDao();
+      actingAcspMember.setId("actorid");
+      actingAcspMember.setAcspNumber("acsp-number-for-removal");
+      actingAcspMember.setUserId(actingUser.getUserId());
+      actingAcspMember.setUserRole(UserRoleEnum.fromValue(actorRole));
+      actingAcspMember.setCreatedAt(LocalDateTime.now().minusYears(20));
+      actingAcspMember.setAddedAt(LocalDateTime.now().minusYears(20));
+      actingAcspMember.setEtag(generateEtag());
+
+      final var targetAcspMember = new AcspMembersDao();
+      targetAcspMember.setId("targetid");
+      targetAcspMember.setAcspNumber("acsp-number-for-removal");
+      targetAcspMember.setUserId("target-user-id");
+      targetAcspMember.setUserRole(UserRoleEnum.fromValue(targetRole));
+      targetAcspMember.setCreatedAt(LocalDateTime.now().minusYears(20));
+      targetAcspMember.setAddedAt(LocalDateTime.now().minusYears(20));
+      targetAcspMember.setEtag(generateEtag());
+
+      acspMembersRepository.insert(List.of(actingAcspMember, targetAcspMember));
+      Mockito.doReturn(actingUser)
+          .when(usersService)
+          .fetchUserDetails(actingAcspMember.getUserId());
+
+      var response =
+          mockMvc
+              .perform(
+                  patch("/acsp-members/{id}", targetAcspMember.getId())
+                      .header("X-Request-Id", "theId123")
+                      .header("Eric-identity", actingUser.getUserId())
+                      .header("ERIC-Identity-Type", "oauth2")
+                      .header("ERIC-Authorised-Key-Roles", "*")
+                      .contentType(MediaType.APPLICATION_JSON)
+                      .content("{\"action\":\"remove_member\"}"))
+              .andExpect(expectedStatus)
+              .andReturn();
+
+      if (shouldSucceed) {
+        AcspMembersDao updatedMember =
+            acspMembersRepository.findById(targetAcspMember.getId()).orElseThrow();
+        assertNotNull(updatedMember.getRemovedAt());
+        assertEquals(actingUser.getUserId(), updatedMember.getRemovedBy());
+        assertNotEquals(targetAcspMember.getEtag(), updatedMember.getEtag());
+      } else {
+        assertEquals(
+            "{\"errors\":[{\"error\":\"Please check the request and try again\",\"type\":\"ch:service\"}]}",
+            response.getResponse().getContentAsString());
+      }
+    }
+
+    private static Stream<Arguments> membershipUpdateScenarios() {
+      return Stream.of(
+          // Owner actions
+          Arguments.of("owner", "owner", "admin", true, status().isOk()),
+          Arguments.of("owner", "owner", "standard", true, status().isOk()),
+          Arguments.of("owner", "owner", "owner", false, status().isBadRequest()),
+          Arguments.of("owner", "admin", "standard", true, status().isOk()),
+          Arguments.of("owner", "admin", "admin", true, status().isOk()),
+          Arguments.of("owner", "admin", "owner", false, status().isBadRequest()),
+          Arguments.of("owner", "standard", "admin", true, status().isOk()),
+          Arguments.of("owner", "standard", "standard", true, status().isOk()),
+          Arguments.of("owner", "standard", "owner", false, status().isBadRequest()),
+
+          // Admin actions
+          Arguments.of("admin", "owner", "standard", false, status().isBadRequest()),
+          Arguments.of("admin", "owner", "admin", false, status().isBadRequest()),
+          Arguments.of("admin", "owner", "owner", false, status().isBadRequest()),
+          Arguments.of("admin", "admin", "standard", true, status().isOk()),
+          Arguments.of("admin", "admin", "admin", true, status().isOk()),
+          Arguments.of("admin", "admin", "owner", false, status().isBadRequest()),
+          Arguments.of("admin", "standard", "admin", true, status().isOk()),
+          Arguments.of("admin", "standard", "standard", true, status().isOk()),
+          Arguments.of("admin", "standard", "owner", false, status().isBadRequest()),
+
+          // Standard member actions
+          Arguments.of("standard", "owner", "admin", false, status().isBadRequest()),
+          Arguments.of("standard", "owner", "standard", false, status().isBadRequest()),
+          Arguments.of("standard", "owner", "owner", false, status().isBadRequest()),
+          Arguments.of("standard", "admin", "standard", false, status().isBadRequest()),
+          Arguments.of("standard", "admin", "admin", false, status().isBadRequest()),
+          Arguments.of("standard", "admin", "owner", false, status().isBadRequest()),
+          Arguments.of("standard", "standard", "admin", false, status().isBadRequest()),
+          Arguments.of("standard", "standard", "standard", false, status().isBadRequest()),
+          Arguments.of("standard", "standard", "owner", false, status().isBadRequest()));
+    }
+
+    @ParameterizedTest
+    @MethodSource("membershipUpdateScenarios")
+    void testUpdateAcspMembershipScenarios(
+        String actorRole,
+        String targetRole,
+        String newRole,
+        boolean shouldSucceed,
+        ResultMatcher expectedStatus)
+        throws Exception {
+      final var actingUser = new User();
+      actingUser.setUserId("actor-user-id");
+
+      final var actingAcspMember = new AcspMembersDao();
+      actingAcspMember.setId("actorid");
+      actingAcspMember.setAcspNumber("acsp-number-for-updating-role");
+      actingAcspMember.setUserId(actingUser.getUserId());
+      actingAcspMember.setUserRole(UserRoleEnum.fromValue(actorRole));
+      actingAcspMember.setCreatedAt(LocalDateTime.now().minusYears(20));
+      actingAcspMember.setAddedAt(LocalDateTime.now().minusYears(20));
+      actingAcspMember.setEtag(generateEtag());
+
+      final var targetAcspMember = new AcspMembersDao();
+      targetAcspMember.setId("targetid");
+      targetAcspMember.setAcspNumber("acsp-number-for-updating-role");
+      targetAcspMember.setUserId("target-user-id");
+      targetAcspMember.setUserRole(UserRoleEnum.fromValue(targetRole));
+      targetAcspMember.setCreatedAt(LocalDateTime.now().minusYears(20));
+      targetAcspMember.setAddedAt(LocalDateTime.now().minusYears(20));
+      targetAcspMember.setEtag(generateEtag());
+
+      acspMembersRepository.insert(List.of(actingAcspMember, targetAcspMember));
+      Mockito.doReturn(actingUser)
+          .when(usersService)
+          .fetchUserDetails(actingAcspMember.getUserId());
+
+      var response =
+          mockMvc
+              .perform(
+                  patch("/acsp-members/{id}", targetAcspMember.getId())
+                      .header("X-Request-Id", "theId123")
+                      .header("Eric-identity", actingUser.getUserId())
+                      .header("ERIC-Identity-Type", "oauth2")
+                      .header("ERIC-Authorised-Key-Roles", "*")
+                      .contentType(MediaType.APPLICATION_JSON)
+                      .content(
+                          String.format(
+                              "{\"action\":\"edit_role\",\"user_role\":\"%s\"}", newRole)))
+              .andExpect(expectedStatus)
+              .andReturn();
+
+      if (shouldSucceed) {
+        AcspMembersDao updatedMember =
+            acspMembersRepository.findById(targetAcspMember.getId()).orElseThrow();
+        assertEquals(UserRoleEnum.valueOf(newRole.toUpperCase()), updatedMember.getUserRole());
+      } else {
+        assertEquals(
+            "{\"errors\":[{\"error\":\"Please check the request and try again\",\"type\":\"ch:service\"}]}",
+            response.getResponse().getContentAsString());
+      }
+    }
+
+    @Test
+    void updateAcspMembershipForIdReturnsBadRequestWhenOwnerAttemptsToChangeTheirOwnRole()
+        throws Exception {
+      final var actingUser = new User();
+      actingUser.setUserId("self-change-user-id");
+
+      final var actingAcspMember = new AcspMembersDao();
+      actingAcspMember.setId("selfchangeid");
+      actingAcspMember.setAcspNumber("acsp-number-self-change");
+      actingAcspMember.setUserId(actingUser.getUserId());
+      actingAcspMember.setUserRole(UserRoleEnum.OWNER);
+      actingAcspMember.setCreatedAt(LocalDateTime.now().minusYears(1));
+      actingAcspMember.setAddedAt(LocalDateTime.now().minusYears(1));
+      actingAcspMember.setEtag(generateEtag());
+
+      acspMembersRepository.insert(actingAcspMember);
+      Mockito.doReturn(actingUser)
+          .when(usersService)
+          .fetchUserDetails(actingAcspMember.getUserId());
+
+      mockMvc
+          .perform(
+              patch("/acsp-members/{id}", actingAcspMember.getId())
+                  .header("X-Request-Id", "self-change-request-id")
+                  .header("Eric-identity", actingUser.getUserId())
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .header("ERIC-Authorised-Key-Roles", "*")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"action\":\"edit_role\",\"user_role\":\"standard\"}"))
+          .andExpect(status().isBadRequest())
+          .andExpect(
+              content()
+                  .json(
+                      "{\"errors\":[{\"error\":\"Please check the request and try again\",\"type\":\"ch:service\"}]}"));
+
+      AcspMembersDao unchangedMember =
+          acspMembersRepository.findById(actingAcspMember.getId()).orElseThrow();
+      assertEquals(UserRoleEnum.OWNER, unchangedMember.getUserRole());
+    }
   }
 
   @AfterEach
