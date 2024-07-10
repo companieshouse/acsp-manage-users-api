@@ -29,8 +29,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -925,203 +927,172 @@ class UserAcspMembershipIntegrationTest {
     }
 
     private static Stream<Arguments> membershipRemovalScenarios() {
+      TestDataManager testDataManager = TestDataManager.getInstance();
+
+      AcspMembersDao owner1 = testDataManager.fetchAcspMembersDaos("COM002").getFirst();
+      AcspMembersDao owner2 = testDataManager.fetchAcspMembersDaos("COM010").getFirst();
+      AcspMembersDao admin1 = testDataManager.fetchAcspMembersDaos("COM004").getFirst();
+      AcspMembersDao admin2 = testDataManager.fetchAcspMembersDaos("COM012").getFirst();
+      AcspMembersDao standard1 = testDataManager.fetchAcspMembersDaos("COM007").getFirst();
+      AcspMembersDao standard2 = testDataManager.fetchAcspMembersDaos("COM015").getFirst();
+
       return Stream.of(
-          // Owner actions
-          Arguments.of("owner", "owner", true, status().isOk()),
-          Arguments.of("owner", "admin", true, status().isOk()),
-          Arguments.of("owner", "standard", true, status().isOk()),
+              // Owner actions
+              Arguments.of(owner1, owner2, status().isOk()),
+              Arguments.of(owner1, admin1, status().isOk()),
+              Arguments.of(owner1, standard1, status().isOk()),
 
-          // Admin actions
-          Arguments.of("admin", "owner", false, status().isBadRequest()),
-          Arguments.of("admin", "admin", true, status().isOk()),
-          Arguments.of("admin", "standard", true, status().isOk()),
+              // Admin actions
+              Arguments.of(admin1, owner1, status().isBadRequest()),
+              Arguments.of(admin1, admin2, status().isOk()),
+              Arguments.of(admin1, standard1, status().isOk()),
 
-          // Standard member actions
-          Arguments.of("standard", "owner", false, status().isBadRequest()),
-          Arguments.of("standard", "admin", false, status().isBadRequest()),
-          Arguments.of("standard", "standard", false, status().isBadRequest()));
+              // Standard member actions
+              Arguments.of(standard1, owner1, status().isBadRequest()),
+              Arguments.of(standard1, admin1, status().isBadRequest()),
+              Arguments.of(standard1, standard2, status().isBadRequest())
+      );
     }
 
     @ParameterizedTest
     @MethodSource("membershipRemovalScenarios")
     void testUpdateAcspMembershipRemovalScenarios(
-        String actorRole, String targetRole, boolean shouldSucceed, ResultMatcher expectedStatus)
-        throws Exception {
-
+            AcspMembersDao actor, AcspMembersDao target, ResultMatcher expectedStatus)
+            throws Exception {
+      acspMembersRepository.insert(List.of(actor, target));
       final var actingUser = new User();
-      actingUser.setUserId("actor-user-id");
-
-      final var actingAcspMember = new AcspMembersDao();
-      actingAcspMember.setId("actorid");
-      actingAcspMember.setAcspNumber("acsp-number-for-removal");
-      actingAcspMember.setUserId(actingUser.getUserId());
-      actingAcspMember.setUserRole(UserRoleEnum.fromValue(actorRole));
-      actingAcspMember.setCreatedAt(LocalDateTime.now().minusYears(20));
-      actingAcspMember.setAddedAt(LocalDateTime.now().minusYears(20));
-      actingAcspMember.setEtag(generateEtag());
-
-      final var targetAcspMember = new AcspMembersDao();
-      targetAcspMember.setId("targetid");
-      targetAcspMember.setAcspNumber("acsp-number-for-removal");
-      targetAcspMember.setUserId("target-user-id");
-      targetAcspMember.setUserRole(UserRoleEnum.fromValue(targetRole));
-      targetAcspMember.setCreatedAt(LocalDateTime.now().minusYears(20));
-      targetAcspMember.setAddedAt(LocalDateTime.now().minusYears(20));
-      targetAcspMember.setEtag(generateEtag());
-
-      acspMembersRepository.insert(List.of(actingAcspMember, targetAcspMember));
+      actingUser.setUserId(actor.getUserId());
       Mockito.doReturn(actingUser)
-          .when(usersService)
-          .fetchUserDetails(actingAcspMember.getUserId());
+              .when(usersService)
+              .fetchUserDetails(actingUser.getUserId());
 
-      var response =
-          mockMvc
-              .perform(
-                  patch("/acsp-members/{id}", targetAcspMember.getId())
-                      .header("X-Request-Id", "theId123")
-                      .header("Eric-identity", actingUser.getUserId())
-                      .header("ERIC-Identity-Type", "oauth2")
-                      .header("ERIC-Authorised-Key-Roles", "*")
-                      .contentType(MediaType.APPLICATION_JSON)
-                      .content("{\"action\":\"remove_member\"}"))
-              .andExpect(expectedStatus)
-              .andReturn();
+      var resultActions =
+              mockMvc
+                      .perform(
+                              patch("/acsp-members/{id}", target.getId())
+                                      .header("X-Request-Id", "theId123")
+                                      .header("Eric-identity", actingUser.getUserId())
+                                      .header("ERIC-Identity-Type", "oauth2")
+                                      .header("ERIC-Authorised-Key-Roles", "*")
+                                      .contentType(MediaType.APPLICATION_JSON)
+                                      .content("{\"action\":\"remove_member\"}"))
+                      .andExpect(expectedStatus);
 
-      if (shouldSucceed) {
+      MvcResult result = resultActions.andReturn();;
+
+      if (result.getResponse().getStatus() == HttpStatus.OK.value()) {
         AcspMembersDao updatedMember =
-            acspMembersRepository.findById(targetAcspMember.getId()).orElseThrow();
+                acspMembersRepository.findById(target.getId()).orElseThrow();
         assertNotNull(updatedMember.getRemovedAt());
         assertEquals(actingUser.getUserId(), updatedMember.getRemovedBy());
-        assertNotEquals(targetAcspMember.getEtag(), updatedMember.getEtag());
+        assertNotEquals(target.getEtag(), updatedMember.getEtag());
       } else {
         assertEquals(
-            "{\"errors\":[{\"error\":\"Please check the request and try again\",\"type\":\"ch:service\"}]}",
-            response.getResponse().getContentAsString());
+                "{\"errors\":[{\"error\":\"Please check the request and try again\",\"type\":\"ch:service\"}]}",
+                result.getResponse().getContentAsString());
       }
     }
 
     private static Stream<Arguments> membershipUpdateScenarios() {
+      TestDataManager testDataManager = TestDataManager.getInstance();
+
+      AcspMembersDao owner1 = testDataManager.fetchAcspMembersDaos("COM002").getFirst();
+      AcspMembersDao owner2 = testDataManager.fetchAcspMembersDaos("COM010").getFirst();
+      AcspMembersDao admin1 = testDataManager.fetchAcspMembersDaos("COM004").getFirst();
+      AcspMembersDao admin2 = testDataManager.fetchAcspMembersDaos("COM012").getFirst();
+      AcspMembersDao standard1 = testDataManager.fetchAcspMembersDaos("COM007").getFirst();
+      AcspMembersDao standard2 = testDataManager.fetchAcspMembersDaos("COM015").getFirst();
+
       return Stream.of(
           // Owner actions
-          Arguments.of("owner", "owner", "admin", true, status().isOk()),
-          Arguments.of("owner", "owner", "standard", true, status().isOk()),
-          Arguments.of("owner", "owner", "owner", false, status().isBadRequest()),
-          Arguments.of("owner", "admin", "standard", true, status().isOk()),
-          Arguments.of("owner", "admin", "admin", true, status().isOk()),
-          Arguments.of("owner", "admin", "owner", false, status().isBadRequest()),
-          Arguments.of("owner", "standard", "admin", true, status().isOk()),
-          Arguments.of("owner", "standard", "standard", true, status().isOk()),
-          Arguments.of("owner", "standard", "owner", false, status().isBadRequest()),
+          Arguments.of(owner1, owner2, "admin", status().isOk()),
+          Arguments.of(owner1, owner2, "standard", status().isOk()),
+          Arguments.of(owner1, owner2, "owner", status().isBadRequest()),
+          Arguments.of(owner1, admin1, "standard", status().isOk()),
+          Arguments.of(owner1, admin1, "admin", status().isOk()),
+          Arguments.of(owner1, admin1, "owner", status().isBadRequest()),
+          Arguments.of(owner1, standard1, "admin", status().isOk()),
+          Arguments.of(owner1, standard1, "standard", status().isOk()),
+          Arguments.of(owner1, standard1, "owner", status().isBadRequest()),
 
           // Admin actions
-          Arguments.of("admin", "owner", "standard", false, status().isBadRequest()),
-          Arguments.of("admin", "owner", "admin", false, status().isBadRequest()),
-          Arguments.of("admin", "owner", "owner", false, status().isBadRequest()),
-          Arguments.of("admin", "admin", "standard", true, status().isOk()),
-          Arguments.of("admin", "admin", "admin", true, status().isOk()),
-          Arguments.of("admin", "admin", "owner", false, status().isBadRequest()),
-          Arguments.of("admin", "standard", "admin", true, status().isOk()),
-          Arguments.of("admin", "standard", "standard", true, status().isOk()),
-          Arguments.of("admin", "standard", "owner", false, status().isBadRequest()),
+          Arguments.of(admin1, owner1, "standard", status().isBadRequest()),
+          Arguments.of(admin1, owner1, "admin", status().isBadRequest()),
+          Arguments.of(admin1, owner1, "owner", status().isBadRequest()),
+          Arguments.of(admin1, admin2, "standard", status().isOk()),
+          Arguments.of(admin1, admin2, "admin", status().isOk()),
+          Arguments.of(admin1, admin2, "owner", status().isBadRequest()),
+          Arguments.of(admin1, standard1, "admin", status().isOk()),
+          Arguments.of(admin1, standard1, "standard", status().isOk()),
+          Arguments.of(admin1, standard1, "owner", status().isBadRequest()),
 
           // Standard member actions
-          Arguments.of("standard", "owner", "admin", false, status().isBadRequest()),
-          Arguments.of("standard", "owner", "standard", false, status().isBadRequest()),
-          Arguments.of("standard", "owner", "owner", false, status().isBadRequest()),
-          Arguments.of("standard", "admin", "standard", false, status().isBadRequest()),
-          Arguments.of("standard", "admin", "admin", false, status().isBadRequest()),
-          Arguments.of("standard", "admin", "owner", false, status().isBadRequest()),
-          Arguments.of("standard", "standard", "admin", false, status().isBadRequest()),
-          Arguments.of("standard", "standard", "standard", false, status().isBadRequest()),
-          Arguments.of("standard", "standard", "owner", false, status().isBadRequest()));
+          Arguments.of(standard1, owner1, "admin", status().isBadRequest()),
+          Arguments.of(standard1, owner1, "standard", status().isBadRequest()),
+          Arguments.of(standard1, owner1, "owner", status().isBadRequest()),
+          Arguments.of(standard1, admin1, "standard", status().isBadRequest()),
+          Arguments.of(standard1, admin1, "admin", status().isBadRequest()),
+          Arguments.of(standard1, admin1, "owner", status().isBadRequest()),
+          Arguments.of(standard1, standard2, "admin", status().isBadRequest()),
+          Arguments.of(standard1, standard2, "standard", status().isBadRequest()),
+          Arguments.of(standard1, standard2, "owner", status().isBadRequest()));
     }
 
     @ParameterizedTest
     @MethodSource("membershipUpdateScenarios")
-    void testUpdateAcspMembershipScenarios(
-        String actorRole,
-        String targetRole,
-        String newRole,
-        boolean shouldSucceed,
-        ResultMatcher expectedStatus)
-        throws Exception {
+    void testUpdateAcspMembershipRoleScenarios(
+            AcspMembersDao actor, AcspMembersDao target, String newRole, ResultMatcher expectedStatus)
+            throws Exception {
+      acspMembersRepository.insert(List.of(actor, target));
       final var actingUser = new User();
-      actingUser.setUserId("actor-user-id");
-
-      final var actingAcspMember = new AcspMembersDao();
-      actingAcspMember.setId("actorid");
-      actingAcspMember.setAcspNumber("acsp-number-for-updating-role");
-      actingAcspMember.setUserId(actingUser.getUserId());
-      actingAcspMember.setUserRole(UserRoleEnum.fromValue(actorRole));
-      actingAcspMember.setCreatedAt(LocalDateTime.now().minusYears(20));
-      actingAcspMember.setAddedAt(LocalDateTime.now().minusYears(20));
-      actingAcspMember.setEtag(generateEtag());
-
-      final var targetAcspMember = new AcspMembersDao();
-      targetAcspMember.setId("targetid");
-      targetAcspMember.setAcspNumber("acsp-number-for-updating-role");
-      targetAcspMember.setUserId("target-user-id");
-      targetAcspMember.setUserRole(UserRoleEnum.fromValue(targetRole));
-      targetAcspMember.setCreatedAt(LocalDateTime.now().minusYears(20));
-      targetAcspMember.setAddedAt(LocalDateTime.now().minusYears(20));
-      targetAcspMember.setEtag(generateEtag());
-
-      acspMembersRepository.insert(List.of(actingAcspMember, targetAcspMember));
+      actingUser.setUserId(actor.getUserId());
       Mockito.doReturn(actingUser)
-          .when(usersService)
-          .fetchUserDetails(actingAcspMember.getUserId());
+              .when(usersService)
+              .fetchUserDetails(actingUser.getUserId());
 
-      var response =
-          mockMvc
-              .perform(
-                  patch("/acsp-members/{id}", targetAcspMember.getId())
-                      .header("X-Request-Id", "theId123")
-                      .header("Eric-identity", actingUser.getUserId())
-                      .header("ERIC-Identity-Type", "oauth2")
-                      .header("ERIC-Authorised-Key-Roles", "*")
-                      .contentType(MediaType.APPLICATION_JSON)
-                      .content(
-                          String.format(
-                              "{\"action\":\"edit_role\",\"user_role\":\"%s\"}", newRole)))
-              .andExpect(expectedStatus)
-              .andReturn();
+      var resultActions =
+              mockMvc
+                      .perform(
+                              patch("/acsp-members/{id}", target.getId())
+                                      .header("X-Request-Id", "theId123")
+                                      .header("Eric-identity", actingUser.getUserId())
+                                      .header("ERIC-Identity-Type", "oauth2")
+                                      .header("ERIC-Authorised-Key-Roles", "*")
+                                      .contentType(MediaType.APPLICATION_JSON)
+                                      .content(String.format("{\"action\":\"edit_role\",\"user_role\":\"%s\"}", newRole)))
+                      .andExpect(expectedStatus);
 
-      if (shouldSucceed) {
+      MvcResult result = resultActions.andReturn();
+
+      if (result.getResponse().getStatus() == HttpStatus.OK.value()) {
         AcspMembersDao updatedMember =
-            acspMembersRepository.findById(targetAcspMember.getId()).orElseThrow();
+                acspMembersRepository.findById(target.getId()).orElseThrow();
         assertEquals(UserRoleEnum.valueOf(newRole.toUpperCase()), updatedMember.getUserRole());
+        assertNotEquals(target.getEtag(), updatedMember.getEtag());
       } else {
         assertEquals(
-            "{\"errors\":[{\"error\":\"Please check the request and try again\",\"type\":\"ch:service\"}]}",
-            response.getResponse().getContentAsString());
+                "{\"errors\":[{\"error\":\"Please check the request and try again\",\"type\":\"ch:service\"}]}",
+                result.getResponse().getContentAsString());
       }
     }
 
     @Test
     void updateAcspMembershipForIdReturnsBadRequestWhenOwnerAttemptsToChangeTheirOwnRole()
         throws Exception {
-      final var actingUser = new User();
-      actingUser.setUserId("self-change-user-id");
+      var ownerMember = testDataManager.fetchAcspMembersDaos("COM002").getFirst();
+      acspMembersRepository.insert(ownerMember);
 
-      final var actingAcspMember = new AcspMembersDao();
-      actingAcspMember.setId("selfchangeid");
-      actingAcspMember.setAcspNumber("acsp-number-self-change");
-      actingAcspMember.setUserId(actingUser.getUserId());
-      actingAcspMember.setUserRole(UserRoleEnum.OWNER);
-      actingAcspMember.setCreatedAt(LocalDateTime.now().minusYears(1));
-      actingAcspMember.setAddedAt(LocalDateTime.now().minusYears(1));
-      actingAcspMember.setEtag(generateEtag());
-
-      acspMembersRepository.insert(actingAcspMember);
-      Mockito.doReturn(actingUser)
+      final var ownerUser = new User();
+      ownerUser.setUserId(ownerMember.getUserId());
+      Mockito.doReturn(ownerUser)
           .when(usersService)
-          .fetchUserDetails(actingAcspMember.getUserId());
+          .fetchUserDetails(ownerMember.getUserId());
 
       mockMvc
           .perform(
-              patch("/acsp-members/{id}", actingAcspMember.getId())
+              patch("/acsp-members/{id}", ownerMember.getId())
                   .header("X-Request-Id", "self-change-request-id")
-                  .header("Eric-identity", actingUser.getUserId())
+                  .header("Eric-identity", ownerUser.getUserId())
                   .header("ERIC-Identity-Type", "oauth2")
                   .header("ERIC-Authorised-Key-Roles", "*")
                   .contentType(MediaType.APPLICATION_JSON)
@@ -1133,7 +1104,7 @@ class UserAcspMembershipIntegrationTest {
                       "{\"errors\":[{\"error\":\"Please check the request and try again\",\"type\":\"ch:service\"}]}"));
 
       AcspMembersDao unchangedMember =
-          acspMembersRepository.findById(actingAcspMember.getId()).orElseThrow();
+          acspMembersRepository.findById(ownerMember.getId()).orElseThrow();
       assertEquals(UserRoleEnum.OWNER, unchangedMember.getUserRole());
     }
   }
