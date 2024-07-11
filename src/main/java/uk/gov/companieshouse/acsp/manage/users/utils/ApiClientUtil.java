@@ -1,16 +1,16 @@
 package uk.gov.companieshouse.acsp.manage.users.utils;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.companieshouse.api.InternalApiClient;
-import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
-
 
 @Component
 public class ApiClientUtil {
 
+    @Autowired
+    private InternalApiClient internalApiClient;
 
     public InternalApiClient getInternalApiClient(final String internalApiUrl) {
-        final var internalApiClient = ApiSdkManager.getInternalSDK();
         internalApiClient.setInternalBasePath(internalApiUrl);
         return internalApiClient;
     }

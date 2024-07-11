@@ -16,8 +16,8 @@ import java.util.List;
 @Service
 public class AccountsUserEndpoint {
 
-    @Value("${internal.api.url}")
-    private String internalApiUrl;
+    @Value("${account.api.url}")
+    private String accountApiUrl;
 
     private final ApiClientUtil apiClientUtil;
 
@@ -28,7 +28,7 @@ public class AccountsUserEndpoint {
 
     public ApiResponse<UsersList> searchUserDetails(final List<String> emails) throws ApiErrorResponseException, URIValidationException {
         final var searchUserDetailsUrl = "/users/search";
-        return apiClientUtil.getInternalApiClient(internalApiUrl)
+        return apiClientUtil.getInternalApiClient(accountApiUrl)
                 .privateAccountsUserResourceHandler()
                 .searchUserDetails(searchUserDetailsUrl, emails)
                 .execute();
@@ -36,7 +36,7 @@ public class AccountsUserEndpoint {
 
     public PrivateAccountsUserUserGet createGetUserDetailsRequest(final String userId) {
         final var getUserDetailsUrl = String.format("/users/%s", userId);
-        return apiClientUtil.getInternalApiClient(internalApiUrl)
+        return apiClientUtil.getInternalApiClient(accountApiUrl)
                             .privateAccountsUserResourceHandler()
                             .getUserDetails(getUserDetailsUrl);
     }
