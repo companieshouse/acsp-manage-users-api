@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.api.accounts.user.model.User;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 
 public class TestDataManager {
@@ -39,6 +40,7 @@ public class TestDataManager {
             acspMembersDao.setUserRole( UserRoleEnum.OWNER );
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 1 ) );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 1 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -55,6 +57,7 @@ public class TestDataManager {
             acspMembersDao.setAddedBy( "TSU001" );
             acspMembersDao.setRemovedAt( LocalDateTime.now().minusMonths( 10 ) );
             acspMembersDao.setRemovedBy( "TSU001" );
+            acspMembersDao.setStatus( MembershipStatusEnum.REMOVED );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -71,6 +74,7 @@ public class TestDataManager {
             acspMembersDao.setAddedBy( "TSU002" );
             acspMembersDao.setRemovedAt( LocalDateTime.now().minusMonths( 4 ) );
             acspMembersDao.setRemovedBy( "TSU002" );
+            acspMembersDao.setStatus( MembershipStatusEnum.REMOVED );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -84,6 +88,7 @@ public class TestDataManager {
             acspMembersDao.setUserRole( UserRoleEnum.OWNER );
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 2 ) );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 2 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -99,6 +104,7 @@ public class TestDataManager {
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 10 ) );
             acspMembersDao.setRemovedBy( "COMU002" );
             acspMembersDao.setRemovedAt( LocalDateTime.now().minusYears( 8 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.REMOVED );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -112,6 +118,7 @@ public class TestDataManager {
             acspMembersDao.setUserRole( UserRoleEnum.OWNER );
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 9 ) );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 9 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -128,6 +135,7 @@ public class TestDataManager {
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 8 ) );
             acspMembersDao.setRemovedBy( "COMU002" );
             acspMembersDao.setRemovedAt( LocalDateTime.now().minusYears( 7 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.REMOVED );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -142,6 +150,7 @@ public class TestDataManager {
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 8 ) );
             acspMembersDao.setAddedBy( "COMU002" );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 8 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -156,6 +165,7 @@ public class TestDataManager {
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 7 ) );
             acspMembersDao.setAddedBy( "COMU004" );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 7 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -172,6 +182,7 @@ public class TestDataManager {
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 6 ) );
             acspMembersDao.setRemovedBy( "COMU002" );
             acspMembersDao.setRemovedAt( LocalDateTime.now().minusYears( 5 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.REMOVED );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -186,6 +197,7 @@ public class TestDataManager {
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 3 ) );
             acspMembersDao.setAddedBy( "COMU002" );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 3 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -200,6 +212,7 @@ public class TestDataManager {
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 2 ) );
             acspMembersDao.setAddedBy( "COMU004" );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 2 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -215,6 +228,7 @@ public class TestDataManager {
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 20 ) );
             acspMembersDao.setRemovedBy( "COMU002" );
             acspMembersDao.setRemovedAt( LocalDateTime.now().minusYears( 1 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.REMOVED );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -228,6 +242,7 @@ public class TestDataManager {
             acspMembersDao.setUserRole( UserRoleEnum.OWNER );
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 19 ) );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 19 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -244,6 +259,7 @@ public class TestDataManager {
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 4 ) );
             acspMembersDao.setRemovedBy( "COMU004" );
             acspMembersDao.setRemovedAt( LocalDateTime.now().minusYears( 1 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.REMOVED );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -258,6 +274,7 @@ public class TestDataManager {
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 4 ) );
             acspMembersDao.setAddedBy( "COMU002" );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 4 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -272,6 +289,7 @@ public class TestDataManager {
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 4 ) );
             acspMembersDao.setAddedBy( "COMU004" );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 4 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -289,6 +307,7 @@ public class TestDataManager {
             acspMembersDao.setEtag( generateEtag() );
             acspMembersDao.setRemovedBy( "COMU004" );
             acspMembersDao.setRemovedAt( LocalDateTime.now().minusYears( 2 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.REMOVED );
             return acspMembersDao;
         };
         acspMembersDaoSuppliers.put( "COM014", ComedyMichealAcspMembersDao );
@@ -302,6 +321,7 @@ public class TestDataManager {
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 4 ) );
             acspMembersDao.setAddedBy( "COMU002" );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 4 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -316,6 +336,7 @@ public class TestDataManager {
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 4 ) );
             acspMembersDao.setAddedBy( "COMU004" );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 4 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -329,6 +350,7 @@ public class TestDataManager {
             acspMembersDao.setUserRole( UserRoleEnum.OWNER );
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 20 ) );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 20 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -343,6 +365,7 @@ public class TestDataManager {
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusMonths( 11 ) );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusMonths( 11 ) );
             acspMembersDao.setAddedBy( "WITU001" );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -357,6 +380,7 @@ public class TestDataManager {
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusMonths( 10 ) );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusMonths( 10 ) );
             acspMembersDao.setAddedBy( "WITU002" );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -370,6 +394,7 @@ public class TestDataManager {
             acspMembersDao.setUserRole( UserRoleEnum.OWNER );
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 21 ) );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 21 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -383,6 +408,7 @@ public class TestDataManager {
             acspMembersDao.setUserRole( UserRoleEnum.OWNER );
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 25 ) );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 25 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -397,6 +423,7 @@ public class TestDataManager {
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 11 ) );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 11 ) );
             acspMembersDao.setAddedBy( "NEIU001" );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -411,6 +438,7 @@ public class TestDataManager {
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 4 ) );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 4 ) );
             acspMembersDao.setAddedBy( "NEIU002" );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -424,6 +452,7 @@ public class TestDataManager {
             acspMembersDao.setUserRole( UserRoleEnum.ADMIN );
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 26 ) );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 26 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -437,6 +466,7 @@ public class TestDataManager {
             acspMembersDao.setUserRole( UserRoleEnum.OWNER );
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 14 ) );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 14 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -451,6 +481,7 @@ public class TestDataManager {
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 11 ) );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 11 ) );
             acspMembersDao.setAddedBy( "XMEU001" );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -465,6 +496,7 @@ public class TestDataManager {
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 4 ) );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 4 ) );
             acspMembersDao.setAddedBy( "XMEU002" );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
@@ -478,6 +510,7 @@ public class TestDataManager {
             acspMembersDao.setUserRole( UserRoleEnum.STANDARD );
             acspMembersDao.setCreatedAt( LocalDateTime.now().minusYears( 15 ) );
             acspMembersDao.setAddedAt( LocalDateTime.now().minusYears( 15 ) );
+            acspMembersDao.setStatus( MembershipStatusEnum.ACTIVE );
             acspMembersDao.setEtag( generateEtag() );
             return acspMembersDao;
         };
