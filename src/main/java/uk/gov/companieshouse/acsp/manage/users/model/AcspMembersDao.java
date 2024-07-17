@@ -8,8 +8,6 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
-import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
-import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 
 @Document( "acsp_members" )
 public class AcspMembersDao {
@@ -29,7 +27,7 @@ public class AcspMembersDao {
 
     @NotNull
     @Field( "user_role" )
-    private UserRoleEnum userRole;
+    private String userRole;
 
     @CreatedDate
     @Field( "created_at" )
@@ -47,7 +45,7 @@ public class AcspMembersDao {
     @Field( "removed_by" )
     private String removedBy;
 
-    private MembershipStatusEnum status;
+    private String status;
 
     @NotNull
     private String etag;
@@ -81,12 +79,11 @@ public class AcspMembersDao {
         this.userId = userId;
     }
 
-    public UserRoleEnum getUserRole() {
+    public String getUserRole() {
         return userRole;
     }
 
-    public void setUserRole(
-            UserRoleEnum userRole) {
+    public void setUserRole(String userRole) {
         this.userRole = userRole;
     }
 
@@ -146,11 +143,11 @@ public class AcspMembersDao {
         this.version = version;
     }
 
-    public MembershipStatusEnum getStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public void setStatus(MembershipStatusEnum status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 
