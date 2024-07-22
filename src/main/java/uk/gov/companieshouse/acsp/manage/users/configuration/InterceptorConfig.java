@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.acsp.manage.users.configuration;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -20,7 +21,7 @@ public class InterceptorConfig implements WebMvcConfigurer {
 
     private final AuthorizationAndInternalUserInterceptors authorizationAndInternalUserInterceptors;
 
-    public InterceptorConfig(final LoggingInterceptor loggingInterceptor, final AuthorizationInterceptor authorizationInterceptor, final AuthorizationAndInternalUserInterceptors authorizationAndInternalUserInterceptors) {
+    public InterceptorConfig(final LoggingInterceptor loggingInterceptor, @Qualifier( "authorizationInterceptor" ) final AuthorizationInterceptor authorizationInterceptor, final AuthorizationAndInternalUserInterceptors authorizationAndInternalUserInterceptors) {
         this.loggingInterceptor = loggingInterceptor;
         this.authorizationInterceptor = authorizationInterceptor;
         this.authorizationAndInternalUserInterceptors = authorizationAndInternalUserInterceptors;
