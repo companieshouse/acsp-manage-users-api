@@ -1,49 +1,46 @@
 package uk.gov.companieshouse.acsp.manage.users.configuration;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import uk.gov.companieshouse.acsp.manage.users.interceptor.AuthorizationInterceptor;
 import uk.gov.companieshouse.acsp.manage.users.interceptor.LoggingInterceptor;
-import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
-import uk.gov.companieshouse.api.interceptor.InternalUserInterceptor;
 
 @Configuration
 public class InterceptorConfig implements WebMvcConfigurer {
 
-  private static final String OAUTH_PROTECTED_ENDPOINTS = "/acsp-members/**";
-  private static final String OAUTH_PROTECTED_ENDPOINTS_BASE = "/acsp-members";
-  private static final String KEY_PROTECTED_ENDPOINTS = "/internal/acsp-members/**";
-  private static final String HEALTH_CHECK_ENDPOINT = "/*/healthcheck";
+  private static final String ACSP_MEMBERSHIPS_BASE = "/acsps/**/memberships";
+  private static final String ACSP_MEMBERSHIP_BASE = "/acsps/memberships/**";
+  private static final String USER_ACSP_MEMBERSHIPS = "/user/acsps/memberships";
+  private static final String HEALTH_CHECK_ENDPOINT = "/**/healthcheck";
 
     private final LoggingInterceptor loggingInterceptor;
     private final AuthorizationInterceptor authorizationInterceptor;
 
-    public InterceptorConfig(final LoggingInterceptor loggingInterceptor, AuthorizationInterceptor authorizationInterceptor) {
+  public InterceptorConfig(
+      LoggingInterceptor loggingInterceptor, AuthorizationInterceptor authorizationInterceptor) {
         this.loggingInterceptor = loggingInterceptor;
         this.authorizationInterceptor = authorizationInterceptor;
     }
 
-    @Override
-    public void addInterceptors(@NonNull final InterceptorRegistry registry) {
+  @Override
+  public void addInterceptors(InterceptorRegistry registry) {
         addLoggingInterceptor(registry);
-        addEricInterceptors(registry);
+    addAuthorizationInterceptors(registry);
     }
 
-    private void addLoggingInterceptor(final InterceptorRegistry registry) {
+  private void addLoggingInterceptor(InterceptorRegistry registry) {
         registry.addInterceptor(loggingInterceptor);
     }
 
-    private void addEricInterceptors(final InterceptorRegistry registry) {
+  private void addAuthorizationInterceptors(InterceptorRegistry registry) {
     registry
         .addInterceptor(authorizationInterceptor)
-        .addPathPatterns(OAUTH_PROTECTED_ENDPOINTS, OAUTH_PROTECTED_ENDPOINTS_BASE)
-        .excludePathPatterns(HEALTH_CHECK_ENDPOINT, KEY_PROTECTED_ENDPOINTS);
-
-        registry.addInterceptor( new InternalUserInterceptor( StaticPropertyUtil.APPLICATION_NAMESPACE ) )
-                .addPathPatterns( KEY_PROTECTED_ENDPOINTS )
-                .excludePathPatterns( HEALTH_CHECK_ENDPOINT, OAUTH_PROTECTED_ENDPOINTS );
+        .addPathPatterns(
+            ACSP_MEMBERSHIPS_BASE,
+            ACSP_MEMBERSHIPS_BASE + "/**",
+            ACSP_MEMBERSHIP_BASE,
+            USER_ACSP_MEMBERSHIPS)
+        .excludePathPatterns(HEALTH_CHECK_ENDPOINT);
     }
-
 }

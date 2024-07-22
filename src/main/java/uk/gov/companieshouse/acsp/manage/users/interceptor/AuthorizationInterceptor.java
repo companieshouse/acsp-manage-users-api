@@ -2,32 +2,43 @@ package uk.gov.companieshouse.acsp.manage.users.interceptor;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.Objects;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
+import uk.gov.companieshouse.api.interceptor.InternalUserInterceptor;
 import uk.gov.companieshouse.api.util.security.AuthorisationUtil;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 
 @Component
-public class AuthorizationInterceptor implements HandlerInterceptor {
+public class AuthorizationInterceptor extends InternalUserInterceptor {
 
     private final UsersService usersService;
+    private final InternalUserInterceptor internalUserInterceptor;
 
-    public AuthorizationInterceptor(UsersService usersService) {
+    public AuthorizationInterceptor(final UsersService usersService,
+                                    final InternalUserInterceptor internalUserInterceptor) {
         this.usersService = usersService;
+        this.internalUserInterceptor = internalUserInterceptor;
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StaticPropertyUtil.APPLICATION_NAMESPACE);
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        return isOauth2User(request, response) && isValidAuthorisedUser(request, response);
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws IOException {
+        final var isInternalUser = internalUserInterceptor.preHandle(request, response, handler);
+
+        if (!isInternalUser) {
+            // if we're not an internal user, we might still be a valid oauth2 user, so reset this to 200
+            response.setStatus(200);
+        }
+
+        return isInternalUser || isOauth2User(request, response) && isValidAuthorisedUser(request, response);
     }
 
     private boolean isOauth2User(HttpServletRequest request, HttpServletResponse response) {

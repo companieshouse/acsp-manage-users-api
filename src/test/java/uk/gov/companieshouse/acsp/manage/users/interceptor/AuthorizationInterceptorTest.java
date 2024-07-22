@@ -4,9 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -20,6 +22,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.api.accounts.user.model.User;
+import uk.gov.companieshouse.api.interceptor.InternalUserInterceptor;
 
 @ExtendWith(MockitoExtension.class)
 @Tag("unit-test")
@@ -30,16 +33,19 @@ class AuthorizationInterceptorTest {
     @Mock
     UsersService usersService;
 
+    @Mock
+    InternalUserInterceptor internalUserInterceptor;
+
     @InjectMocks
     AuthorizationInterceptor authorizationInterceptor;
 
     @BeforeEach
     void setup(){
-         interceptor = new AuthorizationInterceptor(usersService);
+         interceptor = new AuthorizationInterceptor(usersService, internalUserInterceptor);
     }
 
     @Test
-    void preHandleWithoutHeadersReturns401() {
+    void preHandleWithoutHeadersReturns401() throws IOException {
 
         HttpServletRequest request = new MockHttpServletRequest();
 
@@ -49,7 +55,7 @@ class AuthorizationInterceptorTest {
     }
 
     @Test
-    void preHandleWithoutEricIdentityReturns401() {
+    void preHandleWithoutEricIdentityReturns401() throws IOException {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Eric-Identity-Type", "oauth2");
 
@@ -59,7 +65,7 @@ class AuthorizationInterceptorTest {
     }
 
     @Test
-    void preHandleWithoutEricIdentityTypeReturns401() {
+    void preHandleWithoutEricIdentityTypeReturns401() throws IOException {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Eric-Identity", "abcd123456");
 
@@ -69,7 +75,7 @@ class AuthorizationInterceptorTest {
     }
 
     @Test
-    void preHandleWithIncorrectEricIdentityTypeReturns401() {
+    void preHandleWithIncorrectEricIdentityTypeReturns401() throws IOException {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Eric-Identity", "abcd123456");
         request.addHeader("Eric-Identity-Type", "key");
@@ -80,7 +86,7 @@ class AuthorizationInterceptorTest {
     }
 
     @Test
-    void preHandleWithMalformedOrNonexistentEricIdentityReturn403() {
+    void preHandleWithMalformedOrNonexistentEricIdentityReturn403() throws IOException {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Eric-Identity", "$$$");
         request.addHeader( "ERIC-Identity-Type", "oauth2" );
@@ -94,7 +100,7 @@ class AuthorizationInterceptorTest {
     }
 
     @Test
-    void preHandleShouldReturnTrueWhenAuthHeaderAndAuthHeaderTypeOauthAreProvided() {
+    void preHandleShouldReturnTrueWhenAuthHeaderAndAuthHeaderTypeOauthAreProvided() throws IOException {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Eric-identity", "111");
         request.addHeader("Eric-identity-type", "oauth2");
@@ -107,6 +113,16 @@ class AuthorizationInterceptorTest {
         Mockito.doReturn( bruce ).when( usersService ).fetchUserDetails( "111" );
 
         HttpServletResponse response = new MockHttpServletResponse();
+        assertTrue(interceptor.preHandle(request, response, null));
+    }
+
+    @Test
+    void preHandleShouldReturnTrueWhenInternalUser() throws IOException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        HttpServletResponse response = new MockHttpServletResponse();
+
+        when(internalUserInterceptor.preHandle(request, response, null)).thenReturn(true);
+
         assertTrue(interceptor.preHandle(request, response, null));
     }
 
