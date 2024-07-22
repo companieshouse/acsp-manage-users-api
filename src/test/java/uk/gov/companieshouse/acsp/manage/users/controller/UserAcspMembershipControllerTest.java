@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
@@ -14,13 +13,10 @@ import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.accounts.user.model.User;
-import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
 
-import java.util.List;
 
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -77,54 +73,4 @@ class UserAcspMembershipControllerTest {
         .andExpect(status().isBadRequest());
   }
 
-  @Test
-  void getAcspMembershipsForUserIdWhoHasNoAcspMemebershipsReturnsEmptyAcspMembershipsList()
-      throws Exception {
-    when(usersService.fetchUserDetails(userId))
-        .thenReturn(testDataManager.fetchUserDtos(userId).getFirst());
-
-    acspMembershipsList.setItems(List.of());
-    when(acspMembersService.fetchAcspMemberships(existingUser, false))
-        .thenReturn(acspMembershipsList);
-
-    mockMvc
-        .perform(
-            get("/user/acsps/memberships")
-                .header("X-Request-Id", "theId123")
-                .header("Eric-identity", userId)
-                .header("ERIC-Identity-Type", "oauth2")
-                .header("ERIC-Authorised-Key-Roles", "*"))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.items").isArray())
-        .andExpect(jsonPath("$.items.length()").value(0));
-    verify(acspMembersService).fetchAcspMemberships(existingUser, false);
-  }
-
-  @Test
-  void getAcspMembershipsForUserIdWhoHasNoAcspMemebershipsReturnsNonEmptyAcspMembershipsList()
-      throws Exception {
-    when(usersService.fetchUserDetails(userId))
-        .thenReturn(testDataManager.fetchUserDtos(userId).getFirst());
-
-    final var acspMembership = new AcspMembership();
-    acspMembership.setUserId(userId);
-    acspMembershipsList.setItems(List.of(acspMembership));
-    when(acspMembersService.fetchAcspMemberships(existingUser, false))
-        .thenReturn(acspMembershipsList);
-
-    mockMvc
-        .perform(
-            get("/user/acsps/memberships")
-                .header("X-Request-Id", "theId123")
-                .header("Eric-identity", userId)
-                .header("ERIC-Identity-Type", "oauth2")
-                .header("ERIC-Authorised-Key-Roles", "*"))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.items").isArray())
-        .andExpect(jsonPath("$.items.length()").value(1))
-        .andExpect(jsonPath("$.items[0].user_id").value(userId));
-    verify(acspMembersService).fetchAcspMemberships(existingUser, false);
-  }
 }

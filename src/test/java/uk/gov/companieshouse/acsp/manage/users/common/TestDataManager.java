@@ -764,7 +764,7 @@ public class TestDataManager {
             final var acspDataDao = new AcspDataDao();
             acspDataDao.setId("TSA001");
             acspDataDao.setAcspName( "Toy Story" );
-            acspDataDao.setAcspStatus( "active" );
+            acspDataDao.setAcspStatus( "live" );
             return acspDataDao;
         };
         acspDataDaoSuppliers.put( "TSA001", ToyStoryAcspDataDao );
@@ -773,7 +773,7 @@ public class TestDataManager {
             final var acspDataDao = new AcspDataDao();
             acspDataDao.setId("NFA001");
             acspDataDao.setAcspName( "Netflix" );
-            acspDataDao.setAcspStatus( "active" );
+            acspDataDao.setAcspStatus( "live" );
             return acspDataDao;
         };
         acspDataDaoSuppliers.put( "NFA001", NetflixAcspDataDao );
@@ -782,7 +782,7 @@ public class TestDataManager {
             final var acspDataDao = new AcspDataDao();
             acspDataDao.setId("COMA001");
             acspDataDao.setAcspName( "Comedy" );
-            acspDataDao.setAcspStatus( "active" );
+            acspDataDao.setAcspStatus( "live" );
             return acspDataDao;
         };
         acspDataDaoSuppliers.put( "COMA001", comedyAcspDataDao );
@@ -791,7 +791,7 @@ public class TestDataManager {
             final var acspDataDao = new AcspDataDao();
             acspDataDao.setId("WITA001");
             acspDataDao.setAcspName( "Witcher" );
-            acspDataDao.setAcspStatus( "active" );
+            acspDataDao.setAcspStatus( "live" );
             return acspDataDao;
         };
         acspDataDaoSuppliers.put( "WITA001", witcherDataDao );
@@ -800,7 +800,7 @@ public class TestDataManager {
             final var acspDataDao = new AcspDataDao();
             acspDataDao.setId("NEIA001");
             acspDataDao.setAcspName( "Neighbours" );
-            acspDataDao.setAcspStatus( "active" );
+            acspDataDao.setAcspStatus( "live" );
             return acspDataDao;
         };
         acspDataDaoSuppliers.put( "NEIA001", neighboursDataDao );
@@ -809,7 +809,7 @@ public class TestDataManager {
             final var acspDataDao = new AcspDataDao();
             acspDataDao.setId("XMEA001");
             acspDataDao.setAcspName( "XMen" );
-            acspDataDao.setAcspStatus( "active" );
+            acspDataDao.setAcspStatus( "live" );
             return acspDataDao;
         };
         acspDataDaoSuppliers.put( "XMEA001", xmenDataDao );

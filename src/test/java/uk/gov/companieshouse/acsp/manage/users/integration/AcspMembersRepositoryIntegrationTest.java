@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.acsp.manage.users.integration;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
+import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.acsp.manage.users.utils.ApiClientUtil;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
@@ -84,4 +86,10 @@ class AcspMembersRepositoryIntegrationTest {
                         && elem.getStatus()
                             .equals(AcspMembership.MembershipStatusEnum.ACTIVE.getValue())));
   }
+
+  @AfterEach
+  public void after() {
+    mongoTemplate.dropCollection( AcspMembersDao.class );
+  }
+
 }

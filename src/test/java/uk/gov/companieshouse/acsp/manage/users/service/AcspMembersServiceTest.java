@@ -1,13 +1,18 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
+import java.util.Optional;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipListMapper;
+import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipMapper;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.api.accounts.user.model.User;
@@ -29,12 +34,17 @@ class AcspMembersServiceTest {
 
   @Mock private AcspMembershipListMapper acspMembershipsListMapper;
 
+  @Mock
+  private AcspMembershipMapper acspMembershipMapper;
+
   @InjectMocks private AcspMembersService acspMembersService;
 
   private User testUser;
   private List<AcspMembersDao> testActiveAcspMembersDaos;
   private List<AcspMembersDao> testAllAcspMembersDaos;
   private List<AcspMembership> testAcspMemberships;
+
+  private final TestDataManager testDataManager = TestDataManager.getInstance();
 
   @BeforeEach
   void setUp() {
@@ -124,4 +134,27 @@ class AcspMembersServiceTest {
     verify(acspMembershipsListMapper).daoToDto(Collections.emptyList(), testUser);
     verifyNoMoreInteractions(acspMembersRepository, acspMembershipsListMapper);
   }
+
+    @Test
+    void fetchMembershipWithNullMembershipIdThrowsIllegalArguemntException(){
+       Mockito.doThrow( new IllegalArgumentException( "Cannot be null" ) ).when( acspMembersRepository ).findById( isNull() );
+       Assertions.assertThrows( IllegalArgumentException.class, () -> acspMembersService.fetchMembership( null ) );
+    }
+
+    @Test
+    void fetchMembershipWithMalformedOrNonexistentMembershipIdReturnsEmptyOptional(){
+       Mockito.doReturn(Optional.empty() ).when( acspMembersRepository ).findById( eq( "$$$" ) );
+       Assertions.assertFalse( acspMembersService.fetchMembership( "$$$" ).isPresent() );
+    }
+
+    @Test
+    void fetchMembershipRetrievesMembership(){
+        final var acspMemberDao = testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst();
+
+        Mockito.doReturn( Optional.of( acspMemberDao ) ).when( acspMembersRepository ).findById( eq( "TS001" ) );
+        acspMembersService.fetchMembership( "TS001" );
+        Mockito.verify( acspMembershipMapper ).daoToDto( eq( acspMemberDao ) );
+    }
+
+
 }

@@ -1,9 +1,12 @@
 package uk.gov.companieshouse.acsp.manage.users.integration;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,7 +20,9 @@ import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipListMapper;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
+import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.InternalApiClient;
 import uk.gov.companieshouse.api.accounts.user.model.User;
@@ -53,11 +58,18 @@ class AcspMembersServiceIntegrationTest {
 
   private final TestDataManager testDataManager = TestDataManager.getInstance();
 
-  @Autowired private AcspMembersService acspMembersService;
+    @Autowired
+    private AcspMembersService acspMembersService;
 
   @Autowired private AcspMembersRepository acspMembersRepository;
 
   @MockBean private AcspMembershipListMapper acspMembershipsListMapper;
+
+    @MockBean
+    private UsersService usersService;
+
+    @MockBean
+    private AcspDataService acspDataService;
 
   private User testUser;
 
@@ -151,4 +163,30 @@ class AcspMembersServiceIntegrationTest {
 
     assertTrue(result.getItems().isEmpty());
   }
+
+    @Test
+    void fetchMembershipWithNullMembershipIdThrowsIllegalArguemntException(){
+      Assertions.assertThrows( IllegalArgumentException.class, () -> acspMembersService.fetchMembership( null ) );
+    }
+
+    @Test
+    void fetchMembershipWithMalformedOrNonexistentMembershipIdReturnsEmptyOptional(){
+        Assertions.assertFalse( acspMembersService.fetchMembership( "$$$" ).isPresent() );
+    }
+
+    @Test
+    void fetchMembershipRetrievesMembership(){
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001" ) );
+
+        Mockito.doReturn( testDataManager.fetchUserDtos( "TSU001" ).getFirst() ).when( usersService ).fetchUserDetails( "TSU001" );
+        Mockito.doReturn( testDataManager.fetchAcspDataDaos( "TSA001" ).getFirst() ).when( acspDataService ).fetchAcspData( "TSA001" );
+
+        Assertions.assertTrue( acspMembersService.fetchMembership( "TS001" ).isPresent() );
+    }
+
+    @AfterEach
+    public void after() {
+      mongoTemplate.dropCollection( AcspMembersDao.class );
+    }
+
 }

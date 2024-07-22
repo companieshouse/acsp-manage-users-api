@@ -82,7 +82,7 @@ class MapperUtilTest {
 
         Assertions.assertEquals( "TSA001", acspMembership.getAcspNumber() );
         Assertions.assertEquals( "Toy Story", acspMembership.getAcspName() );
-        Assertions.assertEquals( "active", acspMembership.getAcspStatus().getValue() );
+        Assertions.assertEquals( "live", acspMembership.getAcspStatus().getValue() );
 
     }
 
