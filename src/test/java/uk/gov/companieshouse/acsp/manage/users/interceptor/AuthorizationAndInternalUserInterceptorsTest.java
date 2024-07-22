@@ -14,55 +14,34 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.api.accounts.user.model.User;
-import uk.gov.companieshouse.api.interceptor.InternalUserInterceptor;
 
 @ExtendWith( MockitoExtension.class )
 @Tag( "unit-test" )
-class CompositeInterceptorTest {
+class AuthorizationAndInternalUserInterceptorsTest {
 
     @Mock
     private UsersService usersService;
 
-    private AuthorizationInterceptor authorizationInterceptor;
-
-    private InternalUserInterceptor internalUserInterceptor;
-
-    private CompositeInterceptor compositeInterceptor;
+    private AuthorizationAndInternalUserInterceptors authorizationAndInternalUserInterceptors;
 
     @BeforeEach
     void setup(){
-        authorizationInterceptor = new AuthorizationInterceptor( usersService );
-        internalUserInterceptor = new InternalUserInterceptor();
-        compositeInterceptor = new CompositeInterceptor( authorizationInterceptor, internalUserInterceptor );
+        authorizationAndInternalUserInterceptors = new AuthorizationAndInternalUserInterceptors( usersService );
     }
 
     @Test
-    void preHandleWithoutEricHeadersReturnsUnauthorised() throws Exception {
+    void preHandleWithoutEricHeadersReturnsUnauthorised() {
         MockHttpServletRequest request = new MockHttpServletRequest();
 
         HttpServletResponse response = new MockHttpServletResponse();
-        assertFalse( compositeInterceptor.preHandle(request, response, null) );
+        assertFalse( authorizationAndInternalUserInterceptors.preHandle(request, response, null) );
         assertEquals(401, response.getStatus() );
     }
 
     @Test
-    void preHandleWithMalformedRequestReturnsForbidden() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.addHeader("Eric-Identity", "$$$");
-        request.addHeader( "ERIC-Identity-Type", "oauth2" );
-
-        Mockito.doThrow( new NotFoundRuntimeException( "accounts-association-api", "Not found" ) ).when( usersService ).fetchUserDetails( "$$$" );
-
-        HttpServletResponse response = new MockHttpServletResponse();
-        assertFalse( compositeInterceptor.preHandle(request, response, null) );
-        assertEquals(403, response.getStatus() );
-    }
-
-    @Test
-    void preHandleWithWellFormedOAuth2RequestSucceeds() throws Exception {
+    void preHandleWithOAuth2RequestUsesAuthorizationInterceptor() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Eric-identity", "111");
         request.addHeader("Eric-identity-type", "oauth2");
@@ -75,18 +54,30 @@ class CompositeInterceptorTest {
         Mockito.doReturn( bruce ).when( usersService ).fetchUserDetails( "111" );
 
         HttpServletResponse response = new MockHttpServletResponse();
-        assertTrue( compositeInterceptor.preHandle(request, response, null) );
+        assertTrue( authorizationAndInternalUserInterceptors.preHandle(request, response, null) );
     }
 
     @Test
-    void preHandleWithWellFormedApiKeyRequestSucceeds() throws Exception {
+    void preHandleWithApiKeyRequestUsesInternalUserInterceptor() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Eric-identity", "111");
         request.addHeader("Eric-identity-type", "key");
         request.addHeader("ERIC-Authorised-Key-Roles","*");
 
         HttpServletResponse response = new MockHttpServletResponse();
-        assertTrue( compositeInterceptor.preHandle(request, response, null) );
+        assertTrue( authorizationAndInternalUserInterceptors.preHandle(request, response, null) );
+    }
+
+    @Test
+    void preHandleWithMalformedEricIdentityTypeReturnsUnauthorised(){
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("Eric-identity", "111");
+        request.addHeader("Eric-identity-type", "fingerprint");
+        request.addHeader("ERIC-Authorised-Key-Roles","*");
+
+        HttpServletResponse response = new MockHttpServletResponse();
+        assertFalse( authorizationAndInternalUserInterceptors.preHandle(request, response, null) );
+        assertEquals(401, response.getStatus() );
     }
 
 }
