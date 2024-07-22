@@ -12,7 +12,7 @@ public class AcspDataService {
 
     private final AcspDataRepository acspDataRepository;
 
-    public AcspDataService( final AcspDataRepository acspDataRepository ) {
+  public AcspDataService(final AcspDataRepository acspDataRepository) {
         this.acspDataRepository = acspDataRepository;
     }
 
