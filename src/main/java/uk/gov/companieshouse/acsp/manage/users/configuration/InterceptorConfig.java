@@ -4,11 +4,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import uk.gov.companieshouse.acsp.manage.users.interceptor.AuthorizationAndInternalUserInterceptors;
 import uk.gov.companieshouse.acsp.manage.users.interceptor.AuthorizationInterceptor;
-import uk.gov.companieshouse.acsp.manage.users.interceptor.CompositeInterceptor;
 import uk.gov.companieshouse.acsp.manage.users.interceptor.LoggingInterceptor;
-import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
-import uk.gov.companieshouse.api.interceptor.InternalUserInterceptor;
 
 @Configuration
 public class InterceptorConfig implements WebMvcConfigurer {
@@ -20,9 +18,12 @@ public class InterceptorConfig implements WebMvcConfigurer {
     private final LoggingInterceptor loggingInterceptor;
     private final AuthorizationInterceptor authorizationInterceptor;
 
-    public InterceptorConfig(final LoggingInterceptor loggingInterceptor, AuthorizationInterceptor authorizationInterceptor) {
+    private final AuthorizationAndInternalUserInterceptors authorizationAndInternalUserInterceptors;
+
+    public InterceptorConfig(final LoggingInterceptor loggingInterceptor, final AuthorizationInterceptor authorizationInterceptor, final AuthorizationAndInternalUserInterceptors authorizationAndInternalUserInterceptors) {
         this.loggingInterceptor = loggingInterceptor;
         this.authorizationInterceptor = authorizationInterceptor;
+        this.authorizationAndInternalUserInterceptors = authorizationAndInternalUserInterceptors;
     }
 
     @Override
@@ -40,7 +41,7 @@ public class InterceptorConfig implements WebMvcConfigurer {
             .addPathPatterns( OAUTH_PROTECTED_ENDPOINTS )
             .excludePathPatterns( HEALTH_CHECK_ENDPOINT, OAUTH_AND_KEY_PROTECTED_ENDPOINTS );
 
-        registry.addInterceptor( new CompositeInterceptor( authorizationInterceptor, new InternalUserInterceptor( StaticPropertyUtil.APPLICATION_NAMESPACE ) ) )
+        registry.addInterceptor( authorizationAndInternalUserInterceptors )
                 .addPathPatterns( OAUTH_AND_KEY_PROTECTED_ENDPOINTS )
                 .excludePathPatterns( HEALTH_CHECK_ENDPOINT, OAUTH_PROTECTED_ENDPOINTS );
     }
