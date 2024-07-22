@@ -13,8 +13,8 @@ import uk.gov.companieshouse.api.interceptor.InternalUserInterceptor;
 @Configuration
 public class InterceptorConfig implements WebMvcConfigurer {
 
-    private static final String OAUTH_PROTECTED_ENDPOINTS = "/acsp-members/user/**";
-    private static final String OAUTH_AND_KEY_PROTECTED_ENDPOINTS = "/acsp-members/acsps/**";
+    private static final String OAUTH_PROTECTED_ENDPOINTS = "/user/**";
+    private static final String OAUTH_AND_KEY_PROTECTED_ENDPOINTS = "/acsps/**";
     private static final String HEALTH_CHECK_ENDPOINT = "/*/healthcheck";
 
     private final LoggingInterceptor loggingInterceptor;
