@@ -18,10 +18,13 @@ public class InterceptorConfig implements WebMvcConfigurer {
 
     private final LoggingInterceptor loggingInterceptor;
     private final AuthorizationInterceptor authorizationInterceptor;
-
     private final AuthorizationAndInternalUserInterceptors authorizationAndInternalUserInterceptors;
 
-    public InterceptorConfig(final LoggingInterceptor loggingInterceptor, @Qualifier( "authorizationInterceptor" ) final AuthorizationInterceptor authorizationInterceptor, final AuthorizationAndInternalUserInterceptors authorizationAndInternalUserInterceptors) {
+  public InterceptorConfig(
+      final LoggingInterceptor loggingInterceptor,
+      @Qualifier("authorizationInterceptor")
+          final AuthorizationInterceptor authorizationInterceptor,
+      final AuthorizationAndInternalUserInterceptors authorizationAndInternalUserInterceptors) {
         this.loggingInterceptor = loggingInterceptor;
         this.authorizationInterceptor = authorizationInterceptor;
         this.authorizationAndInternalUserInterceptors = authorizationAndInternalUserInterceptors;
