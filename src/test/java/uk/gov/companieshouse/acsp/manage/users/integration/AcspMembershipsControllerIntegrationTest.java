@@ -278,15 +278,12 @@ class AcspMembershipsControllerIntegrationTest {
 
     private static Stream<Arguments> provideRoleAndIncludeRemovedTestData() {
       return Stream.of(
-          // Standard role tests
           Arguments.of("standard", false, 2, new String[] {"COMU007", "COMU008"}),
           Arguments.of("standard", true, 3, new String[] {"COMU006", "COMU007", "COMU008"}),
 
-          // Admin role tests
           Arguments.of("admin", false, 2, new String[] {"COMU004", "COMU005"}),
           Arguments.of("admin", true, 3, new String[] {"COMU003", "COMU004", "COMU005"}),
 
-          // Owner role tests
           Arguments.of("owner", false, 1, new String[] {"COMU002"}),
           Arguments.of("owner", true, 3, new String[] {"COMU001", "COMU002", "COMU009"}));
     }
@@ -441,7 +438,6 @@ class AcspMembershipsControllerIntegrationTest {
           .thenReturn(usersList);
       Mockito.when(acspDataService.fetchAcspData("COMA001")).thenReturn(acspDataDao);
 
-      // Insert test data into MongoDB
       acspMembersRepository.insert(activeMembers);
       acspMembersRepository.insert(removedMembers);
 
@@ -484,14 +480,12 @@ class AcspMembershipsControllerIntegrationTest {
           .thenReturn(usersList);
       Mockito.when(acspDataService.fetchAcspData("COMA001")).thenReturn(acspDataDao);
 
-      // Insert test data into MongoDB
       acspMembersRepository.insert(activeMembers);
       acspMembersRepository.insert(removedMembers);
 
       RequestBodyLookup requestBody = new RequestBodyLookup();
       requestBody.setUserEmail(removedUserDto.getEmail());
 
-      // Test with include_removed=false
       MvcResult resultWithoutRemoved =
           mockMvc
               .perform(
@@ -505,7 +499,6 @@ class AcspMembershipsControllerIntegrationTest {
               .andExpect(status().isOk())
               .andReturn();
 
-      // Test with include_removed=true
       MvcResult resultWithRemoved =
           mockMvc
               .perform(
