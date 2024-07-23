@@ -1,4 +1,4 @@
-package uk.gov.companieshouse.acsp.manage.users.controller.implementations;
+package uk.gov.companieshouse.acsp.manage.users.controller;
 
 import java.util.Arrays;
 import java.util.HashMap;

@@ -49,7 +49,7 @@ import uk.gov.companieshouse.api.sdk.ApiClientService;
 @Testcontainers
 @ExtendWith(MockitoExtension.class)
 @Tag("integration-test")
-class AcspMembershipListForAcspTest {
+class AcspMembershipsControllerIntegrationTest {
 
   @Container @ServiceConnection static MongoDBContainer container = new MongoDBContainer("mongo:5");
 
