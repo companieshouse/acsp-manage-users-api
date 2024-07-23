@@ -3,6 +3,8 @@ package uk.gov.companieshouse.acsp.manage.users.integration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.AfterEach;
@@ -207,6 +209,64 @@ class AcspMembersRepositoryIntegrationTest {
                       elem.getId().equals("NF002")
                           && elem.getUserId().equals(userId)
                           && elem.getStatus()
+                              .equals(AcspMembership.MembershipStatusEnum.ACTIVE.getValue())));
+    }
+  }
+
+  @Nested
+  class FetchAllAcspMembersByUserIdAndAcspNumber {
+    @Test
+    void returnsRemovedAcspMembersForProvidedUserIdAndAcspNumber() {
+      // Given
+      String userId = "COMU001";
+      String acspNumber = "COMA001";
+      acspMembersRepository.insert(
+          testDataManager.fetchAcspMembersDaos("COM001", "COM002", "COM003", "NF002", "TS002"));
+
+      // When
+      List<AcspMembersDao> result =
+          acspMembersRepository.fetchAllAcspMembersByUserIdAndAcspNumber(userId, acspNumber);
+
+      // Then
+      assertEquals(1, result.size());
+      assertTrue(
+          result.stream()
+              .anyMatch(
+                  member ->
+                      member.getId().equals("COM001")
+                          && member.getUserId().equals(userId)
+                          && member.getAcspNumber().equals(acspNumber)
+                          && member
+                              .getStatus()
+                              .equals(AcspMembership.MembershipStatusEnum.REMOVED.getValue())));
+    }
+  }
+
+  @Nested
+  class FetchActiveAcspMembersByUserIdAndAcspNumber {
+    @Test
+    void returnsActiveAcspMembersForProvidedUserIdAndAcspNumber() {
+      // Given
+      String userId = "COMU002";
+      String acspNumber = "COMA001";
+      acspMembersRepository.insert(
+          testDataManager.fetchAcspMembersDaos("COM001", "COM002", "COM003", "NF002", "TS002"));
+
+      // When
+      List<AcspMembersDao> result =
+          acspMembersRepository.fetchActiveAcspMembersByUserIdAndAcspNumber(userId, acspNumber);
+
+      // Then
+      assertEquals(1, result.size());
+      assertTrue(
+          result.stream()
+              .anyMatch(
+                  member ->
+                      member.getId().equals("COM002")
+                          && member.getUserId().equals(userId)
+                          && member.getAcspNumber().equals(acspNumber)
+                          && member
+                              .getStatus()
                               .equals(AcspMembership.MembershipStatusEnum.ACTIVE.getValue())));
     }
   }
