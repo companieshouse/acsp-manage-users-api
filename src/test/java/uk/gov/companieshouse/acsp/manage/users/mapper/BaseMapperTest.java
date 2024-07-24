@@ -11,12 +11,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
-import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
-import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipLinks;
 
-@ExtendWith(MockitoExtension.class)
-@Tag("unit-test")
+@ExtendWith( MockitoExtension.class )
+@Tag( "unit-test" )
 class BaseMapperTest {
 
     private final TestDataManager testDataManager = TestDataManager.getInstance();
@@ -45,30 +44,6 @@ class BaseMapperTest {
     }
 
     @Test
-    void enrichAcspMembershipWithKindWithNullThrowsNullPointerException(){
-        Assertions.assertThrows( NullPointerException.class, () -> baseMapper.enrichAcspMembershipWithKind( null ) );
-    }
-
-    @Test
-    void enrichAcspMembershipWithKindEnrichesMembership(){
-        final var acspMembership = new AcspMembership();
-        baseMapper.enrichAcspMembershipWithKind( acspMembership );
-        Assertions.assertEquals( DEFAULT_KIND, acspMembership.getKind() );
-    }
-
-    @Test
-    void enrichAcspMembershipWithLinksWithNullThrowsNullPointerException(){
-        Assertions.assertThrows( NullPointerException.class, () -> baseMapper.enrichAcspMembershipWithLinks( null ) );
-    }
-
-    @Test
-    void enrichAcspMembershipWithLinksEnrichesMembership(){
-        final var acspMembership = new AcspMembership().id("1");
-        baseMapper.enrichAcspMembershipWithLinks( acspMembership );
-        Assertions.assertEquals( new AcspMembershipLinks().self("/1"), acspMembership.getLinks() );
-    }
-
-    @Test
     void daoToDtoWithNullInputReturnsNull(){
         Assertions.assertNull( baseMapper.daoToDto( null ) );
     }
@@ -91,8 +66,8 @@ class BaseMapperTest {
         Assertions.assertNull( dto.getAddedBy() );
         Assertions.assertNull( dto.getRemovedBy() );
         Assertions.assertNull( dto.getRemovedAt() );
+        Assertions.assertEquals( MembershipStatusEnum.ACTIVE, dto.getMembershipStatus() );
         Assertions.assertEquals( DEFAULT_KIND, dto.getKind() );
-        Assertions.assertEquals( "/TS001", dto.getLinks().getSelf() );
     }
 
     @Test
@@ -113,8 +88,8 @@ class BaseMapperTest {
         Assertions.assertEquals( "TSU001", dto.getAddedBy() );
         Assertions.assertEquals( "TSU001", dto.getRemovedBy() );
         Assertions.assertEquals( localDateTimeToNormalisedString( dao.getRemovedAt() ), reduceTimestampResolution( dto.getRemovedAt().toString() ) );
+        Assertions.assertEquals( MembershipStatusEnum.REMOVED, dto.getMembershipStatus() );
         Assertions.assertEquals( DEFAULT_KIND, dto.getKind() );
-        Assertions.assertEquals( "/TS002", dto.getLinks().getSelf() );
     }
 
 }

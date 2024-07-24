@@ -6,10 +6,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
-import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembers;
-import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembersLinks;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.AcspStatusEnum;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsListLinks;
 
 @Component
 public class MapperUtil {
@@ -48,13 +48,14 @@ public class MapperUtil {
         return acspMembership;
     }
 
-    public AcspMembers enrichWithMetadata( final Page<AcspMembership> page, final String endpointUrl ) {
+    public AcspMembershipsList enrichWithMetadata( final Page<AcspMembership> page, final String endpointUrl ) {
         final var pageIndex = page.getNumber();
         final var itemsPerPage = page.getSize();
         final var self = String.format( "%s?page_index=%d&items_per_page=%d", endpointUrl, pageIndex, itemsPerPage );
         final var next = page.isLast() ? "" : String.format( "%s?page_index=%d&items_per_page=%d", endpointUrl, pageIndex + 1, itemsPerPage );
-        final var links = new AcspMembersLinks().self( self ).next( next );
-        return new AcspMembers()
+        final var links = new AcspMembershipsListLinks().self( self ).next( next );
+
+        return new AcspMembershipsList()
                 .items( page.getContent() )
                 .pageNumber( pageIndex )
                 .itemsPerPage( itemsPerPage )

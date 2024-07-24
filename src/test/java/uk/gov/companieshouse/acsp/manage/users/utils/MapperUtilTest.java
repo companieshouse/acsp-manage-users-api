@@ -16,8 +16,8 @@ import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 
-@ExtendWith(MockitoExtension.class)
-@Tag("unit-test")
+@ExtendWith( MockitoExtension.class )
+@Tag( "unit-test" )
 class MapperUtilTest {
 
     @Mock
@@ -82,7 +82,7 @@ class MapperUtilTest {
 
         Assertions.assertEquals( "TSA001", acspMembership.getAcspNumber() );
         Assertions.assertEquals( "Toy Story", acspMembership.getAcspName() );
-        Assertions.assertEquals( "active", acspMembership.getAcspStatus().getValue() );
+        Assertions.assertEquals( "live", acspMembership.getAcspStatus().getValue() );
 
     }
 

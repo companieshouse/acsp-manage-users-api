@@ -16,6 +16,7 @@ import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.MapperUtil;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 
 @ExtendWith( MockitoExtension.class )
@@ -66,13 +67,13 @@ class AcspMembershipMapperTest {
         Assertions.assertEquals( UserRoleEnum.OWNER, dto.getUserRole() );
         Assertions.assertEquals( "TSA001", dto.getAcspNumber() );
         Assertions.assertEquals( "Toy Story", dto.getAcspName() );
-        Assertions.assertEquals( "active", dto.getAcspStatus().getValue() );
+        Assertions.assertEquals( "live", dto.getAcspStatus().getValue() );
         Assertions.assertEquals( localDateTimeToNormalisedString( dao.getAddedAt() ), reduceTimestampResolution( dto.getAddedAt().toString() ) );
         Assertions.assertNull( dto.getAddedBy() );
         Assertions.assertNull( dto.getRemovedBy() );
         Assertions.assertNull( dto.getRemovedAt() );
+        Assertions.assertEquals( MembershipStatusEnum.ACTIVE, dto.getMembershipStatus() );
         Assertions.assertEquals( DEFAULT_KIND, dto.getKind() );
-        Assertions.assertEquals( "/TS001", dto.getLinks().getSelf() );
     }
 
     @Test
@@ -94,13 +95,13 @@ class AcspMembershipMapperTest {
         Assertions.assertEquals( UserRoleEnum.ADMIN, dto.getUserRole() );
         Assertions.assertEquals( "TSA001", dto.getAcspNumber() );
         Assertions.assertEquals( "Toy Story", dto.getAcspName() );
-        Assertions.assertEquals( "active", dto.getAcspStatus().getValue() );
+        Assertions.assertEquals( "live", dto.getAcspStatus().getValue() );
         Assertions.assertEquals( localDateTimeToNormalisedString( dao.getAddedAt() ), reduceTimestampResolution( dto.getAddedAt().toString() ) );
         Assertions.assertEquals( "TSU001", dto.getAddedBy() );
         Assertions.assertEquals( "TSU001", dto.getRemovedBy() );
         Assertions.assertEquals( localDateTimeToNormalisedString( dao.getRemovedAt() ), reduceTimestampResolution( dto.getRemovedAt().toString() ) );
+        Assertions.assertEquals( MembershipStatusEnum.REMOVED, dto.getMembershipStatus() );
         Assertions.assertEquals( DEFAULT_KIND, dto.getKind() );
-        Assertions.assertEquals( "/TS002", dto.getLinks().getSelf() );
     }
 
 }
