@@ -10,19 +10,20 @@ import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 @Service
 public class AcspDataService {
 
-    private final AcspDataRepository acspDataRepository;
+  private final AcspDataRepository acspDataRepository;
 
-    public AcspDataService( final AcspDataRepository acspDataRepository ) {
-        this.acspDataRepository = acspDataRepository;
+  public AcspDataService(final AcspDataRepository acspDataRepository) {
+    this.acspDataRepository = acspDataRepository;
+  }
+
+  @Transactional(readOnly = true)
+  public AcspDataDao fetchAcspData(final String acspNumber) {
+    final var acspDataOptional = acspDataRepository.findById(acspNumber);
+    if (acspDataOptional.isEmpty()) {
+      throw new NotFoundRuntimeException(
+          StaticPropertyUtil.APPLICATION_NAMESPACE,
+          String.format("Acsp %s was not found.", acspNumber));
     }
-
-    @Transactional( readOnly = true )
-    public AcspDataDao fetchAcspData( final String acspNumber ){
-        final var acspDataOptional = acspDataRepository.findById( acspNumber );
-        if ( acspDataOptional.isEmpty() ) {
-            throw new NotFoundRuntimeException( StaticPropertyUtil.APPLICATION_NAMESPACE, String.format( "Acsp %s was not found.", acspNumber ) );
-        }
-        return acspDataOptional.get();
-    }
-
+    return acspDataOptional.get();
+  }
 }
