@@ -11,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
@@ -69,6 +68,7 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
     LOG.info("Getting members for ACSP & User email", logMap);
 
     if (Objects.isNull(requestBody.getUserEmail())) {
+      LOG.error(String.format("%s: A user email was not provided.", requestId));
       throw new BadRequestRuntimeException(PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN);
     }
 
