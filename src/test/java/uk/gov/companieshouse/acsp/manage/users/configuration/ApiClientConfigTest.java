@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import uk.gov.companieshouse.api.InternalApiClient;
 
 @Tag("unit-test")
-public class ApiClientConfigTest {
+class ApiClientConfigTest {
 
     @Test
     void internalApiClientIsCorrectType(){

@@ -8,11 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.PaginationValidatorUtil;
-import uk.gov.companieshouse.acsp.manage.users.utils.PaginationValidatorUtil.PaginationParams;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.acsp_manage_users.api.AcspMembershipsInterface;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
@@ -86,11 +84,11 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
       throw new BadRequestRuntimeException(PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN);
     }
 
-    final PaginationParams paginationParams =
+    final var paginationParams =
         PaginationValidatorUtil.validateAndGetParams(pageIndex, itemsPerPage);
 
     // This will probably be replaced by the ACSP Data Sync API once available.
-    final AcspDataDao acspDataDao = acspDataService.fetchAcspData(acspNumber);
+    final var acspDataDao = acspDataService.fetchAcspData(acspNumber);
 
     final var acspMembershipsList =
         acspMembersService.findAllByAcspNumberAndRole(
