@@ -34,6 +34,8 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
 
   private static final String PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN =
       "Please check the request and try again";
+  private static final String ACSP_NUMBER_KEY = "acspNumber";
+  private static final String REQUEST_ID_KEY = "requestId";
 
   private final UsersService usersService;
   private final AcspDataService acspDataService;
@@ -61,8 +63,8 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
       final Boolean includeRemoved,
       final RequestBodyLookup requestBody) {
     Map<String, Object> logMap = new HashMap<>();
-    logMap.put("requestId", requestId);
-    logMap.put("acspNumber", acspNumber);
+    logMap.put(REQUEST_ID_KEY, requestId);
+    logMap.put(ACSP_NUMBER_KEY, acspNumber);
     logMap.put("includeRemoved", includeRemoved);
     logMap.put("userEmail", requestBody.getUserEmail());
     LOG.info("Getting members for ACSP & User email", logMap);
@@ -88,15 +90,16 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
     }
 
     // This will probably be replaced by the ACSP Data Sync API once available.
-    final AcspDataDao acspDataDao = acspDataService.fetchAcspData(acspNumber);
+    acspDataService.fetchAcspData(acspNumber); // can throw 404.
 
     final var acspMembershipsList =
         acspMembersService.fetchAcspMemberships(user, includeRemoved, acspNumber);
 
-    LOG.info(
-        "Successfully retrieved members for ACSP and user email",
-        new HashMap<>(
-            Map.of("userEmail", userEmail, "requestId", requestId, "acspNumber", acspNumber)));
+    Map<String, Object> successLogMap = new HashMap<>();
+    logMap.put(REQUEST_ID_KEY, requestId);
+    logMap.put("userEmail", userEmail);
+    logMap.put(ACSP_NUMBER_KEY, acspNumber);
+    LOG.info("Getting members for ACSP & User email", successLogMap);
 
     return new ResponseEntity<>(acspMembershipsList, HttpStatus.OK);
   }
@@ -110,8 +113,8 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
       final Integer itemsPerPage,
       final String role) {
     Map<String, Object> logMap = new HashMap<>();
-    logMap.put("requestId", requestId);
-    logMap.put("acspNumber", acspNumber);
+    logMap.put(REQUEST_ID_KEY, requestId);
+    logMap.put(ACSP_NUMBER_KEY, acspNumber);
     logMap.put("includeRemoved", includeRemoved);
     logMap.put("pageIndex", pageIndex);
     logMap.put("itemsPerPage", itemsPerPage);
@@ -147,16 +150,13 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
             paginationParams.pageIndex,
             paginationParams.itemsPerPage);
 
-    LOG.info(
-        "Successfully retrieved members for ACSP",
-        new HashMap<>(
-            Map.of(
-                "requestId",
-                requestId,
-                "acspNumber",
-                acspNumber,
-                "membersCount",
-                acspMembershipsList.getTotalResults())));
+    Map<String, Object> successLogMap = new HashMap<>();
+    logMap.put(REQUEST_ID_KEY, requestId);
+    logMap.put(ACSP_NUMBER_KEY, acspNumber);
+    logMap.put("membersCount", Optional.ofNullable(acspMembershipsList.getItems())
+            .map(List::size)
+            .orElse(0));
+    LOG.info("Getting members for ACSP", successLogMap);
 
     return new ResponseEntity<>(acspMembershipsList, HttpStatus.OK);
   }

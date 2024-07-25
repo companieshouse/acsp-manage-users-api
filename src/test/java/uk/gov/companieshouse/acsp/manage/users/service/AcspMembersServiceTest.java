@@ -1,7 +1,14 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.isNull;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,12 +45,8 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserStatusEnum;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -66,6 +69,7 @@ class AcspMembersServiceTest {
   private List<AcspMembersDao> testActiveAcspMembersDaos;
   private List<AcspMembersDao> testAllAcspMembersDaos;
   private List<AcspMembership> testAcspMemberships;
+  private AcspDataDao testAcspDataDao;
 
   @BeforeEach
   void setUp() {
@@ -76,6 +80,16 @@ class AcspMembersServiceTest {
     testAllAcspMembersDaos =
         Arrays.asList(createAcspMembersDao("1", false), createAcspMembersDao("2", true));
     testAcspMemberships = Arrays.asList(new AcspMembership(), new AcspMembership());
+    testUser.setEmail("test@example.com");
+    testUser.setDisplayName("Test User");
+    testActiveAcspMembersDaos = List.of(createAcspMembersDao("1", false));
+    testAllAcspMembersDaos = Arrays.asList(createAcspMembersDao("1", false),
+            createAcspMembersDao("2", true));
+    testAcspMemberships = Arrays.asList(new AcspMembership(), new AcspMembership());
+    testAcspDataDao = new AcspDataDao();
+    testAcspDataDao.setId("ACSP001");
+    testAcspDataDao.setAcspName("Test ACSP");
+    testAcspDataDao.setAcspStatus("ACTIVE");
   }
 
   private ArgumentMatcher<Update> updateMatches( final Map<String, Object> expectedKeyValuePairs ){
@@ -167,19 +181,19 @@ class AcspMembersServiceTest {
     @Test
     void findAllByAcspNumberAndRoleWithRoleAndIncludeRemovedTrue() {
       when(acspMembersRepository.findAllByAcspNumberAndUserRole("ACSP001", "standard", pageable))
-          .thenReturn(pageResult);
-      when(acspMembershipsListMapper.daoToDto(pageResult, acspDataDao))
-          .thenReturn(new AcspMembershipsList().items(testAcspMemberships));
+              .thenReturn(pageResult);
+      when(acspMembershipsListMapper.daoToDto(pageResult, testAcspDataDao))
+              .thenReturn(new AcspMembershipsList().items(testAcspMemberships));
 
-      AcspMembershipsList result =
-          acspMembersService.findAllByAcspNumberAndRole(
-              "ACSP001", acspDataDao, "standard", true, 0, 10);
+      AcspMembershipsList result = acspMembersService.findAllByAcspNumberAndRole(
+              "ACSP001", testAcspDataDao, "standard", true, 0, 10);
 
       assertNotNull(result);
       assertEquals(2, result.getItems().size());
       verify(acspMembersRepository).findAllByAcspNumberAndUserRole("ACSP001", "standard", pageable);
-      verify(acspMembershipsListMapper).daoToDto(pageResult, acspDataDao);
+      verify(acspMembershipsListMapper).daoToDto(pageResult, testAcspDataDao);
     }
+
 
     @Test
     void findAllByAcspNumberAndRoleWithRoleAndIncludeRemovedFalse() {
@@ -266,6 +280,48 @@ class AcspMembersServiceTest {
       assertSame(expectedMembership, result.get());
       verify(acspMembersRepository).findById("TS001");
       verify(acspMembershipMapper).daoToDto(acspMemberDao);
+    }
+  }
+
+  @Nested
+  class FetchAcspMembershipsWithAcspNumber {
+
+    @Test
+    void fetchAcspMembershipsWithAcspNumberReturnsAllMembersIfIncludeRemovedTrue() {
+      when(acspMembersRepository.fetchAllAcspMembersByUserIdAndAcspNumber(testUser.getUserId(),
+              "ACSP001"))
+              .thenReturn(testAllAcspMembersDaos);
+      when(acspMembershipListMapper.daoToDto(testAllAcspMembersDaos, testUser))
+              .thenReturn(testAcspMemberships);
+
+      AcspMembershipsList result = acspMembersService.fetchAcspMemberships(testUser, true,
+              "ACSP001");
+
+      assertNotNull(result);
+      assertEquals(2, result.getItems().size());
+      assertSame(testAcspMemberships, result.getItems());
+      verify(acspMembersRepository).fetchAllAcspMembersByUserIdAndAcspNumber(testUser.getUserId(),
+              "ACSP001");
+      verify(acspMembershipListMapper).daoToDto(testAllAcspMembersDaos, testUser);
+    }
+
+    @Test
+    void fetchAcspMembershipsWithAcspNumberReturnsActiveMembersIfIncludeRemovedFalse() {
+      when(acspMembersRepository.fetchActiveAcspMembersByUserIdAndAcspNumber(testUser.getUserId(),
+              "ACSP001"))
+              .thenReturn(testActiveAcspMembersDaos);
+      when(acspMembershipListMapper.daoToDto(testActiveAcspMembersDaos, testUser))
+              .thenReturn(Collections.singletonList(testAcspMemberships.get(0)));
+
+      AcspMembershipsList result = acspMembersService.fetchAcspMemberships(testUser, false,
+              "ACSP001");
+
+      assertNotNull(result);
+      assertEquals(1, result.getItems().size());
+      assertSame(testAcspMemberships.get(0), result.getItems().get(0));
+      verify(acspMembersRepository).fetchActiveAcspMembersByUserIdAndAcspNumber(
+              testUser.getUserId(), "ACSP001");
+      verify(acspMembershipListMapper).daoToDto(testActiveAcspMembersDaos, testUser);
     }
   }
 
