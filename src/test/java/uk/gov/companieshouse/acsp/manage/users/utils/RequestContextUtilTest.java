@@ -1,6 +1,6 @@
 package uk.gov.companieshouse.acsp.manage.users.utils;
 
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getEricIdentityType;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isOAuth2Request;
 import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_IDENTITY_TYPE;
 
 import org.junit.jupiter.api.Assertions;
@@ -17,14 +17,25 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 public class RequestContextUtilTest {
 
     @Test
-    void getEricIdentityTypeRetrievesValue(){
+    void isOAuth2RequestReturnsTrueIfEricIdentityTypeIsOAuth2(){
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader( ERIC_IDENTITY_TYPE, "oauth2" );
 
         ServletRequestAttributes requestAttributes = new ServletRequestAttributes( request );
         RequestContextHolder.setRequestAttributes( requestAttributes );
 
-        Assertions.assertEquals( "oauth2", getEricIdentityType() );
+        Assertions.assertTrue( isOAuth2Request() );
+    }
+
+    @Test
+    void isOAuth2RequestReturnsFalseIfEricIdentityTypeIsNotOAuth2(){
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader( ERIC_IDENTITY_TYPE, "key" );
+
+        ServletRequestAttributes requestAttributes = new ServletRequestAttributes( request );
+        RequestContextHolder.setRequestAttributes( requestAttributes );
+
+        Assertions.assertFalse( isOAuth2Request() );
     }
 
 }

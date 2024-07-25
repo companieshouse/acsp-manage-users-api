@@ -6,12 +6,16 @@ import static org.mockito.Mockito.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import org.bson.Document;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatcher;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -20,7 +24,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Update;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
+import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipListMapper;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipMapper;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipsListMapper;
@@ -29,7 +35,16 @@ import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserStatusEnum;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @Tag("unit-test")
@@ -61,6 +76,21 @@ class AcspMembersServiceTest {
     testAllAcspMembersDaos =
         Arrays.asList(createAcspMembersDao("1", false), createAcspMembersDao("2", true));
     testAcspMemberships = Arrays.asList(new AcspMembership(), new AcspMembership());
+  }
+
+  private ArgumentMatcher<Update> updateMatches( final Map<String, Object> expectedKeyValuePairs ){
+    return update -> {
+      final var document = update.getUpdateObject().get("$set", Document.class);
+      return expectedKeyValuePairs.entrySet()
+              .stream()
+              .map( entry -> {
+                final var value = document.get( entry.getKey() );
+                final var expectedValue = entry.getValue();
+                return value.equals( expectedValue );
+              } )
+              .reduce( (firstIsCorrect, secondIsCorrect) -> firstIsCorrect && secondIsCorrect )
+              .get();
+    };
   }
 
   private AcspMembersDao createAcspMembersDao(String id, boolean removed) {
@@ -238,4 +268,88 @@ class AcspMembersServiceTest {
       verify(acspMembershipMapper).daoToDto(acspMemberDao);
     }
   }
+
+    @Test
+    void fetchMembershipDaoWithNullMembershipIdThrowsIllegalArgumentException(){
+        Mockito.doThrow( new IllegalArgumentException( "Cannot be null" ) ).when( acspMembersRepository ).findById( isNull() );
+        Assertions.assertThrows( IllegalArgumentException.class, () -> acspMembersService.fetchMembershipDao( null ) );
+    }
+
+    @Test
+    void fetchMembershipDaoWithMalformedOrNonExistentMembershipIdReturnsEmptyOptional(){
+        Assertions.assertFalse( acspMembersService.fetchMembershipDao( "£££" ).isPresent() );
+        Assertions.assertFalse( acspMembersService.fetchMembershipDao( "TS001" ).isPresent() );
+    }
+
+    @Test
+    void fetchMembershipDaoRetrievesMembership(){
+        acspMembersService.fetchMembershipDao( "TS001" );
+        Mockito.verify( acspMembersRepository ).findById( eq( "TS001" ) );
+    }
+
+    @Test
+    void fetchNumberOfActiveOwnersWithNullOrMalformedOrNonexistentAcspNumberReturnsZero(){
+        Assertions.assertEquals( 0, acspMembersService.fetchNumberOfActiveOwners( null ) );
+        Assertions.assertEquals( 0, acspMembersService.fetchNumberOfActiveOwners( "£££" ) );
+        Assertions.assertEquals( 0, acspMembersService.fetchNumberOfActiveOwners( "TS001" ) );
+    }
+
+    @Test
+    void fetchNumberOfActiveOwnersRetrievesNumberOfActiveOwnersAtAcsp(){
+        acspMembersService.fetchNumberOfActiveOwners( "COMA001" );
+        Mockito.verify( acspMembersRepository ).fetchNumberOfActiveOwners( eq( "COMA001" ) );
+    }
+
+    @Test
+    void fetchActiveAcspMembershipWithNullOrMalformedOrNonexistentUserIdOrAcspNumberReturnsEmptyOptional(){
+        Assertions.assertFalse( acspMembersService.fetchActiveAcspMembership( null, "TSA001" ).isPresent() );
+        Assertions.assertFalse( acspMembersService.fetchActiveAcspMembership( "£££", "TSA001" ).isPresent() );
+        Assertions.assertFalse( acspMembersService.fetchActiveAcspMembership( "TSU001", null ).isPresent() );
+        Assertions.assertFalse( acspMembersService.fetchActiveAcspMembership( "TSU001", "£££" ).isPresent() );
+        Assertions.assertFalse( acspMembersService.fetchActiveAcspMembership( "TSU001", "TSA001" ).isPresent() );
+    }
+
+    @Test
+    void fetchActiveAcspMembershipAppliedToInactiveMembershipReturnsEmptyOptional(){
+        Assertions.assertFalse( acspMembersService.fetchActiveAcspMembership( "TSU002", "TSA001" ).isPresent() );
+    }
+
+    @Test
+    void fetchActiveAcspMembershipRetrievesMembership(){
+        acspMembersService.fetchActiveAcspMembership( "TSU001", "TSA001" );
+        Mockito.verify( acspMembersRepository ).fetchActiveAcspMembership( eq( "TSU001" ), eq( "TSA001" ) );
+    }
+
+    @Test
+    void updateMembershipWithNullMembershipIdThrowsIllegalArgumentException(){
+        Assertions.assertThrows( IllegalArgumentException.class, () -> acspMembersService.updateMembership( null, UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" ) );
+    }
+
+    @Test
+    void updateMembershipWithMalformedOrNonexistentMembershipIdThrowsInternalServerErrorRuntimeException(){
+        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspMembersService.updateMembership( "£££", UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" ) );
+        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspMembersService.updateMembership( "TS001", UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" ) );
+    }
+
+    @Test
+    void updateMembershipWithNullUserStatusAndNotNullUserRoleOnlyUpdatesEtagAndRole(){
+        Mockito.doReturn( 1 ).when( acspMembersRepository ).updateAcspMembership( eq("TS001" ), any( Update.class ) );
+        acspMembersService.updateMembership( "TS001", null, UserRoleEnum.STANDARD, "TSU002" );
+        Mockito.verify( acspMembersRepository ).updateAcspMembership( eq( "TS001" ), argThat( updateMatches( Map.of( "user_role", UserRoleEnum.STANDARD.getValue() ) ) ) );
+    }
+
+    @Test
+    void updateMembershipWithNotNullUserStatusAndNullUserRoleOnlyUpdatesEtagAndStatusAndRemovedAtAndRemovedBy(){
+        Mockito.doReturn( 1 ).when( acspMembersRepository ).updateAcspMembership( eq("TS001" ), any( Update.class ) );
+        acspMembersService.updateMembership( "TS001", UserStatusEnum.REMOVED, null, "TSU002" );
+        Mockito.verify( acspMembersRepository ).updateAcspMembership( eq( "TS001" ), argThat( updateMatches( Map.of( "status", UserStatusEnum.REMOVED.getValue(), "removed_by", "TSU002" ) ) ) );
+    }
+
+    @Test
+    void updateMembershipWithNotNullUserStatusAndNotNullUserRoleOnlyUpdatesEverything(){
+        Mockito.doReturn( 1 ).when( acspMembersRepository ).updateAcspMembership( eq("TS001" ), any( Update.class ) );
+        acspMembersService.updateMembership( "TS001", UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" );
+        Mockito.verify( acspMembersRepository ).updateAcspMembership( eq( "TS001" ), argThat( updateMatches( Map.of( "user_role", UserRoleEnum.STANDARD.getValue(), "status", UserStatusEnum.REMOVED.getValue(), "removed_by", "TSU002" ) ) ) );
+    }
+
 }

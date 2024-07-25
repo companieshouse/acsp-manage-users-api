@@ -3,6 +3,8 @@ package uk.gov.companieshouse.acsp.manage.users.repositories;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import java.util.Optional;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -31,4 +33,14 @@ public interface AcspMembersRepository extends MongoRepository<AcspMembersDao, S
 
   @Query(value = "{ 'user_id': ?0, 'status': 'active' }")
   List<AcspMembersDao> fetchActiveAcspMembersByUserId(final String userId);
+
+    @Query( value = "{ 'acsp_number': ?0, 'user_role': 'owner', 'status': 'active' }", count = true )
+    int fetchNumberOfActiveOwners( final String acspNumber );
+
+    @Query( "{ 'user_id': ?0, 'acsp_number': ?1, 'status': 'active' }" )
+    Optional<AcspMembersDao> fetchActiveAcspMembership( final String userId, final String acspNumber );
+
+    @Query( "{ '_id': ?0 }" )
+    int updateAcspMembership( final String acspMembershipId, final Update update );
+
 }

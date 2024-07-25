@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Update;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -209,8 +211,62 @@ class AcspMembersRepositoryIntegrationTest {
     }
   }
 
-    @AfterEach
-    public void after() {
-        mongoTemplate.dropCollection( AcspMembersDao.class );
-    }
+  @Test
+  void fetchNumberOfActiveOwnersWithNullOrMalformedOrNonexistentAcspNumberReturnsZero(){
+    Assertions.assertEquals( 0, acspMembersRepository.fetchNumberOfActiveOwners( null ) );
+    Assertions.assertEquals( 0, acspMembersRepository.fetchNumberOfActiveOwners( "£££" ) );
+    Assertions.assertEquals( 0, acspMembersRepository.fetchNumberOfActiveOwners( "TS001" ) );
+  }
+
+  @Test
+  void fetchNumberOfActiveOwnersRetrievesNumberOfActiveOwnersAtAcsp(){
+    acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001", "COM001", "COM002", "COM003", "COM004" ) );
+    Assertions.assertEquals( 1, acspMembersRepository.fetchNumberOfActiveOwners( "COMA001" ) );
+  }
+
+  @Test
+  void fetchActiveAcspMembershipWithNullOrMalformedOrNonexistentUserIdOrAcspNumberReturnsEmptyOptional(){
+    Assertions.assertFalse( acspMembersRepository.fetchActiveAcspMembership( null, "TSA001" ).isPresent() );
+    Assertions.assertFalse( acspMembersRepository.fetchActiveAcspMembership( "£££", "TSA001" ).isPresent() );
+    Assertions.assertFalse( acspMembersRepository.fetchActiveAcspMembership( "TSU001", null ).isPresent() );
+    Assertions.assertFalse( acspMembersRepository.fetchActiveAcspMembership( "TSU001", "£££" ).isPresent() );
+    Assertions.assertFalse( acspMembersRepository.fetchActiveAcspMembership( "TSU001", "TSA001" ).isPresent() );
+  }
+
+  @Test
+  void fetchActiveAcspMembershipAppliedToInactiveMembershipReturnsEmptyOptional(){
+    acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS002" ) );
+    Assertions.assertFalse( acspMembersRepository.fetchActiveAcspMembership( "TSU002", "TSA001" ).isPresent() );
+  }
+
+  @Test
+  void fetchActiveAcspMembershipRetrievesMembership(){
+    acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001" ) );
+    Assertions.assertEquals( "TS001", acspMembersRepository.fetchActiveAcspMembership( "TSU001", "TSA001" ).get().getId() );
+  }
+
+  @Test
+  void updateAcspMembershipWithNullOrMalformedOrNonexistentAcspMembershipIdDoesNotPerformUpdate(){
+    Assertions.assertEquals( 0, acspMembersRepository.updateAcspMembership( null, new Update().set( "user_role", "standard" ) ) );
+    Assertions.assertEquals( 0, acspMembersRepository.updateAcspMembership( "£££", new Update().set( "user_role", "standard" ) ) );
+    Assertions.assertEquals( 0, acspMembersRepository.updateAcspMembership( "TS001", new Update().set( "user_role", "standard" ) ) );
+  }
+
+  @Test
+  void updateAcspMembershipWithNullUpdateThrowsIllegalArgumentException(){
+    Assertions.assertThrows( IllegalStateException.class, () -> acspMembersRepository.updateAcspMembership( "TS001", null ) );
+  }
+
+  @Test
+  void updateAcspMembershipPerformsUpdate(){
+    acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001" ) );
+    Assertions.assertEquals( 1, acspMembersRepository.updateAcspMembership( "TS001", new Update().set( "user_role", "standard" ) ) );
+    Assertions.assertEquals( "standard", acspMembersRepository.findById( "TS001" ).get().getUserRole() );
+  }
+
+  @AfterEach
+  public void after() {
+    mongoTemplate.dropCollection( AcspMembersDao.class );
+  }
+
 }
