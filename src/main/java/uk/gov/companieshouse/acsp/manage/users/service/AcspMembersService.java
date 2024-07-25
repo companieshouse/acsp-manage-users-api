@@ -2,12 +2,18 @@ package uk.gov.companieshouse.acsp.manage.users.service;
 
 import java.util.List;
 import java.util.Objects;
+import static uk.gov.companieshouse.GenerateEtagUtil.generateEtag;
+
+import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipListMapper;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipMapper;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipsListMapper;
@@ -17,7 +23,9 @@ import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepositor
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
+import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserStatusEnum;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 
@@ -94,8 +102,49 @@ public class AcspMembersService {
   }
 
     @Transactional( readOnly = true )
+    public Optional<AcspMembersDao> fetchMembershipDao( final String membershipId ){
+      return acspMembersRepository.findById( membershipId );
+    }
+
+    @Transactional( readOnly = true )
     public Optional<AcspMembership> fetchMembership( final String membershipId ){
-       return acspMembersRepository.findById( membershipId ).map( acspMembershipMapper::daoToDto );
+       return fetchMembershipDao( membershipId ).map( acspMembershipMapper::daoToDto );
+    }
+
+    @Transactional( readOnly = true )
+    public int fetchNumberOfActiveOwners( final String acspNumber ){
+       return acspMembersRepository.fetchNumberOfActiveOwners( acspNumber );
+    }
+
+    @Transactional( readOnly = true )
+    public Optional<AcspMembersDao> fetchActiveAcspMembership( final String userId, final String acspNumber ){
+       return acspMembersRepository.fetchActiveAcspMembership( userId, acspNumber );
+    }
+
+    @Transactional
+    public void updateMembership( final String membershipId, final UserStatusEnum userStatus, final UserRoleEnum userRole, final String requestingUserId ){
+        if ( Objects.isNull( membershipId ) ){
+            throw new IllegalArgumentException( "membershipId cannot be null" );
+        }
+
+        final var update = new Update();
+        update.set( "etag", generateEtag() );
+
+        if ( Objects.nonNull( userRole ) ){
+            update.set( "user_role", userRole.getValue() );
+        }
+
+        if ( Objects.nonNull( userStatus ) ){
+           update.set( "status", userStatus.getValue() );
+           update.set( "removed_by", requestingUserId );
+           update.set( "removed_at", LocalDateTime.now() );
+        }
+
+        final var numRecordsUpdated = acspMembersRepository.updateAcspMembership( membershipId, update );
+        if ( numRecordsUpdated == 0 ){
+            LOG.error( String.format( "Failed to update Acsp Membership %s", membershipId ) );
+            throw new InternalServerErrorRuntimeException( String.format( "Failed to update Acsp Membership %s", membershipId ) );
+        }
     }
 
 }
