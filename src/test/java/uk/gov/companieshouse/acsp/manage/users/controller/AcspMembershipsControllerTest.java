@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -41,109 +42,119 @@ class AcspMembershipsControllerTest {
     private static final String REQUEST_ID = "test-request-id";
     private static final String ACSP_NUMBER = "COMA001";
 
-    @Test
-    void getMembersForAcsp_ValidRequest_ReturnsOk() {
-        final boolean includeRemoved = false;
-        final int pageIndex = 0;
-        final int itemsPerPage = 15;
-        final String role = "owner";
+    @Nested
+    class GetMembersForAcspTests {
 
-        final AcspDataDao acspDataDao = new AcspDataDao();
-        when(acspDataService.fetchAcspData(ACSP_NUMBER)).thenReturn(acspDataDao);
+        @Test
+        void validRequest_ReturnsOk() {
+            final boolean includeRemoved = false;
+            final int pageIndex = 0;
+            final int itemsPerPage = 15;
+            final String role = "owner";
 
-        AcspMembershipsList expectedList = new AcspMembershipsList();
-        when(acspMembersService.findAllByAcspNumberAndRole(ACSP_NUMBER, acspDataDao, role,
-                includeRemoved, pageIndex, itemsPerPage))
-                .thenReturn(expectedList);
+            final AcspDataDao acspDataDao = new AcspDataDao();
+            when(acspDataService.fetchAcspData(ACSP_NUMBER)).thenReturn(acspDataDao);
 
-        ResponseEntity<AcspMembershipsList> response = acspMembershipsController.getMembersForAcsp(
-                ACSP_NUMBER, REQUEST_ID, includeRemoved, pageIndex, itemsPerPage, role);
+            AcspMembershipsList expectedList = new AcspMembershipsList();
+            when(acspMembersService.findAllByAcspNumberAndRole(ACSP_NUMBER, acspDataDao, role,
+                    includeRemoved, pageIndex, itemsPerPage))
+                    .thenReturn(expectedList);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(expectedList, response.getBody());
+            ResponseEntity<AcspMembershipsList> response = acspMembershipsController.getMembersForAcsp(
+                    ACSP_NUMBER, REQUEST_ID, includeRemoved, pageIndex, itemsPerPage, role);
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(expectedList, response.getBody());
+        }
+
+        @Test
+        void invalidRole_ThrowsBadRequestException() {
+            final String invalidRole = "invalid_role";
+
+            assertThrows(BadRequestRuntimeException.class, () ->
+                    acspMembershipsController.getMembersForAcsp(ACSP_NUMBER, REQUEST_ID, false, 0,
+                            15,
+                            invalidRole)
+            );
+        }
+
+        @Test
+        void nullRole_ReturnsOk() {
+            final Boolean includeRemoved = true;
+            final Integer pageIndex = 0;
+            final Integer itemsPerPage = 20;
+            final String role = null;
+
+            final AcspDataDao acspDataDao = new AcspDataDao();
+            when(acspDataService.fetchAcspData(ACSP_NUMBER)).thenReturn(acspDataDao);
+
+            final AcspMembershipsList expectedList = new AcspMembershipsList();
+            when(acspMembersService.findAllByAcspNumberAndRole(ACSP_NUMBER, acspDataDao, role,
+                    includeRemoved, pageIndex, itemsPerPage))
+                    .thenReturn(expectedList);
+
+            ResponseEntity<AcspMembershipsList> response = acspMembershipsController.getMembersForAcsp(
+                    ACSP_NUMBER, REQUEST_ID, includeRemoved, pageIndex, itemsPerPage, role);
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(expectedList, response.getBody());
+        }
     }
 
-    @Test
-    void getMembersForAcsp_InvalidRole_ThrowsBadRequestException() {
-        final String invalidRole = "invalid_role";
+    @Nested
+    class FindMembershipsForUserAndAcspTests {
 
-        assertThrows(BadRequestRuntimeException.class, () ->
-                acspMembershipsController.getMembersForAcsp(ACSP_NUMBER, REQUEST_ID, false, 0, 15,
-                        invalidRole)
-        );
-    }
+        @Test
+        void validRequest_ReturnsOk() {
+            final String userEmail = "test@example.com";
+            final boolean includeRemoved = false;
+            final RequestBodyLookup requestBody = new RequestBodyLookup();
+            requestBody.setUserEmail(userEmail);
 
-    @Test
-    void getMembersForAcsp_NullRole_ReturnsOk() {
-        final Boolean includeRemoved = true;
-        final Integer pageIndex = 0;
-        final Integer itemsPerPage = 20;
-        final String role = null;
+            final User user = new User();
+            user.setEmail(userEmail);
+            final UsersList usersList = new UsersList();
+            usersList.add(user);
+            when(usersService.searchUserDetails(List.of(userEmail))).thenReturn(usersList);
 
-        final AcspDataDao acspDataDao = new AcspDataDao();
-        when(acspDataService.fetchAcspData(ACSP_NUMBER)).thenReturn(acspDataDao);
+            AcspDataDao acspDataDao = new AcspDataDao();
+            when(acspDataService.fetchAcspData(ACSP_NUMBER)).thenReturn(acspDataDao);
 
-        final AcspMembershipsList expectedList = new AcspMembershipsList();
-        when(acspMembersService.findAllByAcspNumberAndRole(ACSP_NUMBER, acspDataDao, role,
-                includeRemoved, pageIndex, itemsPerPage))
-                .thenReturn(expectedList);
+            AcspMembershipsList expectedList = new AcspMembershipsList();
+            when(acspMembersService.fetchAcspMemberships(user, includeRemoved,
+                    ACSP_NUMBER)).thenReturn(
+                    expectedList);
 
-        ResponseEntity<AcspMembershipsList> response = acspMembershipsController.getMembersForAcsp(
-                ACSP_NUMBER, REQUEST_ID, includeRemoved, pageIndex, itemsPerPage, role);
+            ResponseEntity<AcspMembershipsList> response = acspMembershipsController.findMembershipsForUserAndAcsp(
+                    REQUEST_ID, ACSP_NUMBER, includeRemoved, requestBody);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(expectedList, response.getBody());
-    }
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(expectedList, response.getBody());
+        }
 
-    @Test
-    void findMembershipsForUserAndAcsp_ValidRequest_ReturnsOk() {
-        final String userEmail = "test@example.com";
-        final Boolean includeRemoved = false;
-        final RequestBodyLookup requestBody = new RequestBodyLookup();
-        requestBody.setUserEmail(userEmail);
+        @Test
+        void nullUserEmail_ThrowsBadRequestException() {
+            RequestBodyLookup requestBody = new RequestBodyLookup();
+            requestBody.setUserEmail(null);
 
-        final User user = new User();
-        user.setEmail(userEmail);
-        final UsersList usersList = new UsersList();
-        usersList.add(user);
-        when(usersService.searchUserDetails(List.of(userEmail))).thenReturn(usersList);
+            assertThrows(BadRequestRuntimeException.class, () ->
+                    acspMembershipsController.findMembershipsForUserAndAcsp(REQUEST_ID, ACSP_NUMBER,
+                            false, requestBody)
+            );
+        }
 
-        AcspDataDao acspDataDao = new AcspDataDao();
-        when(acspDataService.fetchAcspData(ACSP_NUMBER)).thenReturn(acspDataDao);
+        @Test
+        void userNotFound_ThrowsNotFoundException() {
+            final String userEmail = "nonexistent@example.com";
+            final RequestBodyLookup requestBody = new RequestBodyLookup();
+            requestBody.setUserEmail(userEmail);
 
-        AcspMembershipsList expectedList = new AcspMembershipsList();
-        when(acspMembersService.fetchAcspMemberships(user, includeRemoved, ACSP_NUMBER)).thenReturn(
-                expectedList);
+            when(usersService.searchUserDetails(List.of(userEmail))).thenReturn(new UsersList());
 
-        ResponseEntity<AcspMembershipsList> response = acspMembershipsController.findMembershipsForUserAndAcsp(
-                REQUEST_ID, ACSP_NUMBER, includeRemoved, requestBody);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(expectedList, response.getBody());
-    }
-
-    @Test
-    void findMembershipsForUserAndAcsp_NullUserEmail_ThrowsBadRequestException() {
-        RequestBodyLookup requestBody = new RequestBodyLookup();
-        requestBody.setUserEmail(null);
-
-        assertThrows(BadRequestRuntimeException.class, () ->
-                acspMembershipsController.findMembershipsForUserAndAcsp(REQUEST_ID, ACSP_NUMBER,
-                        false, requestBody)
-        );
-    }
-
-    @Test
-    void findMembershipsForUserAndAcsp_UserNotFound_ThrowsNotFoundException() {
-        final String userEmail = "nonexistent@example.com";
-        final RequestBodyLookup requestBody = new RequestBodyLookup();
-        requestBody.setUserEmail(userEmail);
-
-        when(usersService.searchUserDetails(List.of(userEmail))).thenReturn(new UsersList());
-
-        assertThrows(NotFoundRuntimeException.class, () ->
-                acspMembershipsController.findMembershipsForUserAndAcsp(REQUEST_ID, ACSP_NUMBER,
-                        false, requestBody)
-        );
+            assertThrows(NotFoundRuntimeException.class, () ->
+                    acspMembershipsController.findMembershipsForUserAndAcsp(REQUEST_ID, ACSP_NUMBER,
+                            false, requestBody)
+            );
+        }
     }
 }

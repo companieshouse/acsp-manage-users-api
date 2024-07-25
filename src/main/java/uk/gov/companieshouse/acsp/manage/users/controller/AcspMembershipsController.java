@@ -17,7 +17,6 @@ import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.PaginationValidatorUtil;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
-import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.api.AcspMembershipsInterface;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
@@ -74,20 +73,17 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
     }
 
     final var userEmail = requestBody.getUserEmail();
-    User user = null;
-    if (Objects.nonNull(userEmail)) {
-      final var usersList =
-          Optional.ofNullable(usersService.searchUserDetails(List.of(userEmail)))
-              .filter(users -> !users.isEmpty())
-              .orElseThrow(
-                  () -> {
-                    LOG.error(String.format("User %s was not found", userEmail));
-                    return new NotFoundRuntimeException(
-                        StaticPropertyUtil.APPLICATION_NAMESPACE,
-                        PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN);
-                  });
-      user = usersList.getFirst();
-    }
+    final var usersList =
+            Optional.ofNullable(usersService.searchUserDetails(List.of(userEmail)))
+                    .filter(users -> !users.isEmpty())
+                    .orElseThrow(
+                            () -> {
+                              LOG.error(String.format("User %s was not found", userEmail));
+                              return new NotFoundRuntimeException(
+                                      StaticPropertyUtil.APPLICATION_NAMESPACE,
+                                      PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN);
+                            });
+    final var user = usersList.getFirst();
 
     // This will probably be replaced by the ACSP Data Sync API once available.
     acspDataService.fetchAcspData(acspNumber); // can throw 404.
