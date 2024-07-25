@@ -11,6 +11,10 @@ public class PaginationValidatorUtil {
   private static final int DEFAULT_PAGE_INDEX = 0;
   private static final int DEFAULT_ITEMS_PER_PAGE = 15;
 
+  private PaginationValidatorUtil() {
+    // private instructor to hide the implicit public one
+  }
+
   public static class PaginationParams {
     public final int pageIndex;
     public final int itemsPerPage;
