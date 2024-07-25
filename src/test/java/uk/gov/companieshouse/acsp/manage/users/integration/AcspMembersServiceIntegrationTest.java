@@ -82,38 +82,39 @@ class AcspMembersServiceIntegrationTest {
 
   private User testUser;
 
-  @BeforeEach
-  void setUp() {
+  private void setupEnvironment(){
     testUser = testDataManager.fetchUserDtos("COMU002").get(0);
 
     acspMembersRepository.deleteAll();
 
     List<AcspMembersDao> testMembers =
-        testDataManager.fetchAcspMembersDaos(
-            "COM002", "COM003", "COM004", "COM005", "COM006", "COM007");
+            testDataManager.fetchAcspMembersDaos(
+                    "COM002", "COM003", "COM004", "COM005", "COM006", "COM007");
     acspMembersRepository.saveAll(testMembers);
 
     when(acspMembershipListMapper.daoToDto(anyList(), eq(testUser)))
-        .thenAnswer(
-            invocation -> {
-              List<AcspMembersDao> daos = invocation.getArgument(0);
-              return daos.stream()
-                  .map(
-                      dao -> {
-                        AcspMembership membership = new AcspMembership();
-                        membership.setAcspNumber(dao.getAcspNumber());
-                        membership.setUserRole(
-                            AcspMembership.UserRoleEnum.fromValue(dao.getUserRole()));
-                        return membership;
-                      })
-                  .toList();
-            });
+            .thenAnswer(
+                    invocation -> {
+                      List<AcspMembersDao> daos = invocation.getArgument(0);
+                      return daos.stream()
+                              .map(
+                                      dao -> {
+                                        AcspMembership membership = new AcspMembership();
+                                        membership.setAcspNumber(dao.getAcspNumber());
+                                        membership.setUserRole(
+                                                AcspMembership.UserRoleEnum.fromValue(dao.getUserRole()));
+                                        return membership;
+                                      })
+                              .toList();
+                    });
   }
 
   @Nested
   class FetchAcspMembershipsTests {
     @Test
     void fetchAcspMembershipsReturnsAcspMembershipsListWithAllAcspMembersIfIncludeRemovedTrue() {
+      setupEnvironment();
+
       AcspMembershipsList result = acspMembersService.fetchAcspMemberships(testUser, true);
 
       assertEquals(1, result.getItems().size());
@@ -121,8 +122,8 @@ class AcspMembersServiceIntegrationTest {
     }
 
     @Test
-    void
-        fetchAcspMembershipsReturnsAcspMembershipsListWithActiveAcspMembersIfIncludeRemovedFalse() {
+    void fetchAcspMembershipsReturnsAcspMembershipsListWithActiveAcspMembersIfIncludeRemovedFalse() {
+      setupEnvironment();
       AcspMembershipsList result = acspMembersService.fetchAcspMemberships(testUser, false);
 
       assertEquals(1, result.getItems().size());
@@ -150,6 +151,7 @@ class AcspMembersServiceIntegrationTest {
 
   @Nested
   class FindAllByAcspNumberAndRoleTests {
+
     private AcspDataDao acspDataDao;
 
     @BeforeEach
@@ -179,6 +181,7 @@ class AcspMembersServiceIntegrationTest {
 
     @Test
     void findAllByAcspNumberAndRoleReturnsCorrectResultsWithRoleAndIncludeRemovedTrue() {
+      setupEnvironment();
       AcspMembershipsList result =
           acspMembersService.findAllByAcspNumberAndRole(
               "COMA001", acspDataDao, "standard", true, 0, 10);
@@ -191,6 +194,7 @@ class AcspMembersServiceIntegrationTest {
 
     @Test
     void findAllByAcspNumberAndRoleReturnsCorrectResultsWithRoleAndIncludeRemovedFalse() {
+      setupEnvironment();
       AcspMembershipsList result =
           acspMembersService.findAllByAcspNumberAndRole(
               "COMA001", acspDataDao, "standard", false, 0, 10);
@@ -203,6 +207,7 @@ class AcspMembersServiceIntegrationTest {
 
     @Test
     void findAllByAcspNumberAndRoleReturnsCorrectResultsWithoutRoleAndIncludeRemovedTrue() {
+      setupEnvironment();
       AcspMembershipsList result =
           acspMembersService.findAllByAcspNumberAndRole("COMA001", acspDataDao, null, true, 0, 10);
 
@@ -211,6 +216,7 @@ class AcspMembersServiceIntegrationTest {
 
     @Test
     void findAllByAcspNumberAndRoleReturnsCorrectResultsWithoutRoleAndIncludeRemovedFalse() {
+      setupEnvironment();
       AcspMembershipsList result =
           acspMembersService.findAllByAcspNumberAndRole("COMA001", acspDataDao, null, false, 0, 10);
 
