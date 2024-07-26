@@ -43,4 +43,11 @@ public interface AcspMembersRepository extends MongoRepository<AcspMembersDao, S
     @Query( "{ '_id': ?0 }" )
     int updateAcspMembership( final String acspMembershipId, final Update update );
 
+  @Query(value = "{ 'user_id': ?0, 'acsp_number': ?1 }")
+  List<AcspMembersDao> fetchAllAcspMembersByUserIdAndAcspNumber(
+      final String userId, final String acspNumber);
+
+  @Query(value = "{ 'user_id': ?0, 'acsp_number': ?1, 'status': 'active' }")
+  List<AcspMembersDao> fetchActiveAcspMembersByUserIdAndAcspNumber(
+      final String userId, final String acspNumber);
 }

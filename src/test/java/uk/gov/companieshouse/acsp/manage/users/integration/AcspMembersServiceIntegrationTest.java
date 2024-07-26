@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -82,7 +81,8 @@ class AcspMembersServiceIntegrationTest {
 
   private User testUser;
 
-  private void setupEnvironment(){
+  @BeforeEach
+  public void setup() {
     testUser = testDataManager.fetchUserDtos("COMU002").get(0);
 
     acspMembersRepository.deleteAll();
@@ -92,7 +92,7 @@ class AcspMembersServiceIntegrationTest {
                     "COM002", "COM003", "COM004", "COM005", "COM006", "COM007");
     acspMembersRepository.saveAll(testMembers);
 
-    when(acspMembershipListMapper.daoToDto(anyList(), eq(testUser)))
+    when(acspMembershipListMapper.daoToDto(anyList(), any()))
             .thenAnswer(
                     invocation -> {
                       List<AcspMembersDao> daos = invocation.getArgument(0);
@@ -103,6 +103,9 @@ class AcspMembersServiceIntegrationTest {
                                         membership.setAcspNumber(dao.getAcspNumber());
                                         membership.setUserRole(
                                                 AcspMembership.UserRoleEnum.fromValue(dao.getUserRole()));
+                                        membership.setMembershipStatus(
+                                                AcspMembership.MembershipStatusEnum.fromValue(
+                                                        dao.getStatus()));
                                         return membership;
                                       })
                               .toList();
@@ -113,8 +116,6 @@ class AcspMembersServiceIntegrationTest {
   class FetchAcspMembershipsTests {
     @Test
     void fetchAcspMembershipsReturnsAcspMembershipsListWithAllAcspMembersIfIncludeRemovedTrue() {
-      setupEnvironment();
-
       AcspMembershipsList result = acspMembersService.fetchAcspMemberships(testUser, true);
 
       assertEquals(1, result.getItems().size());
@@ -123,7 +124,6 @@ class AcspMembersServiceIntegrationTest {
 
     @Test
     void fetchAcspMembershipsReturnsAcspMembershipsListWithActiveAcspMembersIfIncludeRemovedFalse() {
-      setupEnvironment();
       AcspMembershipsList result = acspMembersService.fetchAcspMemberships(testUser, false);
 
       assertEquals(1, result.getItems().size());
@@ -172,6 +172,9 @@ class AcspMembersServiceIntegrationTest {
                               membership.setAcspNumber(dao.getAcspNumber());
                               membership.setUserRole(
                                   AcspMembership.UserRoleEnum.fromValue(dao.getUserRole()));
+                              membership.setMembershipStatus(
+                                      AcspMembership.MembershipStatusEnum.fromValue(
+                                              dao.getStatus()));
                               return membership;
                             })
                         .toList());
@@ -181,7 +184,6 @@ class AcspMembersServiceIntegrationTest {
 
     @Test
     void findAllByAcspNumberAndRoleReturnsCorrectResultsWithRoleAndIncludeRemovedTrue() {
-      setupEnvironment();
       AcspMembershipsList result =
           acspMembersService.findAllByAcspNumberAndRole(
               "COMA001", acspDataDao, "standard", true, 0, 10);
@@ -194,7 +196,6 @@ class AcspMembersServiceIntegrationTest {
 
     @Test
     void findAllByAcspNumberAndRoleReturnsCorrectResultsWithRoleAndIncludeRemovedFalse() {
-      setupEnvironment();
       AcspMembershipsList result =
           acspMembersService.findAllByAcspNumberAndRole(
               "COMA001", acspDataDao, "standard", false, 0, 10);
@@ -207,7 +208,6 @@ class AcspMembersServiceIntegrationTest {
 
     @Test
     void findAllByAcspNumberAndRoleReturnsCorrectResultsWithoutRoleAndIncludeRemovedTrue() {
-      setupEnvironment();
       AcspMembershipsList result =
           acspMembersService.findAllByAcspNumberAndRole("COMA001", acspDataDao, null, true, 0, 10);
 
@@ -216,7 +216,6 @@ class AcspMembersServiceIntegrationTest {
 
     @Test
     void findAllByAcspNumberAndRoleReturnsCorrectResultsWithoutRoleAndIncludeRemovedFalse() {
-      setupEnvironment();
       AcspMembershipsList result =
           acspMembersService.findAllByAcspNumberAndRole("COMA001", acspDataDao, null, false, 0, 10);
 
@@ -233,28 +232,69 @@ class AcspMembersServiceIntegrationTest {
     }
   }
 
-    @Nested
-    class FetchMembership {
-        @Test
-        void fetchMembershipWithNullMembershipIdThrowsIllegalArguemntException(){
-            Assertions.assertThrows( IllegalArgumentException.class, () -> acspMembersService.fetchMembership( null ) );
-        }
-
-        @Test
-        void fetchMembershipWithMalformedOrNonexistentMembershipIdReturnsEmptyOptional(){
-            Assertions.assertFalse( acspMembersService.fetchMembership( "$$$" ).isPresent() );
-        }
-
-        @Test
-        void fetchMembershipRetrievesMembership(){
-            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001" ) );
-
-            Mockito.doReturn( testDataManager.fetchUserDtos( "TSU001" ).getFirst() ).when( usersService ).fetchUserDetails( "TSU001" );
-            Mockito.doReturn( testDataManager.fetchAcspDataDaos( "TSA001" ).getFirst() ).when( acspDataService ).fetchAcspData( "TSA001" );
-
-            Assertions.assertTrue( acspMembersService.fetchMembership( "TS001" ).isPresent() );
-        }
+  @Nested
+  class FetchMembership {
+    @Test
+    void fetchMembershipWithNullMembershipIdThrowsIllegalArguemntException() {
+      Assertions.assertThrows(
+          IllegalArgumentException.class, () -> acspMembersService.fetchMembership(null));
     }
+
+    @Test
+    void fetchMembershipWithMalformedOrNonexistentMembershipIdReturnsEmptyOptional() {
+      Assertions.assertFalse(acspMembersService.fetchMembership("$$$").isPresent());
+    }
+
+    @Test
+    void fetchMembershipRetrievesMembership() {
+      acspMembersRepository.insert(testDataManager.fetchAcspMembersDaos("TS001"));
+
+      Mockito.doReturn(testDataManager.fetchUserDtos("TSU001").getFirst())
+          .when(usersService)
+          .fetchUserDetails("TSU001");
+      Mockito.doReturn(testDataManager.fetchAcspDataDaos("TSA001").getFirst())
+          .when(acspDataService)
+          .fetchAcspData("TSA001");
+
+      Assertions.assertTrue(acspMembersService.fetchMembership("TS001").isPresent());
+    }
+  }
+
+  @Nested
+  class FetchAcspMembershipsByAcspNumberTests {
+
+    @Test
+    void fetchAcspMemberships_WithoutRemovedMemberships_ReturnsEmptyList() {
+      var user = testDataManager.fetchUserDtos("COMU003").get(0);
+      var acspMembersList = acspMembersService.fetchAcspMemberships(user, false, "COMA001");
+
+      assertTrue(acspMembersList.getItems().isEmpty());
+    }
+
+    @Test
+    void fetchAcspMemberships_WithRemovedMemberships_ReturnsRemovedMembership() {
+      var user = testDataManager.fetchUserDtos("COMU003").get(0);
+      var acspMembersList = acspMembersService.fetchAcspMemberships(user, true, "COMA001");
+
+      assertFalse(acspMembersList.getItems().isEmpty());
+      var firstMembership = acspMembersList.getItems().getFirst();
+      assertEquals("COMA001", firstMembership.getAcspNumber());
+      assertEquals(
+          AcspMembership.MembershipStatusEnum.REMOVED, firstMembership.getMembershipStatus());
+    }
+
+    @Test
+    void fetchAcspMemberships_WithActiveMembership_ReturnsActiveMembership() {
+      var user = testDataManager.fetchUserDtos("COMU002").get(0);
+      var acspMembersList = acspMembersService.fetchAcspMemberships(user, true, "COMA001");
+
+      assertFalse(acspMembersList.getItems().isEmpty());
+      var firstMembership = acspMembersList.getItems().getFirst();
+      assertEquals("COMA001", firstMembership.getAcspNumber());
+      assertEquals(
+          AcspMembership.MembershipStatusEnum.ACTIVE, firstMembership.getMembershipStatus());
+    }
+  }
 
   @Test
   void fetchMembershipDaoWithNullMembershipIdThrowsIllegalArgumentException(){
@@ -282,7 +322,7 @@ class AcspMembersServiceIntegrationTest {
 
   @Test
   void fetchNumberOfActiveOwnersRetrievesNumberOfActiveOwnersAtAcsp(){
-    acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001", "COM001", "COM002", "COM003", "COM004" ) );
+    acspMembersRepository.insert(testDataManager.fetchAcspMembersDaos("TS001", "COM001"));
     Assertions.assertEquals( 1, acspMembersService.fetchNumberOfActiveOwners( "COMA001" ) );
   }
 
@@ -392,7 +432,6 @@ class AcspMembersServiceIntegrationTest {
     Assertions.assertNotEquals( originalDao.getRemovedAt(), updatedDao.getRemovedAt() );
     Assertions.assertNull( updatedDao.getRemovedBy() );
   }
-
 
     @AfterEach
     public void after() {

@@ -1,10 +1,9 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
-import java.util.List;
-import java.util.Objects;
 import static uk.gov.companieshouse.GenerateEtagUtil.generateEtag;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -147,4 +146,27 @@ public class AcspMembersService {
         }
     }
 
+  @Transactional(readOnly = true)
+  public AcspMembershipsList fetchAcspMemberships(
+      final User user, final boolean includeRemoved, final String acspNumber) {
+    LOG.debug(
+        String.format(
+            "Fetching ACSP memberships from the repository for user ID: %s, include removed: %b, acsp number: %s",
+            user.getUserId(), includeRemoved, acspNumber));
+
+    List<AcspMembersDao> acspMembers;
+    if (includeRemoved) {
+      acspMembers =
+          acspMembersRepository.fetchAllAcspMembersByUserIdAndAcspNumber(
+              user.getUserId(), acspNumber);
+    } else {
+      acspMembers =
+          acspMembersRepository.fetchActiveAcspMembersByUserIdAndAcspNumber(
+              user.getUserId(), acspNumber);
+    }
+
+    final var acspMembershipsList = new AcspMembershipsList();
+    acspMembershipsList.setItems(acspMembershipListMapper.daoToDto(acspMembers, user));
+    return acspMembershipsList;
+  }
 }
