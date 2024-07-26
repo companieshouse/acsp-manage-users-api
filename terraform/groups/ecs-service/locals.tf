@@ -7,7 +7,7 @@ locals {
   container_port             = "8080" # default Java port to match start script
   docker_repo                = "acsp-manage-users-api"
   lb_listener_rule_priority  = 20
-  lb_listener_paths          = ["/acsps/*/memberships**", "/acsps/*/memberships/lookup**", "/acsps/memberships/*", "/user/acsps/memberships**"]
+  lb_listener_paths          = ["/acsps/*/memberships*", "/acsps/*/memberships/lookup*", "/acsps/memberships/*", "/user/acsps/memberships*"]
   healthcheck_path           = "/acsp-manage-users-api/healthcheck" #healthcheck path for acsp-manage-users-api service
   healthcheck_matcher        = "200"
   application_subnet_ids     = data.aws_subnets.application.ids
