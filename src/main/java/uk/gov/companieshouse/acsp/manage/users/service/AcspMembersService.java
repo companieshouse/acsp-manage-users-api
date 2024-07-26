@@ -1,10 +1,9 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
-import java.util.List;
-import java.util.Objects;
 import static uk.gov.companieshouse.GenerateEtagUtil.generateEtag;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.springframework.data.domain.Page;

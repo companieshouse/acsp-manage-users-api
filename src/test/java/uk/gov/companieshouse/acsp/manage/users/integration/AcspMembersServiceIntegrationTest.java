@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -83,7 +82,7 @@ class AcspMembersServiceIntegrationTest {
   private User testUser;
 
   @BeforeEach
-  private void setup(){
+  public void setup() {
     testUser = testDataManager.fetchUserDtos("COMU002").get(0);
 
     acspMembersRepository.deleteAll();
@@ -93,7 +92,7 @@ class AcspMembersServiceIntegrationTest {
                     "COM002", "COM003", "COM004", "COM005", "COM006", "COM007");
     acspMembersRepository.saveAll(testMembers);
 
-    when(acspMembershipListMapper.daoToDto(anyList(), eq(testUser)))
+    when(acspMembershipListMapper.daoToDto(anyList(), any()))
             .thenAnswer(
                     invocation -> {
                       List<AcspMembersDao> daos = invocation.getArgument(0);
@@ -104,8 +103,9 @@ class AcspMembersServiceIntegrationTest {
                                         membership.setAcspNumber(dao.getAcspNumber());
                                         membership.setUserRole(
                                                 AcspMembership.UserRoleEnum.fromValue(dao.getUserRole()));
-                                          membership.setMembershipStatus(
-                                                  AcspMembership.MembershipStatusEnum.fromValue(dao.getStatus()));
+                                        membership.setMembershipStatus(
+                                                AcspMembership.MembershipStatusEnum.fromValue(
+                                                        dao.getStatus()));
                                         return membership;
                                       })
                               .toList();
@@ -172,6 +172,9 @@ class AcspMembersServiceIntegrationTest {
                               membership.setAcspNumber(dao.getAcspNumber());
                               membership.setUserRole(
                                   AcspMembership.UserRoleEnum.fromValue(dao.getUserRole()));
+                              membership.setMembershipStatus(
+                                      AcspMembership.MembershipStatusEnum.fromValue(
+                                              dao.getStatus()));
                               return membership;
                             })
                         .toList());
@@ -319,7 +322,7 @@ class AcspMembersServiceIntegrationTest {
 
   @Test
   void fetchNumberOfActiveOwnersRetrievesNumberOfActiveOwnersAtAcsp(){
-    acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001", "COM001", "COM002", "COM003", "COM004" ) );
+    acspMembersRepository.insert(testDataManager.fetchAcspMembersDaos("TS001", "COM001"));
     Assertions.assertEquals( 1, acspMembersService.fetchNumberOfActiveOwners( "COMA001" ) );
   }
 
