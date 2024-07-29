@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.acsp.manage.users.mapper;
 
+import java.util.Objects;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
@@ -33,7 +34,7 @@ public class AcspMembershipMapper {
   public AcspMembership daoToDto(AcspMembersDao acspMembersDao, User user, AcspDataDao acspData) {
     final var acspMembership =
         Optional.ofNullable(acspMembersDao).map(baseMapper::daoToDto).orElse(null);
-    if (acspMembership != null) {
+    if (!Objects.isNull(acspMembership)) {
       acspMembership.setAcspName(acspData.getAcspName());
       acspMembership.setAcspStatus(
           AcspMembership.AcspStatusEnum.fromValue(acspData.getAcspStatus()));

@@ -62,7 +62,7 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
             "Received request for POST `/%s/memberships` with X-Request-Id: %s, user email: %s, and user role: %s",
             acspNumber, xRequestId, requestBodyPost.getUserId(), requestBodyPost.getUserRole()));
 
-    if (requestBodyPost.getUserId() == null) {
+    if (Objects.isNull(requestBodyPost.getUserId())) {
       LOG.infoContext(xRequestId, "User ID for the target user not provided", null);
       throw new BadRequestRuntimeException(PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN);
     }
@@ -123,19 +123,17 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
         final var loggedInUserRole = acspMembership.get().getUserRole().getValue();
         final var newUserRole = requestBodyPost.getUserRole().getValue();
         final var isStandardUser =
-            loggedInUserRole.equals(AcspMembership.UserRoleEnum.STANDARD.getValue());
+            AcspMembership.UserRoleEnum.STANDARD.getValue().equals(loggedInUserRole);
         final var isAdminAddingOwner =
-            loggedInUserRole.equals(AcspMembership.UserRoleEnum.ADMIN.getValue())
-                && newUserRole.equals(AcspMembership.UserRoleEnum.OWNER.getValue());
+            AcspMembership.UserRoleEnum.ADMIN.getValue().equals(loggedInUserRole)
+                && AcspMembership.UserRoleEnum.OWNER.getValue().equals(newUserRole);
         if (isStandardUser || isAdminAddingOwner) {
-          final var message =
-              isStandardUser
-                  ? String.format(
-                      "User with ID %s and standard role is not authorised to add a member for ACSP",
-                      loggedUser.getUserId())
-                  : String.format(
-                      "User with ID %s and admin role is not authorised to add an owner member for ACSP",
-                      loggedUser.getUserId());
+          final String message =
+              String.format(
+                  "User with ID %s and %s role is not authorised to add %s for ACSP",
+                  loggedUser.getUserId(),
+                  isStandardUser ? "standard" : "admin",
+                  isStandardUser ? "a member" : "an owner member");
           LOG.infoContext(xRequestId, message, null);
           throw new BadRequestRuntimeException(PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN);
         }
