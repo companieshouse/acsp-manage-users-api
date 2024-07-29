@@ -64,8 +64,7 @@ class AcspMembersServiceIntegrationTest {
 
   private final TestDataManager testDataManager = TestDataManager.getInstance();
 
-    @Autowired
-    private AcspMembersService acspMembersService;
+  @Autowired private AcspMembersService acspMembersService;
 
   @Autowired private AcspMembersRepository acspMembersRepository;
 
@@ -73,11 +72,9 @@ class AcspMembersServiceIntegrationTest {
 
   @MockBean private AcspMembershipsListMapper acspMembershipsListMapper;
 
-    @MockBean
-    private UsersService usersService;
+  @MockBean private UsersService usersService;
 
-    @MockBean
-    private AcspDataService acspDataService;
+  @MockBean private AcspDataService acspDataService;
 
   private User testUser;
 
@@ -88,28 +85,27 @@ class AcspMembersServiceIntegrationTest {
     acspMembersRepository.deleteAll();
 
     List<AcspMembersDao> testMembers =
-            testDataManager.fetchAcspMembersDaos(
-                    "COM002", "COM003", "COM004", "COM005", "COM006", "COM007");
+        testDataManager.fetchAcspMembersDaos(
+            "COM002", "COM003", "COM004", "COM005", "COM006", "COM007");
     acspMembersRepository.saveAll(testMembers);
 
     when(acspMembershipListMapper.daoToDto(anyList(), any()))
-            .thenAnswer(
-                    invocation -> {
-                      List<AcspMembersDao> daos = invocation.getArgument(0);
-                      return daos.stream()
-                              .map(
-                                      dao -> {
-                                        AcspMembership membership = new AcspMembership();
-                                        membership.setAcspNumber(dao.getAcspNumber());
-                                        membership.setUserRole(
-                                                AcspMembership.UserRoleEnum.fromValue(dao.getUserRole()));
-                                        membership.setMembershipStatus(
-                                                AcspMembership.MembershipStatusEnum.fromValue(
-                                                        dao.getStatus()));
-                                        return membership;
-                                      })
-                              .toList();
-                    });
+        .thenAnswer(
+            invocation -> {
+              List<AcspMembersDao> daos = invocation.getArgument(0);
+              return daos.stream()
+                  .map(
+                      dao -> {
+                        AcspMembership membership = new AcspMembership();
+                        membership.setAcspNumber(dao.getAcspNumber());
+                        membership.setUserRole(
+                            AcspMembership.UserRoleEnum.fromValue(dao.getUserRole()));
+                        membership.setMembershipStatus(
+                            AcspMembership.MembershipStatusEnum.fromValue(dao.getStatus()));
+                        return membership;
+                      })
+                  .toList();
+            });
   }
 
   @Nested
@@ -123,7 +119,8 @@ class AcspMembersServiceIntegrationTest {
     }
 
     @Test
-    void fetchAcspMembershipsReturnsAcspMembershipsListWithActiveAcspMembersIfIncludeRemovedFalse() {
+    void
+        fetchAcspMembershipsReturnsAcspMembershipsListWithActiveAcspMembersIfIncludeRemovedFalse() {
       AcspMembershipsList result = acspMembersService.fetchAcspMemberships(testUser, false);
 
       assertEquals(1, result.getItems().size());
@@ -173,8 +170,7 @@ class AcspMembersServiceIntegrationTest {
                               membership.setUserRole(
                                   AcspMembership.UserRoleEnum.fromValue(dao.getUserRole()));
                               membership.setMembershipStatus(
-                                      AcspMembership.MembershipStatusEnum.fromValue(
-                                              dao.getStatus()));
+                                  AcspMembership.MembershipStatusEnum.fromValue(dao.getStatus()));
                               return membership;
                             })
                         .toList());
@@ -297,144 +293,216 @@ class AcspMembersServiceIntegrationTest {
   }
 
   @Test
-  void fetchMembershipDaoWithNullMembershipIdThrowsIllegalArgumentException(){
-    Assertions.assertThrows( IllegalArgumentException.class, () -> acspMembersService.fetchMembershipDao( null ) );
+  void fetchMembershipDaoWithNullMembershipIdThrowsIllegalArgumentException() {
+    Assertions.assertThrows(
+        IllegalArgumentException.class, () -> acspMembersService.fetchMembershipDao(null));
   }
 
   @Test
-  void fetchMembershipDaoWithMalformedOrNonExistentMembershipIdReturnsEmptyOptional(){
-    Assertions.assertFalse( acspMembersService.fetchMembershipDao( "£££" ).isPresent() );
-    Assertions.assertFalse( acspMembersService.fetchMembershipDao( "TS001" ).isPresent() );
+  void fetchMembershipDaoWithMalformedOrNonExistentMembershipIdReturnsEmptyOptional() {
+    Assertions.assertFalse(acspMembersService.fetchMembershipDao("£££").isPresent());
+    Assertions.assertFalse(acspMembersService.fetchMembershipDao("TS001").isPresent());
   }
 
   @Test
-  void fetchMembershipDaoRetrievesMembership(){
-    acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001" ) );
-    Assertions.assertEquals( "TS001", acspMembersService.fetchMembershipDao( "TS001" ).get().getId() );
+  void fetchMembershipDaoRetrievesMembership() {
+    acspMembersRepository.insert(testDataManager.fetchAcspMembersDaos("TS001"));
+    Assertions.assertEquals("TS001", acspMembersService.fetchMembershipDao("TS001").get().getId());
   }
 
   @Test
-  void fetchNumberOfActiveOwnersWithNullOrMalformedOrNonexistentAcspNumberReturnsZero(){
-    Assertions.assertEquals( 0, acspMembersService.fetchNumberOfActiveOwners( null ) );
-    Assertions.assertEquals( 0, acspMembersService.fetchNumberOfActiveOwners( "£££" ) );
-    Assertions.assertEquals( 0, acspMembersService.fetchNumberOfActiveOwners( "TS001" ) );
+  void fetchNumberOfActiveOwnersWithNullOrMalformedOrNonexistentAcspNumberReturnsZero() {
+    Assertions.assertEquals(0, acspMembersService.fetchNumberOfActiveOwners(null));
+    Assertions.assertEquals(0, acspMembersService.fetchNumberOfActiveOwners("£££"));
+    Assertions.assertEquals(0, acspMembersService.fetchNumberOfActiveOwners("TS001"));
   }
 
   @Test
-  void fetchNumberOfActiveOwnersRetrievesNumberOfActiveOwnersAtAcsp(){
+  void fetchNumberOfActiveOwnersRetrievesNumberOfActiveOwnersAtAcsp() {
     acspMembersRepository.insert(testDataManager.fetchAcspMembersDaos("TS001", "COM001"));
-    Assertions.assertEquals( 1, acspMembersService.fetchNumberOfActiveOwners( "COMA001" ) );
+    Assertions.assertEquals(1, acspMembersService.fetchNumberOfActiveOwners("COMA001"));
   }
 
   @Test
-  void fetchActiveAcspMembershipWithNullOrMalformedOrNonexistentUserIdOrAcspNumberReturnsEmptyOptional(){
-    Assertions.assertFalse( acspMembersService.fetchActiveAcspMembership( null, "TSA001" ).isPresent() );
-    Assertions.assertFalse( acspMembersService.fetchActiveAcspMembership( "£££", "TSA001" ).isPresent() );
-    Assertions.assertFalse( acspMembersService.fetchActiveAcspMembership( "TSU001", null ).isPresent() );
-    Assertions.assertFalse( acspMembersService.fetchActiveAcspMembership( "TSU001", "£££" ).isPresent() );
-    Assertions.assertFalse( acspMembersService.fetchActiveAcspMembership( "TSU001", "TSA001" ).isPresent() );
+  void
+      fetchActiveAcspMembershipWithNullOrMalformedOrNonexistentUserIdOrAcspNumberReturnsEmptyOptional() {
+    Assertions.assertFalse(
+        acspMembersService.fetchActiveAcspMembership(null, "TSA001").isPresent());
+    Assertions.assertFalse(
+        acspMembersService.fetchActiveAcspMembership("£££", "TSA001").isPresent());
+    Assertions.assertFalse(
+        acspMembersService.fetchActiveAcspMembership("TSU001", null).isPresent());
+    Assertions.assertFalse(
+        acspMembersService.fetchActiveAcspMembership("TSU001", "£££").isPresent());
+    Assertions.assertFalse(
+        acspMembersService.fetchActiveAcspMembership("TSU001", "TSA001").isPresent());
   }
 
   @Test
-  void fetchActiveAcspMembershipAppliedToInactiveMembershipReturnsEmptyOptional(){
-    acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS002" ) );
-    Assertions.assertFalse( acspMembersService.fetchActiveAcspMembership( "TSU002", "TSA001" ).isPresent() );
+  void fetchActiveAcspMembershipAppliedToInactiveMembershipReturnsEmptyOptional() {
+    acspMembersRepository.insert(testDataManager.fetchAcspMembersDaos("TS002"));
+    Assertions.assertFalse(
+        acspMembersService.fetchActiveAcspMembership("TSU002", "TSA001").isPresent());
   }
 
   @Test
-  void fetchActiveAcspMembershipRetrievesMembership(){
-    acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001" ) );
-    Assertions.assertEquals( "TS001", acspMembersService.fetchActiveAcspMembership( "TSU001", "TSA001" ).get().getId() );
+  void fetchActiveAcspMembershipRetrievesMembership() {
+    acspMembersRepository.insert(testDataManager.fetchAcspMembersDaos("TS001"));
+    Assertions.assertEquals(
+        "TS001", acspMembersService.fetchActiveAcspMembership("TSU001", "TSA001").get().getId());
   }
 
   @Test
-  void updateMembershipWithNullMembershipIdThrowsIllegalArgumentException(){
-    Assertions.assertThrows( IllegalArgumentException.class, () -> acspMembersService.updateMembership( null, UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" ) );
+  void updateMembershipWithNullMembershipIdThrowsIllegalArgumentException() {
+    Assertions.assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            acspMembersService.updateMembership(
+                null, UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002"));
   }
 
   @Test
-  void updateMembershipWithMalformedOrNonexistentMembershipIdThrowsInternalServerErrorRuntimeException(){
-    Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspMembersService.updateMembership( "£££", UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" ) );
-    Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspMembersService.updateMembership( "TS001", UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" ) );
+  void
+      updateMembershipWithMalformedOrNonexistentMembershipIdThrowsInternalServerErrorRuntimeException() {
+    Assertions.assertThrows(
+        InternalServerErrorRuntimeException.class,
+        () ->
+            acspMembersService.updateMembership(
+                "£££", UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002"));
+    Assertions.assertThrows(
+        InternalServerErrorRuntimeException.class,
+        () ->
+            acspMembersService.updateMembership(
+                "TS001", UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002"));
   }
 
   @Test
-  void updateMembershipWithNullUserStatusAndNullUserRoleOnlyUpdatesEtag(){
-    final var originalDao = testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst();
-    acspMembersRepository.insert( originalDao );
+  void updateMembershipWithNullUserStatusAndNullUserRoleOnlyUpdatesEtag() {
+    final var originalDao = testDataManager.fetchAcspMembersDaos("TS001").getFirst();
+    acspMembersRepository.insert(originalDao);
 
-    acspMembersService.updateMembership( "TS001", null, null, "TSU002" );
-    final var updatedDao = acspMembersRepository.findById( "TS001" ).get();
+    acspMembersService.updateMembership("TS001", null, null, "TSU002");
+    final var updatedDao = acspMembersRepository.findById("TS001").get();
 
-    Assertions.assertNotEquals( originalDao.getEtag(), updatedDao.getEtag() );
-    Assertions.assertEquals( originalDao.getUserRole(), updatedDao.getUserRole() );
-    Assertions.assertEquals( originalDao.getStatus(), updatedDao.getStatus() );
-    Assertions.assertEquals( originalDao.getRemovedAt(), updatedDao.getRemovedAt() );
-    Assertions.assertEquals( originalDao.getRemovedBy(), updatedDao.getRemovedBy() );
+    Assertions.assertNotEquals(originalDao.getEtag(), updatedDao.getEtag());
+    Assertions.assertEquals(originalDao.getUserRole(), updatedDao.getUserRole());
+    Assertions.assertEquals(originalDao.getStatus(), updatedDao.getStatus());
+    Assertions.assertEquals(originalDao.getRemovedAt(), updatedDao.getRemovedAt());
+    Assertions.assertEquals(originalDao.getRemovedBy(), updatedDao.getRemovedBy());
   }
 
   @Test
-  void updateMembershipWithNullUserStatusAndNotNullUserRoleOnlyUpdatesEtagAndRole(){
-    final var originalDao = testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst();
-    acspMembersRepository.insert( originalDao );
+  void updateMembershipWithNullUserStatusAndNotNullUserRoleOnlyUpdatesEtagAndRole() {
+    final var originalDao = testDataManager.fetchAcspMembersDaos("TS001").getFirst();
+    acspMembersRepository.insert(originalDao);
 
-    acspMembersService.updateMembership( "TS001", null, UserRoleEnum.STANDARD, "TSU002" );
-    final var updatedDao = acspMembersRepository.findById( "TS001" ).get();
+    acspMembersService.updateMembership("TS001", null, UserRoleEnum.STANDARD, "TSU002");
+    final var updatedDao = acspMembersRepository.findById("TS001").get();
 
-    Assertions.assertNotEquals( originalDao.getEtag(), updatedDao.getEtag() );
-    Assertions.assertEquals( UserRoleEnum.STANDARD.getValue(), updatedDao.getUserRole() );
-    Assertions.assertEquals( originalDao.getStatus(), updatedDao.getStatus() );
-    Assertions.assertEquals( originalDao.getRemovedAt(), updatedDao.getRemovedAt() );
-    Assertions.assertEquals( originalDao.getRemovedBy(), updatedDao.getRemovedBy() );
+    Assertions.assertNotEquals(originalDao.getEtag(), updatedDao.getEtag());
+    Assertions.assertEquals(UserRoleEnum.STANDARD.getValue(), updatedDao.getUserRole());
+    Assertions.assertEquals(originalDao.getStatus(), updatedDao.getStatus());
+    Assertions.assertEquals(originalDao.getRemovedAt(), updatedDao.getRemovedAt());
+    Assertions.assertEquals(originalDao.getRemovedBy(), updatedDao.getRemovedBy());
   }
 
   @Test
-  void updateMembershipWithNotNullUserStatusAndNullUserRoleOnlyUpdatesEtagAndStatusAndRemovedAtAndRemovedBy(){
-    final var originalDao = testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst();
-    acspMembersRepository.insert( originalDao );
+  void
+      updateMembershipWithNotNullUserStatusAndNullUserRoleOnlyUpdatesEtagAndStatusAndRemovedAtAndRemovedBy() {
+    final var originalDao = testDataManager.fetchAcspMembersDaos("TS001").getFirst();
+    acspMembersRepository.insert(originalDao);
 
-    acspMembersService.updateMembership( "TS001", UserStatusEnum.REMOVED, null, "TSU002" );
-    final var updatedDao = acspMembersRepository.findById( "TS001" ).get();
+    acspMembersService.updateMembership("TS001", UserStatusEnum.REMOVED, null, "TSU002");
+    final var updatedDao = acspMembersRepository.findById("TS001").get();
 
-    Assertions.assertNotEquals( originalDao.getEtag(), updatedDao.getEtag() );
-    Assertions.assertEquals( originalDao.getUserRole(), updatedDao.getUserRole() );
-    Assertions.assertEquals( UserStatusEnum.REMOVED.getValue(), updatedDao.getStatus() );
-    Assertions.assertNotEquals( originalDao.getRemovedAt(), updatedDao.getRemovedAt() );
-    Assertions.assertEquals( "TSU002", updatedDao.getRemovedBy() );
+    Assertions.assertNotEquals(originalDao.getEtag(), updatedDao.getEtag());
+    Assertions.assertEquals(originalDao.getUserRole(), updatedDao.getUserRole());
+    Assertions.assertEquals(UserStatusEnum.REMOVED.getValue(), updatedDao.getStatus());
+    Assertions.assertNotEquals(originalDao.getRemovedAt(), updatedDao.getRemovedAt());
+    Assertions.assertEquals("TSU002", updatedDao.getRemovedBy());
   }
 
   @Test
-  void updateMembershipWithNotNullUserStatusAndNotNullUserRoleOnlyUpdatesEverything(){
-    final var originalDao = testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst();
-    acspMembersRepository.insert( originalDao );
+  void updateMembershipWithNotNullUserStatusAndNotNullUserRoleOnlyUpdatesEverything() {
+    final var originalDao = testDataManager.fetchAcspMembersDaos("TS001").getFirst();
+    acspMembersRepository.insert(originalDao);
 
-    acspMembersService.updateMembership( "TS001", UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" );
-    final var updatedDao = acspMembersRepository.findById( "TS001" ).get();
+    acspMembersService.updateMembership(
+        "TS001", UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002");
+    final var updatedDao = acspMembersRepository.findById("TS001").get();
 
-    Assertions.assertNotEquals( originalDao.getEtag(), updatedDao.getEtag() );
-    Assertions.assertEquals( UserRoleEnum.STANDARD.getValue(), updatedDao.getUserRole() );
-    Assertions.assertEquals( UserStatusEnum.REMOVED.getValue(), updatedDao.getStatus() );
-    Assertions.assertNotEquals( originalDao.getRemovedAt(), updatedDao.getRemovedAt() );
-    Assertions.assertEquals( "TSU002", updatedDao.getRemovedBy() );
+    Assertions.assertNotEquals(originalDao.getEtag(), updatedDao.getEtag());
+    Assertions.assertEquals(UserRoleEnum.STANDARD.getValue(), updatedDao.getUserRole());
+    Assertions.assertEquals(UserStatusEnum.REMOVED.getValue(), updatedDao.getStatus());
+    Assertions.assertNotEquals(originalDao.getRemovedAt(), updatedDao.getRemovedAt());
+    Assertions.assertEquals("TSU002", updatedDao.getRemovedBy());
   }
 
   @Test
-  void updateMembershipWithNullRequestingUserIdSetsRemovedByToNull(){
-    final var originalDao = testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst();
-    acspMembersRepository.insert( originalDao );
+  void updateMembershipWithNullRequestingUserIdSetsRemovedByToNull() {
+    final var originalDao = testDataManager.fetchAcspMembersDaos("TS001").getFirst();
+    acspMembersRepository.insert(originalDao);
 
-    acspMembersService.updateMembership( "TS001", UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, null );
-    final var updatedDao = acspMembersRepository.findById( "TS001" ).get();
+    acspMembersService.updateMembership(
+        "TS001", UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, null);
+    final var updatedDao = acspMembersRepository.findById("TS001").get();
 
-    Assertions.assertNotEquals( originalDao.getEtag(), updatedDao.getEtag() );
-    Assertions.assertEquals( UserRoleEnum.STANDARD.getValue(), updatedDao.getUserRole() );
-    Assertions.assertEquals( UserStatusEnum.REMOVED.getValue(), updatedDao.getStatus() );
-    Assertions.assertNotEquals( originalDao.getRemovedAt(), updatedDao.getRemovedAt() );
-    Assertions.assertNull( updatedDao.getRemovedBy() );
+    Assertions.assertNotEquals(originalDao.getEtag(), updatedDao.getEtag());
+    Assertions.assertEquals(UserRoleEnum.STANDARD.getValue(), updatedDao.getUserRole());
+    Assertions.assertEquals(UserStatusEnum.REMOVED.getValue(), updatedDao.getStatus());
+    Assertions.assertNotEquals(originalDao.getRemovedAt(), updatedDao.getRemovedAt());
+    Assertions.assertNull(updatedDao.getRemovedBy());
   }
 
-    @AfterEach
-    public void after() {
-        mongoTemplate.dropCollection( AcspMembersDao.class );
+  @Nested
+  class AddAcspMember {
+    @Test
+    void addAcspMemberReturnsAddedAcspMembersDao() {
+      // Given
+      final var user = testDataManager.fetchUserDtos("TSU001").getFirst();
+      final var acspNumber = "TS001";
+      final var userRole = AcspMembership.UserRoleEnum.ADMIN;
+      final var addedByUserId = "COMU001";
+      // When
+      final var result =
+          acspMembersService.addAcspMember(user.getUserId(), acspNumber, userRole, addedByUserId);
+      // Then
+      assertEquals(user.getUserId(), result.getUserId());
+      assertEquals(acspNumber, result.getAcspNumber());
+      assertEquals(userRole.getValue(), result.getUserRole());
+      assertEquals(addedByUserId, result.getAddedBy());
+      assertEquals(AcspMembership.MembershipStatusEnum.ACTIVE.getValue(), result.getStatus());
+      assertFalse(result.getEtag().isEmpty());
     }
+  }
+
+  @Nested
+  class AddAcspMembership {
+    private static final String DEFAULT_DISPLAY_NAME = "Not Provided";
+
+    @Test
+    void addAcspMembershipReturnsAddedAcspMembership() {
+      // Given
+      final var user = testDataManager.fetchUserDtos("TSU001").getFirst();
+      final var acspData = testDataManager.fetchAcspDataDaos("TSA001").getFirst();
+      final var acspNumber = "TS001";
+      final var userRole = AcspMembership.UserRoleEnum.ADMIN;
+      final var addedByUserId = "COMU001";
+      // When
+      final var result =
+          acspMembersService.addAcspMembership(user, acspData, acspNumber, userRole, addedByUserId);
+      // Then
+      assertEquals(user.getUserId(), result.getUserId());
+      assertEquals(user.getEmail(), result.getUserEmail());
+      assertEquals(DEFAULT_DISPLAY_NAME, result.getUserDisplayName());
+      assertEquals(userRole, result.getUserRole());
+      assertEquals(addedByUserId, result.getAddedBy());
+      assertEquals(acspNumber, result.getAcspNumber());
+    }
+  }
+
+  @AfterEach
+  public void after() {
+    mongoTemplate.dropCollection(AcspMembersDao.class);
+  }
 }
