@@ -1,7 +1,5 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isOAuth2Request;
-
 import java.util.Objects;
 import java.util.Optional;
 import org.springframework.http.HttpStatus;
@@ -9,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
@@ -44,30 +41,6 @@ public class AcspMembershipController implements AcspMembershipInterface {
         return new ResponseEntity<>( membership, HttpStatus.OK );
     }
 
-    private void throwBadRequestWhenActionIsNotPermittedByOAuth2User( final User requestingUser, final AcspMembersDao membershipIdAssociation, final UserRoleEnum userRole ){
-        if ( UserRoleEnum.OWNER.equals( userRole ) ){
-            LOG.error( String.format( "User is not permitted to change Acsp Membership %s's role to owner", membershipIdAssociation.getId() ) );
-            throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
-        }
-
-        final var requestUserAssociation =
-                acspMembershipService.fetchActiveAcspMembership( requestingUser.getUserId(), membershipIdAssociation.getAcspNumber() )
-                        .orElseThrow( () -> {
-                            LOG.error( String.format( "Could not find %s's Acsp Membership at Acsp %s", requestingUser.getUserId(), membershipIdAssociation.getAcspNumber() ) );
-                            return new NotFoundRuntimeException( StaticPropertyUtil.APPLICATION_NAMESPACE, PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
-                        } );
-
-        if ( UserRoleEnum.STANDARD.getValue().equals( requestUserAssociation.getUserRole() ) ){
-            LOG.error( "User is not permitted to perform this action because their role is 'standard'" );
-            throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
-        }
-
-        if ( UserRoleEnum.ADMIN.getValue().equals( requestUserAssociation.getUserRole() ) && UserRoleEnum.OWNER.getValue().equals( membershipIdAssociation.getUserRole() ) ){
-            LOG.error( "User is not permitted to perform this action because their role is 'admin' and the target user's role is 'owner'" );
-            throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
-        }
-    }
-
     @Override
     public ResponseEntity<Void> updateAcspMembershipForAcspAndId( final String xRequestId, final String membershipId, final RequestBodyPatch requestBody ) {
 
@@ -85,24 +58,9 @@ public class AcspMembershipController implements AcspMembershipInterface {
                         .map( UserRoleEnum::fromValue )
                         .orElse( null );
 
-        final var membershipIdAssociation =
-        acspMembershipService.fetchMembershipDao( membershipId )
-                .orElseThrow( () -> {
-                    LOG.error( String.format( "Could not find Acsp Membership %s", membershipId ) );
-                    return new NotFoundRuntimeException( StaticPropertyUtil.APPLICATION_NAMESPACE, PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
-                } );
-
-        if ( UserRoleEnum.OWNER.getValue().equals( membershipIdAssociation.getUserRole() ) && acspMembershipService.fetchNumberOfActiveOwners( membershipIdAssociation.getAcspNumber() ) <= 1 ){
-            LOG.error( String.format( "Acsp Membership %s is the last owner", membershipId ) );
-            throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
-        }
-
         final var requestingUser = UserContext.getLoggedUser();
-        if ( isOAuth2Request() ){
-            throwBadRequestWhenActionIsNotPermittedByOAuth2User( requestingUser, membershipIdAssociation, userRole );
-        }
-
         final var requestingUserId = Optional.ofNullable( requestingUser ).map( User::getUserId ).orElse( null );
+
         acspMembershipService.updateMembership( membershipId, userStatus, userRole, requestingUserId );
 
         LOG.infoContext( xRequestId, String.format( "Successfully updated Acsp Membership %s", membershipId ), null );

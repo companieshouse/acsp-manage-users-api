@@ -8,6 +8,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import uk.gov.companieshouse.acsp.manage.users.interceptor.AuthorizationAndInternalUserInterceptors;
 import uk.gov.companieshouse.acsp.manage.users.interceptor.AuthorizationInterceptor;
 import uk.gov.companieshouse.acsp.manage.users.interceptor.LoggingInterceptor;
+import uk.gov.companieshouse.acsp.manage.users.interceptor.UpdateMembershipPermissionsInterceptor;
 
 @Configuration
 public class InterceptorConfig implements WebMvcConfigurer {
@@ -19,16 +20,14 @@ public class InterceptorConfig implements WebMvcConfigurer {
     private final LoggingInterceptor loggingInterceptor;
     private final AuthorizationInterceptor authorizationInterceptor;
     private final AuthorizationAndInternalUserInterceptors authorizationAndInternalUserInterceptors;
+    private final UpdateMembershipPermissionsInterceptor updateMembershipPermissionsInterceptor;
 
-  public InterceptorConfig(
-      final LoggingInterceptor loggingInterceptor,
-      @Qualifier("authorizationInterceptor")
-          final AuthorizationInterceptor authorizationInterceptor,
-      final AuthorizationAndInternalUserInterceptors authorizationAndInternalUserInterceptors) {
+  public InterceptorConfig( final LoggingInterceptor loggingInterceptor, @Qualifier("authorizationInterceptor") final AuthorizationInterceptor authorizationInterceptor, final AuthorizationAndInternalUserInterceptors authorizationAndInternalUserInterceptors, final UpdateMembershipPermissionsInterceptor updateMembershipPermissionsInterceptor ) {
         this.loggingInterceptor = loggingInterceptor;
         this.authorizationInterceptor = authorizationInterceptor;
         this.authorizationAndInternalUserInterceptors = authorizationAndInternalUserInterceptors;
-    }
+        this.updateMembershipPermissionsInterceptor = updateMembershipPermissionsInterceptor;
+  }
 
     @Override
     public void addInterceptors(@NonNull final InterceptorRegistry registry) {
@@ -48,6 +47,12 @@ public class InterceptorConfig implements WebMvcConfigurer {
         registry.addInterceptor( authorizationAndInternalUserInterceptors )
                 .addPathPatterns( OAUTH_AND_KEY_PROTECTED_ENDPOINTS )
                 .excludePathPatterns( HEALTH_CHECK_ENDPOINT, OAUTH_PROTECTED_ENDPOINTS );
+
+
+        registry.addInterceptor( updateMembershipPermissionsInterceptor )
+                .addPathPatterns( "/acsps/memberships/*" );
+
+
     }
 
 }
