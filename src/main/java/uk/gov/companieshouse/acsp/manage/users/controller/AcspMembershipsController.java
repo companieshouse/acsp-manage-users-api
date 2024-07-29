@@ -128,17 +128,20 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
             AcspMembership.UserRoleEnum.ADMIN.getValue().equals(loggedInUserRole)
                 && AcspMembership.UserRoleEnum.OWNER.getValue().equals(newUserRole);
         if (isStandardUser || isAdminAddingOwner) {
-          final String message =
-              String.format(
-                  "User with ID %s and %s role is not authorised to add %s for ACSP",
-                  loggedUser.getUserId(),
-                  isStandardUser ? "standard" : "admin",
-                  isStandardUser ? "a member" : "an owner member");
+          final var message = getErrorMessage(isStandardUser, loggedUser);
           LOG.infoContext(xRequestId, message, null);
           throw new BadRequestRuntimeException(PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN);
         }
       }
     }
+  }
+
+  private String getErrorMessage(final boolean isStandardUser, final User loggedUser) {
+    return String.format(
+        "User with ID %s and %s role is not authorised to add %s for ACSP",
+        loggedUser.getUserId(),
+        isStandardUser ? "standard" : "admin",
+        isStandardUser ? "a member" : "an owner member");
   }
 
   @Override
