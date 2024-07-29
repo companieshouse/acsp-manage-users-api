@@ -100,51 +100,57 @@ public class AcspMembersService {
     return acspMembershipsList;
   }
 
-    @Transactional( readOnly = true )
-    public Optional<AcspMembersDao> fetchMembershipDao( final String membershipId ){
-      return acspMembersRepository.findById( membershipId );
+  @Transactional(readOnly = true)
+  public Optional<AcspMembersDao> fetchMembershipDao(final String membershipId) {
+    return acspMembersRepository.findById(membershipId);
+  }
+
+  @Transactional(readOnly = true)
+  public Optional<AcspMembership> fetchMembership(final String membershipId) {
+    return fetchMembershipDao(membershipId).map(acspMembershipMapper::daoToDto);
+  }
+
+  @Transactional(readOnly = true)
+  public int fetchNumberOfActiveOwners(final String acspNumber) {
+    return acspMembersRepository.fetchNumberOfActiveOwners(acspNumber);
+  }
+
+  @Transactional(readOnly = true)
+  public Optional<AcspMembersDao> fetchActiveAcspMembership(
+      final String userId, final String acspNumber) {
+    return acspMembersRepository.fetchActiveAcspMembership(userId, acspNumber);
+  }
+
+  @Transactional
+  public void updateMembership(
+      final String membershipId,
+      final UserStatusEnum userStatus,
+      final UserRoleEnum userRole,
+      final String requestingUserId) {
+    if (Objects.isNull(membershipId)) {
+      throw new IllegalArgumentException("membershipId cannot be null");
     }
 
-    @Transactional( readOnly = true )
-    public Optional<AcspMembership> fetchMembership( final String membershipId ){
-       return fetchMembershipDao( membershipId ).map( acspMembershipMapper::daoToDto );
+    final var update = new Update();
+    update.set("etag", generateEtag());
+
+    if (Objects.nonNull(userRole)) {
+      update.set("user_role", userRole.getValue());
     }
 
-    @Transactional( readOnly = true )
-    public int fetchNumberOfActiveOwners( final String acspNumber ){
-       return acspMembersRepository.fetchNumberOfActiveOwners( acspNumber );
+    if (Objects.nonNull(userStatus)) {
+      update.set("status", userStatus.getValue());
+      update.set("removed_by", requestingUserId);
+      update.set("removed_at", LocalDateTime.now());
     }
 
-    @Transactional( readOnly = true )
-    public Optional<AcspMembersDao> fetchActiveAcspMembership( final String userId, final String acspNumber ){
-       return acspMembersRepository.fetchActiveAcspMembership( userId, acspNumber );
+    final var numRecordsUpdated = acspMembersRepository.updateAcspMembership(membershipId, update);
+    if (numRecordsUpdated == 0) {
+      LOG.error(String.format("Failed to update Acsp Membership %s", membershipId));
+      throw new InternalServerErrorRuntimeException(
+          String.format("Failed to update Acsp Membership %s", membershipId));
     }
-
-    @Transactional
-    public void updateMembership( final String membershipId, final UserStatusEnum userStatus, final UserRoleEnum userRole, final String requestingUserId ){
-        if ( Objects.isNull( membershipId ) ){
-            throw new IllegalArgumentException( "membershipId cannot be null" );
-        }
-
-        final var update = new Update();
-        update.set( "etag", generateEtag() );
-
-        if ( Objects.nonNull( userRole ) ){
-            update.set( "user_role", userRole.getValue() );
-        }
-
-        if ( Objects.nonNull( userStatus ) ){
-           update.set( "status", userStatus.getValue() );
-           update.set( "removed_by", requestingUserId );
-           update.set( "removed_at", LocalDateTime.now() );
-        }
-
-        final var numRecordsUpdated = acspMembersRepository.updateAcspMembership( membershipId, update );
-        if ( numRecordsUpdated == 0 ){
-            LOG.error( String.format( "Failed to update Acsp Membership %s", membershipId ) );
-            throw new InternalServerErrorRuntimeException( String.format( "Failed to update Acsp Membership %s", membershipId ) );
-        }
-    }
+  }
 
   @Transactional(readOnly = true)
   public AcspMembershipsList fetchAcspMemberships(
@@ -168,5 +174,33 @@ public class AcspMembersService {
     final var acspMembershipsList = new AcspMembershipsList();
     acspMembershipsList.setItems(acspMembershipListMapper.daoToDto(acspMembers, user));
     return acspMembershipsList;
+  }
+
+  public AcspMembersDao addAcspMember(
+      final String userId,
+      final String acspNumber,
+      final AcspMembership.UserRoleEnum userRole,
+      final String addedByUserId) {
+    final var now = LocalDateTime.now();
+    final var newAcspMembersDao = new AcspMembersDao();
+    newAcspMembersDao.setUserId(userId);
+    newAcspMembersDao.setAcspNumber(acspNumber);
+    newAcspMembersDao.setUserRole(userRole.getValue());
+    newAcspMembersDao.setCreatedAt(now);
+    newAcspMembersDao.setAddedAt(now);
+    newAcspMembersDao.setAddedBy(addedByUserId);
+    newAcspMembersDao.setEtag(generateEtag());
+    newAcspMembersDao.setStatus(AcspMembership.MembershipStatusEnum.ACTIVE.getValue());
+    return acspMembersRepository.insert(newAcspMembersDao);
+  }
+
+  public AcspMembership addAcspMembership(
+      final User user,
+      final AcspDataDao acspData,
+      final String acspNumber,
+      final AcspMembership.UserRoleEnum userRole,
+      final String addedByUserId) {
+    final var acspMembersDao = addAcspMember(user.getUserId(), acspNumber, userRole, addedByUserId);
+    return acspMembershipMapper.daoToDto(acspMembersDao, user, acspData);
   }
 }

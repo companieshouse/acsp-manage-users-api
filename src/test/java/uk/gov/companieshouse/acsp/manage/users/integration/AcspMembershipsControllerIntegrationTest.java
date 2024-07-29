@@ -2,8 +2,10 @@ package uk.gov.companieshouse.acsp.manage.users.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -280,10 +283,8 @@ class AcspMembershipsControllerIntegrationTest {
       return Stream.of(
           Arguments.of("standard", false, 2, new String[] {"COMU007", "COMU008"}),
           Arguments.of("standard", true, 3, new String[] {"COMU006", "COMU007", "COMU008"}),
-
           Arguments.of("admin", false, 2, new String[] {"COMU004", "COMU005"}),
           Arguments.of("admin", true, 3, new String[] {"COMU003", "COMU004", "COMU005"}),
-
           Arguments.of("owner", false, 1, new String[] {"COMU002"}),
           Arguments.of("owner", true, 3, new String[] {"COMU001", "COMU002", "COMU009"}));
     }
@@ -527,6 +528,210 @@ class AcspMembershipsControllerIntegrationTest {
           objectMapper.readValue(contentWithRemoved, AcspMembershipsList.class);
       assertEquals(1, responseListWithRemoved.getItems().size());
       assertEquals("COM001", responseListWithRemoved.getItems().get(0).getId());
+    }
+  }
+
+  @Nested
+  class AddMemberForAcsp {
+    @Test
+    void addMemberForAcspWithoutXRequestIdReturnsBadRequest() throws Exception {
+      mockMvc
+          .perform(
+              post("/acsps/TSA001/memberships")
+                  .header("Eric-identity", "COMU002")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .header("ERIC-Authorised-Key-Roles", "*")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}"))
+          .andExpect(status().isBadRequest());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"abc-111-&,TSA001", "COMU001,TSA001-&"})
+    void addMemberForAcspWithMalformedUserIdInBodyOrMalformedAcspNumberInUrlReturnsBadRequest(
+        String id, String acspNumber) throws Exception {
+      mockMvc
+          .perform(
+              post(String.format("/acsps/%s/memberships", acspNumber))
+                  .header("X-Request-Id", "theId123")
+                  .header("Eric-identity", "COMU002")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .header("ERIC-Authorised-Key-Roles", "*")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(String.format("{\"user_id\":\"%s\",\"user_role\":\"standard\"}", id)))
+          .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void addMemberForAcspWithoutUserIdInBodyReturnsBadRequest() throws Exception {
+      mockMvc
+          .perform(
+              post("/acsps/TSA001/memberships")
+                  .header("X-Request-Id", "theId123")
+                  .header("Eric-identity", "COMU002")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .header("ERIC-Authorised-Key-Roles", "*")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(
+                      String.format("{\"user_id\":%s,\"user_role\":\"%s\"}", null, "standard")))
+          .andExpect(status().isBadRequest())
+          .andExpect(
+              content()
+                  .json(
+                      "{\"errors\":[{\"error\":\"Please check the request and try again\",\"type\":\"ch:service\"}]}"));
+    }
+
+    @Test
+    void addMemberForAcspWithoutUserRoleReturnsBadRequest() throws Exception {
+      mockMvc
+          .perform(
+              post("/acsps/TSA001/memberships")
+                  .header("X-Request-Id", "theId123")
+                  .header("Eric-identity", "COMU002")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .header("ERIC-Authorised-Key-Roles", "*")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(String.format("{\"user_id\":%s,\"user_role\":\"%s\"}", "COMU001", null)))
+          .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void addMemberForAcspWithNonexistentUserRoleReturnsBadRequest() throws Exception {
+      mockMvc
+          .perform(
+              post("/acsps/TSA001/memberships")
+                  .header("X-Request-Id", "theId123")
+                  .header("Eric-identity", "COMU002")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .header("ERIC-Authorised-Key-Roles", "*")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(
+                      String.format(
+                          "{\"user_id\":%s,\"user_role\":\"%s\"}", "COMU001", "superuser")))
+          .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void addMemberForAcspWithNonexistentAcspNumberReturnsBadRequest() throws Exception {
+      final var acspMemberDaos =
+          testDataManager.fetchAcspMembersDaos(
+              "COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008",
+              "COM009");
+      acspMembersRepository.insert(acspMemberDaos);
+
+      mockFetchUserDetailsFor(
+          "COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008",
+          "COMU009");
+      mockFetchAcspDataFor("COMA001");
+      when(acspDataService.fetchAcspData("NONEXISTENT"))
+          .thenThrow(new NotFoundRuntimeException("", ""));
+      mockMvc
+          .perform(
+              post("/acsps/NONEXISTENT/memberships")
+                  .header("X-Request-Id", "theId123")
+                  .header("Eric-identity", "COMU002")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .header("ERIC-Authorised-Key-Roles", "*")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}"))
+          .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void addMemberForAcspWithNonexistentUserIdReturnsBadRequest() throws Exception {
+      final var acspMemberDaos =
+          testDataManager.fetchAcspMembersDaos(
+              "COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008",
+              "COM009");
+      acspMembersRepository.insert(acspMemberDaos);
+
+      mockFetchUserDetailsFor(
+          "COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008",
+          "COMU009");
+      mockFetchAcspDataFor("COMA001");
+      when(usersService.fetchUserDetails("NONEXISTENT"))
+          .thenThrow(new NotFoundRuntimeException("", ""));
+      mockMvc
+          .perform(
+              post("/acsps/TSA001/memberships")
+                  .header("X-Request-Id", "theId123")
+                  .header("Eric-identity", "COMU002")
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .header("ERIC-Authorised-Key-Roles", "*")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"user_id\":\"NONEXISTENT\",\"user_role\":\"standard\"}"))
+          .andExpect(status().isBadRequest())
+          .andExpect(
+              content()
+                  .json("{\"errors\":[{\"error\":\"ERROR CODE: 1001\",\"type\":\"ch:service\"}]}"));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+      "COMU002,COMU007,standard,ERROR CODE: 1002",
+      "COMU007,COMU001,standard,Please check the request and try again",
+      "COMU005,COMU001,owner,Please check the request and try again"
+    })
+    void
+        addMemberForAcspWithUserIdThatAlredyHasActiveMembershipOrLoggedStandardUserOrLoggedAdminUserAndNewOwnerUserReturnsBadRequest(
+            String loggedUserId, String userId, String userRole, String errorMessage)
+            throws Exception {
+      final var acspMemberDaos =
+          testDataManager.fetchAcspMembersDaos(
+              "COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008",
+              "COM009", "NEI003");
+      acspMembersRepository.insert(acspMemberDaos);
+
+      mockFetchUserDetailsFor(
+          "COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008",
+          "COMU009", "NEIU003");
+      mockFetchAcspDataFor("COMA001");
+      mockMvc
+          .perform(
+              post("/acsps/COMA001/memberships")
+                  .header("X-Request-Id", "theId123")
+                  .header("Eric-identity", loggedUserId)
+                  .header("ERIC-Identity-Type", "oauth2")
+                  .header("ERIC-Authorised-Key-Roles", "*")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(
+                      String.format("{\"user_id\":\"%s\",\"user_role\":\"%s\"}", userId, userRole)))
+          .andExpect(status().isBadRequest())
+          .andExpect(
+              content()
+                  .json(
+                      String.format(
+                          "{\"errors\":[{\"error\":\"%s\",\"type\":\"ch:service\"}]}",
+                          errorMessage)));
+    }
+
+    @Test
+    void addMemberForAcspWithCorrectDataReturnsAddedAcspMembership() throws Exception {
+      final var acspMemberDaos =
+          testDataManager.fetchAcspMembersDaos(
+              "COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008",
+              "COM009", "TS001");
+      acspMembersRepository.insert(acspMemberDaos);
+
+      mockFetchUserDetailsFor(
+          "COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008",
+          "COMU009", "TSU001");
+      mockFetchAcspDataFor("TSA001");
+      final var result =
+          mockMvc
+              .perform(
+                  post("/acsps/TSA001/memberships")
+                      .header("X-Request-Id", "theId123")
+                      .header("Eric-identity", "TSU001")
+                      .header("ERIC-Identity-Type", "oauth2")
+                      .header("ERIC-Authorised-Key-Roles", "*")
+                      .contentType(MediaType.APPLICATION_JSON)
+                      .content("{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}"))
+              .andReturn();
+      assertEquals(201, result.getResponse().getStatus());
+      assertTrue(result.getResponse().getContentAsString().contains("\"acsp_number\":\"TSA001\""));
+      assertTrue(result.getResponse().getContentAsString().contains("\"user_id\":\"COMU001\""));
+      assertTrue(result.getResponse().getContentAsString().contains("\"added_by\":\"TSU001\""));
     }
   }
 
