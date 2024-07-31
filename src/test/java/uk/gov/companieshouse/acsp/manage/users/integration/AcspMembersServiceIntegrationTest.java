@@ -28,8 +28,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipListMapper;
-import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipsListMapper;
+import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipCollectionMappers;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
@@ -68,9 +67,7 @@ class AcspMembersServiceIntegrationTest {
 
   @Autowired private AcspMembersRepository acspMembersRepository;
 
-  @MockBean private AcspMembershipListMapper acspMembershipListMapper;
-
-  @MockBean private AcspMembershipsListMapper acspMembershipsListMapper;
+  @MockBean private AcspMembershipCollectionMappers acspMembershipCollectionMappers;
 
   @MockBean private UsersService usersService;
 
@@ -89,7 +86,7 @@ class AcspMembersServiceIntegrationTest {
             "COM002", "COM003", "COM004", "COM005", "COM006", "COM007");
     acspMembersRepository.saveAll(testMembers);
 
-    when(acspMembershipListMapper.daoToDto(anyList(), any()))
+    when(acspMembershipCollectionMappers.daoToDto(anyList(), any(), any()))
         .thenAnswer(
             invocation -> {
               List<AcspMembersDao> daos = invocation.getArgument(0);
@@ -156,7 +153,7 @@ class AcspMembersServiceIntegrationTest {
       acspDataDao = new AcspDataDao();
       acspDataDao.setId("COMA001");
 
-      when(acspMembershipsListMapper.daoToDto(any(Page.class), any(AcspDataDao.class)))
+      when(acspMembershipCollectionMappers.daoToDto(any(Page.class), any(), any(AcspDataDao.class)))
           .thenAnswer(
               invocation -> {
                 Page<AcspMembersDao> daos = invocation.getArgument(0);

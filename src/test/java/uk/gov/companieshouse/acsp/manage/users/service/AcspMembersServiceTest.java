@@ -34,9 +34,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Update;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipListMapper;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipMapper;
-import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipsListMapper;
+import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipCollectionMappers;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
@@ -56,9 +55,7 @@ class AcspMembersServiceTest {
 
   @Mock private AcspMembersRepository acspMembersRepository;
 
-  @Mock private AcspMembershipListMapper acspMembershipListMapper;
-
-  @Mock private AcspMembershipsListMapper acspMembershipsListMapper;
+  @Mock private AcspMembershipCollectionMappers acspMembershipCollectionMappers;
 
   @Mock private AcspMembershipMapper acspMembershipMapper;
 
@@ -120,7 +117,7 @@ class AcspMembersServiceTest {
     void fetchAcspMembershipsReturnsAllAcspMembersIfIncludeRemovedTrue() {
       when(acspMembersRepository.fetchAllAcspMembersByUserId(testUser.getUserId()))
           .thenReturn(testAllAcspMembersDaos);
-      when(acspMembershipListMapper.daoToDto(testAllAcspMembersDaos, testUser))
+      when(acspMembershipCollectionMappers.daoToDto(testAllAcspMembersDaos, testUser, null))
           .thenReturn(testAcspMemberships);
 
       AcspMembershipsList result = acspMembersService.fetchAcspMemberships(testUser, true);
@@ -129,14 +126,14 @@ class AcspMembersServiceTest {
       assertEquals(2, result.getItems().size());
       assertSame(testAcspMemberships, result.getItems());
       verify(acspMembersRepository).fetchAllAcspMembersByUserId(testUser.getUserId());
-      verify(acspMembershipListMapper).daoToDto(testAllAcspMembersDaos, testUser);
+      verify(acspMembershipCollectionMappers).daoToDto(testAllAcspMembersDaos, testUser, null);
     }
 
     @Test
     void fetchAcspMembershipsReturnsActiveAcspMembersIfIncludeRemovedFalse() {
       when(acspMembersRepository.fetchActiveAcspMembersByUserId(testUser.getUserId()))
           .thenReturn(testActiveAcspMembersDaos);
-      when(acspMembershipListMapper.daoToDto(testActiveAcspMembersDaos, testUser))
+      when(acspMembershipCollectionMappers.daoToDto(testActiveAcspMembersDaos, testUser,null))
           .thenReturn(Collections.singletonList(testAcspMemberships.get(0)));
 
       AcspMembershipsList result = acspMembersService.fetchAcspMemberships(testUser, false);
@@ -145,14 +142,14 @@ class AcspMembersServiceTest {
       assertEquals(1, result.getItems().size());
       assertSame(testAcspMemberships.get(0), result.getItems().get(0));
       verify(acspMembersRepository).fetchActiveAcspMembersByUserId(testUser.getUserId());
-      verify(acspMembershipListMapper).daoToDto(testActiveAcspMembersDaos, testUser);
+      verify(acspMembershipCollectionMappers).daoToDto(testActiveAcspMembersDaos, testUser, null);
     }
 
     @Test
     void fetchAcspMembershipsReturnsEmptyListIfNoMemberships() {
       when(acspMembersRepository.fetchAllAcspMembersByUserId(testUser.getUserId()))
           .thenReturn(Collections.emptyList());
-      when(acspMembershipListMapper.daoToDto(Collections.emptyList(), testUser))
+      when(acspMembershipCollectionMappers.daoToDto(Collections.emptyList(), testUser,null))
           .thenReturn(Collections.emptyList());
 
       AcspMembershipsList result = acspMembersService.fetchAcspMemberships(testUser, true);
@@ -160,7 +157,7 @@ class AcspMembersServiceTest {
       assertNotNull(result);
       assertTrue(result.getItems().isEmpty());
       verify(acspMembersRepository).fetchAllAcspMembersByUserId(testUser.getUserId());
-      verify(acspMembershipListMapper).daoToDto(Collections.emptyList(), testUser);
+      verify(acspMembershipCollectionMappers).daoToDto(Collections.emptyList(), testUser, null);
     }
   }
 
@@ -182,7 +179,7 @@ class AcspMembersServiceTest {
     void findAllByAcspNumberAndRoleWithRoleAndIncludeRemovedTrue() {
       when(acspMembersRepository.findAllByAcspNumberAndUserRole("ACSP001", "standard", pageable))
           .thenReturn(pageResult);
-      when(acspMembershipsListMapper.daoToDto(pageResult, testAcspDataDao))
+      when(acspMembershipCollectionMappers.daoToDto(pageResult, null, testAcspDataDao))
           .thenReturn(new AcspMembershipsList().items(testAcspMemberships));
 
       AcspMembershipsList result =
@@ -192,7 +189,7 @@ class AcspMembersServiceTest {
       assertNotNull(result);
       assertEquals(2, result.getItems().size());
       verify(acspMembersRepository).findAllByAcspNumberAndUserRole("ACSP001", "standard", pageable);
-      verify(acspMembershipsListMapper).daoToDto(pageResult, testAcspDataDao);
+      verify(acspMembershipCollectionMappers).daoToDto(pageResult, null, testAcspDataDao);
     }
 
     @Test
@@ -200,7 +197,7 @@ class AcspMembersServiceTest {
       when(acspMembersRepository.findAllNotRemovedByAcspNumberAndUserRole(
               "ACSP001", "standard", pageable))
           .thenReturn(pageResult);
-      when(acspMembershipsListMapper.daoToDto(pageResult, acspDataDao))
+      when(acspMembershipCollectionMappers.daoToDto(pageResult, null, acspDataDao))
           .thenReturn(new AcspMembershipsList().items(testAcspMemberships));
 
       AcspMembershipsList result =
@@ -211,13 +208,13 @@ class AcspMembersServiceTest {
       assertEquals(2, result.getItems().size());
       verify(acspMembersRepository)
           .findAllNotRemovedByAcspNumberAndUserRole("ACSP001", "standard", pageable);
-      verify(acspMembershipsListMapper).daoToDto(pageResult, acspDataDao);
+      verify(acspMembershipCollectionMappers).daoToDto(pageResult, null, acspDataDao);
     }
 
     @Test
     void findAllByAcspNumberAndRoleWithoutRoleAndIncludeRemovedTrue() {
       when(acspMembersRepository.findAllByAcspNumber("ACSP001", pageable)).thenReturn(pageResult);
-      when(acspMembershipsListMapper.daoToDto(pageResult, acspDataDao))
+      when(acspMembershipCollectionMappers.daoToDto(pageResult, null, acspDataDao))
           .thenReturn(new AcspMembershipsList().items(testAcspMemberships));
 
       AcspMembershipsList result =
@@ -226,14 +223,14 @@ class AcspMembersServiceTest {
       assertNotNull(result);
       assertEquals(2, result.getItems().size());
       verify(acspMembersRepository).findAllByAcspNumber("ACSP001", pageable);
-      verify(acspMembershipsListMapper).daoToDto(pageResult, acspDataDao);
+      verify(acspMembershipCollectionMappers).daoToDto(pageResult, null, acspDataDao);
     }
 
     @Test
     void findAllByAcspNumberAndRoleWithoutRoleAndIncludeRemovedFalse() {
       when(acspMembersRepository.findAllNotRemovedByAcspNumber("ACSP001", pageable))
           .thenReturn(pageResult);
-      when(acspMembershipsListMapper.daoToDto(pageResult, acspDataDao))
+      when(acspMembershipCollectionMappers.daoToDto(pageResult, null, acspDataDao))
           .thenReturn(new AcspMembershipsList().items(testAcspMemberships));
 
       AcspMembershipsList result =
@@ -242,7 +239,7 @@ class AcspMembersServiceTest {
       assertNotNull(result);
       assertEquals(2, result.getItems().size());
       verify(acspMembersRepository).findAllNotRemovedByAcspNumber("ACSP001", pageable);
-      verify(acspMembershipsListMapper).daoToDto(pageResult, acspDataDao);
+      verify(acspMembershipCollectionMappers).daoToDto(pageResult, null, acspDataDao);
     }
   }
 
@@ -272,14 +269,14 @@ class AcspMembersServiceTest {
       AcspMembership expectedMembership = new AcspMembership();
 
       when(acspMembersRepository.findById("TS001")).thenReturn(Optional.of(acspMemberDao));
-      when(acspMembershipMapper.daoToDto(acspMemberDao)).thenReturn(expectedMembership);
+      when(acspMembershipMapper.daoToDto(acspMemberDao,null,null)).thenReturn(expectedMembership);
 
       Optional<AcspMembership> result = acspMembersService.fetchMembership("TS001");
 
       assertTrue(result.isPresent());
       assertSame(expectedMembership, result.get());
       verify(acspMembersRepository).findById("TS001");
-      verify(acspMembershipMapper).daoToDto(acspMemberDao);
+      verify(acspMembershipMapper).daoToDto(acspMemberDao,null,null);
     }
   }
 
@@ -291,7 +288,7 @@ class AcspMembersServiceTest {
       when(acspMembersRepository.fetchAllAcspMembersByUserIdAndAcspNumber(
               testUser.getUserId(), "ACSP001"))
           .thenReturn(testAllAcspMembersDaos);
-      when(acspMembershipListMapper.daoToDto(testAllAcspMembersDaos, testUser))
+      when(acspMembershipCollectionMappers.daoToDto(testAllAcspMembersDaos, testUser,null))
           .thenReturn(testAcspMemberships);
 
       AcspMembershipsList result =
@@ -302,7 +299,7 @@ class AcspMembersServiceTest {
       assertSame(testAcspMemberships, result.getItems());
       verify(acspMembersRepository)
           .fetchAllAcspMembersByUserIdAndAcspNumber(testUser.getUserId(), "ACSP001");
-      verify(acspMembershipListMapper).daoToDto(testAllAcspMembersDaos, testUser);
+      verify(acspMembershipCollectionMappers).daoToDto(testAllAcspMembersDaos, testUser, null);
     }
 
     @Test
@@ -310,7 +307,7 @@ class AcspMembersServiceTest {
       when(acspMembersRepository.fetchActiveAcspMembersByUserIdAndAcspNumber(
               testUser.getUserId(), "ACSP001"))
           .thenReturn(testActiveAcspMembersDaos);
-      when(acspMembershipListMapper.daoToDto(testActiveAcspMembersDaos, testUser))
+      when(acspMembershipCollectionMappers.daoToDto(testActiveAcspMembersDaos, testUser,null))
           .thenReturn(Collections.singletonList(testAcspMemberships.get(0)));
 
       AcspMembershipsList result =
@@ -321,7 +318,7 @@ class AcspMembersServiceTest {
       assertSame(testAcspMemberships.get(0), result.getItems().get(0));
       verify(acspMembersRepository)
           .fetchActiveAcspMembersByUserIdAndAcspNumber(testUser.getUserId(), "ACSP001");
-      verify(acspMembershipListMapper).daoToDto(testActiveAcspMembersDaos, testUser);
+      verify(acspMembershipCollectionMappers).daoToDto(testActiveAcspMembersDaos, testUser,null);
     }
   }
 
