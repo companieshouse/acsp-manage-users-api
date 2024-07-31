@@ -85,7 +85,7 @@ class AcspMembershipCollectionMappersTest {
         Assertions.assertEquals(UserRoleEnum.ADMIN, dto.getUserRole());
         Assertions.assertEquals("TSA001", dto.getAcspNumber());
         Assertions.assertEquals("Toy Story", dto.getAcspName());
-        Assertions.assertEquals("live", dto.getAcspStatus().getValue());
+        Assertions.assertEquals("active", dto.getAcspStatus().getValue());
         Assertions.assertEquals(localDateTimeToNormalisedString(dao.getAddedAt()), reduceTimestampResolution(dto.getAddedAt().toString()));
         Assertions.assertEquals("TSU001", dto.getAddedBy());
         Assertions.assertEquals("TSU001", dto.getRemovedBy());
@@ -112,7 +112,7 @@ class AcspMembershipCollectionMappersTest {
         Assertions.assertEquals(UserRoleEnum.ADMIN, dto.getUserRole());
         Assertions.assertEquals("TSA001", dto.getAcspNumber());
         Assertions.assertEquals("Toy Story", dto.getAcspName());
-        Assertions.assertEquals("live", dto.getAcspStatus().getValue());
+        Assertions.assertEquals("active", dto.getAcspStatus().getValue());
         Assertions.assertEquals(localDateTimeToNormalisedString(dao.getAddedAt()), reduceTimestampResolution(dto.getAddedAt().toString()));
         Assertions.assertEquals("TSU001", dto.getAddedBy());
         Assertions.assertEquals("TSU001", dto.getRemovedBy());

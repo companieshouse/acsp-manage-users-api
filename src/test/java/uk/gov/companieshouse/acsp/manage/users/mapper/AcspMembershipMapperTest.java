@@ -97,7 +97,7 @@ class AcspMembershipMapperTest {
         acspMembershipMapper.enrichWithAcspDetails( acspMembership, acspDetails );
 
         Assertions.assertEquals( "Toy Story", acspMembership.getAcspName() );
-        Assertions.assertEquals( AcspStatusEnum.LIVE, acspMembership.getAcspStatus() );
+        Assertions.assertEquals( AcspStatusEnum.ACTIVE, acspMembership.getAcspStatus() );
     }
 
     @Test
@@ -110,7 +110,7 @@ class AcspMembershipMapperTest {
         acspMembershipMapper.enrichWithAcspDetails( acspMembership, null );
 
         Assertions.assertEquals( "Toy Story", acspMembership.getAcspName() );
-        Assertions.assertEquals( AcspStatusEnum.LIVE, acspMembership.getAcspStatus() );
+        Assertions.assertEquals( AcspStatusEnum.ACTIVE, acspMembership.getAcspStatus() );
     }
 
     @Test
@@ -137,7 +137,7 @@ class AcspMembershipMapperTest {
         Assertions.assertEquals(UserRoleEnum.OWNER, dto.getUserRole());
         Assertions.assertEquals("TSA001", dto.getAcspNumber());
         Assertions.assertEquals("Toy Story", dto.getAcspName());
-        Assertions.assertEquals("live", dto.getAcspStatus().getValue());
+        Assertions.assertEquals("active", dto.getAcspStatus().getValue());
         Assertions.assertEquals(localDateTimeToNormalisedString(dao.getAddedAt()), reduceTimestampResolution(dto.getAddedAt().toString()));
         Assertions.assertNull(dto.getAddedBy());
         Assertions.assertNull(dto.getRemovedBy());
@@ -165,7 +165,7 @@ class AcspMembershipMapperTest {
         Assertions.assertEquals(UserRoleEnum.ADMIN, dto.getUserRole());
         Assertions.assertEquals("TSA001", dto.getAcspNumber());
         Assertions.assertEquals("Toy Story", dto.getAcspName());
-        Assertions.assertEquals("live", dto.getAcspStatus().getValue());
+        Assertions.assertEquals("active", dto.getAcspStatus().getValue());
         Assertions.assertEquals(localDateTimeToNormalisedString(dao.getAddedAt()), reduceTimestampResolution(dto.getAddedAt().toString()));
         Assertions.assertEquals("TSU001", dto.getAddedBy());
         Assertions.assertEquals("TSU001", dto.getRemovedBy());
