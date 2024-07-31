@@ -143,7 +143,7 @@ class AcspMembershipControllerTest {
         Assertions.assertEquals( UserRoleEnum.OWNER.getValue(), acspMembership.getUserRole().getValue() );
         Assertions.assertEquals( "TSA001", acspMembership.getAcspNumber() );
         Assertions.assertEquals( "Toy Story", acspMembership.getAcspName() );
-        Assertions.assertEquals( "live", acspMembership.getAcspStatus().getValue() );
+        Assertions.assertEquals("active", acspMembership.getAcspStatus().getValue());
         Assertions.assertEquals( localDateTimeToNormalisedString( dao.getAddedAt() ), reduceTimestampResolution( acspMembership.getAddedAt().toString() ) );
         Assertions.assertNull( acspMembership.getAddedBy() );
         Assertions.assertNull( acspMembership.getRemovedBy() );
