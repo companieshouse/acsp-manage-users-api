@@ -95,7 +95,7 @@ class AcspMembershipListMapperTest {
 
         Assertions.assertEquals("TSA001", firstDto.getAcspNumber());
         Assertions.assertEquals("Toy Story", firstDto.getAcspName());
-        Assertions.assertEquals("live", firstDto.getAcspStatus().getValue());
+        Assertions.assertEquals("active", firstDto.getAcspStatus().getValue());
     }
 
     @Test
