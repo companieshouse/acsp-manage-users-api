@@ -1,48 +1,58 @@
 package uk.gov.companieshouse.acsp.manage.users.mapper;
 
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Objects;
-import java.util.Optional;
-import org.springframework.stereotype.Component;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.Context;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.springframework.beans.factory.annotation.Autowired;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
-import uk.gov.companieshouse.acsp.manage.users.utils.MapperUtil;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
+import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.AcspStatusEnum;
 
-@Component
-public class AcspMembershipMapper {
+@Mapper( componentModel = "spring" )
+public abstract class AcspMembershipMapper {
 
-  private static final String DEFAULT_DISPLAY_NAME = "Not Provided";
+    @Autowired
+    protected UsersService usersService;
 
-  private final BaseMapper baseMapper;
+    @Autowired
+    protected AcspDataService acspDataService;
 
-  private final MapperUtil mapperUtil;
+    private final String DEFAULT_DISPLAY_NAME = "Not Provided";
 
-  public AcspMembershipMapper(final BaseMapper baseMapper, final MapperUtil mapperUtil) {
-    this.baseMapper = baseMapper;
-    this.mapperUtil = mapperUtil;
-  }
-
-  public AcspMembership daoToDto(final AcspMembersDao acspMembersDao) {
-    return Optional.ofNullable(acspMembersDao)
-        .map(baseMapper::daoToDto)
-        .map(mapperUtil::enrichAcspMembershipWithUserDetails)
-        .map(mapperUtil::enrichAcspMembershipWithAcspData)
-        .orElse(null);
-  }
-
-  public AcspMembership daoToDto(AcspMembersDao acspMembersDao, User user, AcspDataDao acspData) {
-    final var acspMembership =
-        Optional.ofNullable(acspMembersDao).map(baseMapper::daoToDto).orElse(null);
-    if (!Objects.isNull(acspMembership)) {
-      acspMembership.setAcspName(acspData.getAcspName());
-      acspMembership.setAcspStatus(
-          AcspMembership.AcspStatusEnum.fromValue(acspData.getAcspStatus()));
-      acspMembership.setUserDisplayName(
-          Optional.ofNullable(user.getDisplayName()).orElse(DEFAULT_DISPLAY_NAME));
-      acspMembership.setUserEmail(user.getEmail());
+    protected OffsetDateTime localDateTimeToOffsetDateTime( final LocalDateTime localDateTime ) {
+        return Objects.isNull( localDateTime ) ? null : OffsetDateTime.of( localDateTime, ZoneOffset.UTC );
     }
 
-    return acspMembership;
-  }
+    @AfterMapping
+    protected void enrichWithUserDetails( @MappingTarget final AcspMembership acspMembership, @Context User userDetails ){
+        if ( Objects.isNull( userDetails ) ){
+            userDetails = usersService.fetchUserDetails( acspMembership.getUserId() );
+        }
+        acspMembership.setUserEmail( userDetails.getEmail() );
+        acspMembership.setUserDisplayName( Objects.isNull( userDetails.getDisplayName() ) ? DEFAULT_DISPLAY_NAME : userDetails.getDisplayName() );
+    }
+
+    @AfterMapping
+    protected void enrichWithAcspDetails( @MappingTarget final AcspMembership acspMembership, @Context AcspDataDao acspDetails ){
+        if ( Objects.isNull( acspDetails ) ){
+            acspDetails = acspDataService.fetchAcspData( acspMembership.getAcspNumber() );
+        }
+        acspMembership.setAcspName( acspDetails.getAcspName() );
+        acspMembership.setAcspStatus( AcspStatusEnum.fromValue( acspDetails.getAcspStatus() ) );
+    }
+
+    @Mapping( target = "userRole", expression = "java(AcspMembership.UserRoleEnum.fromValue(acspMembersDao.getUserRole()))" )
+    @Mapping( target = "membershipStatus", expression = "java(AcspMembership.MembershipStatusEnum.fromValue(acspMembersDao.getStatus()))" )
+    public abstract AcspMembership daoToDto( final AcspMembersDao acspMembersDao, @Context final User user, @Context final AcspDataDao acspData );
+
 }

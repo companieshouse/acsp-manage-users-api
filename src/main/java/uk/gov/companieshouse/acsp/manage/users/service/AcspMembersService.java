@@ -13,9 +13,8 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipListMapper;
+import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipCollectionMappers;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipMapper;
-import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipsListMapper;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
@@ -35,29 +34,17 @@ public class AcspMembersService {
       LoggerFactory.getLogger(StaticPropertyUtil.APPLICATION_NAMESPACE);
 
   private final AcspMembersRepository acspMembersRepository;
-  private final AcspMembershipListMapper acspMembershipListMapper;
-  private final AcspMembershipsListMapper acspMembershipsListMapper;
   private final AcspMembershipMapper acspMembershipMapper;
+  private final AcspMembershipCollectionMappers acspMembershipCollectionMappers;
 
-  public AcspMembersService(
-      final AcspMembersRepository acspMembersRepository,
-      final AcspMembershipListMapper acspMembershipListMapper,
-      final AcspMembershipsListMapper acspMembershipsListMapper,
-      final AcspMembershipMapper acspMembershipMapper) {
+  public AcspMembersService( final AcspMembersRepository acspMembersRepository, final AcspMembershipMapper acspMembershipMapper, final AcspMembershipCollectionMappers acspMembershipCollectionMappers ) {
     this.acspMembersRepository = acspMembersRepository;
-    this.acspMembershipListMapper = acspMembershipListMapper;
-    this.acspMembershipsListMapper = acspMembershipsListMapper;
     this.acspMembershipMapper = acspMembershipMapper;
+    this.acspMembershipCollectionMappers = acspMembershipCollectionMappers;
   }
 
   @Transactional(readOnly = true)
-  public AcspMembershipsList findAllByAcspNumberAndRole(
-      final String acspNumber,
-      final AcspDataDao acspDataDao,
-      final String role,
-      final boolean includeRemoved,
-      final int pageIndex,
-      final int itemsPerPage) {
+  public AcspMembershipsList findAllByAcspNumberAndRole( final String acspNumber, final AcspDataDao acspDataDao, final String role, final boolean includeRemoved, final int pageIndex, final int itemsPerPage ) {
     final Pageable pageable = PageRequest.of(pageIndex, itemsPerPage);
     Page<AcspMembersDao> acspMemberDaos;
 
@@ -78,7 +65,7 @@ public class AcspMembersService {
       }
     }
 
-    return acspMembershipsListMapper.daoToDto(acspMemberDaos, acspDataDao);
+    return acspMembershipCollectionMappers.daoToDto( acspMemberDaos, null, acspDataDao );
   }
 
   @Transactional(readOnly = true)
@@ -96,7 +83,7 @@ public class AcspMembersService {
     }
 
     final var acspMembershipsList = new AcspMembershipsList();
-    acspMembershipsList.setItems(acspMembershipListMapper.daoToDto(acspMembers, user));
+    acspMembershipsList.setItems( acspMembershipCollectionMappers.daoToDto( acspMembers, user, null ) );
     return acspMembershipsList;
   }
 
@@ -107,7 +94,7 @@ public class AcspMembersService {
 
   @Transactional(readOnly = true)
   public Optional<AcspMembership> fetchMembership(final String membershipId) {
-    return fetchMembershipDao(membershipId).map(acspMembershipMapper::daoToDto);
+    return fetchMembershipDao(membershipId).map( dao -> acspMembershipMapper.daoToDto( dao, null, null ));
   }
 
   @Transactional(readOnly = true)
@@ -116,17 +103,12 @@ public class AcspMembersService {
   }
 
   @Transactional(readOnly = true)
-  public Optional<AcspMembersDao> fetchActiveAcspMembership(
-      final String userId, final String acspNumber) {
+  public Optional<AcspMembersDao> fetchActiveAcspMembership( final String userId, final String acspNumber ) {
     return acspMembersRepository.fetchActiveAcspMembership(userId, acspNumber);
   }
 
   @Transactional
-  public void updateMembership(
-      final String membershipId,
-      final UserStatusEnum userStatus,
-      final UserRoleEnum userRole,
-      final String requestingUserId) {
+  public void updateMembership( final String membershipId, final UserStatusEnum userStatus, final UserRoleEnum userRole, final String requestingUserId ) {
     if (Objects.isNull(membershipId)) {
       throw new IllegalArgumentException("membershipId cannot be null");
     }
@@ -153,8 +135,7 @@ public class AcspMembersService {
   }
 
   @Transactional(readOnly = true)
-  public AcspMembershipsList fetchAcspMemberships(
-      final User user, final boolean includeRemoved, final String acspNumber) {
+  public AcspMembershipsList fetchAcspMemberships( final User user, final boolean includeRemoved, final String acspNumber ) {
     LOG.debug(
         String.format(
             "Fetching ACSP memberships from the repository for user ID: %s, include removed: %b, acsp number: %s",
@@ -172,15 +153,11 @@ public class AcspMembersService {
     }
 
     final var acspMembershipsList = new AcspMembershipsList();
-    acspMembershipsList.setItems(acspMembershipListMapper.daoToDto(acspMembers, user));
+    acspMembershipsList.setItems( acspMembershipCollectionMappers.daoToDto( acspMembers, user, null ) );
     return acspMembershipsList;
   }
 
-  public AcspMembersDao addAcspMember(
-      final String userId,
-      final String acspNumber,
-      final AcspMembership.UserRoleEnum userRole,
-      final String addedByUserId) {
+  public AcspMembersDao addAcspMember( final String userId, final String acspNumber, final AcspMembership.UserRoleEnum userRole, final String addedByUserId ) {
     final var now = LocalDateTime.now();
     final var newAcspMembersDao = new AcspMembersDao();
     newAcspMembersDao.setUserId(userId);
@@ -194,13 +171,8 @@ public class AcspMembersService {
     return acspMembersRepository.insert(newAcspMembersDao);
   }
 
-  public AcspMembership addAcspMembership(
-      final User user,
-      final AcspDataDao acspData,
-      final String acspNumber,
-      final AcspMembership.UserRoleEnum userRole,
-      final String addedByUserId) {
+  public AcspMembership addAcspMembership( final User user, final AcspDataDao acspData, final String acspNumber, final AcspMembership.UserRoleEnum userRole, final String addedByUserId ) {
     final var acspMembersDao = addAcspMember(user.getUserId(), acspNumber, userRole, addedByUserId);
-    return acspMembershipMapper.daoToDto(acspMembersDao, user, acspData);
+    return acspMembershipMapper.daoToDto( acspMembersDao, user, acspData );
   }
 }
