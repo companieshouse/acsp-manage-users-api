@@ -1,9 +1,13 @@
 package uk.gov.companieshouse.acsp.manage.users.mapper;
 
+import static org.mockito.ArgumentMatchers.any;
 import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.localDateTimeToNormalisedString;
 import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.reduceTimestampResolution;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -47,7 +51,7 @@ class AcspMembershipCollectionMappersTest {
         acspMembershipMapper = new AcspMembershipMapperImpl();
         acspMembershipMapper.usersService = usersService;
         acspMembershipMapper.acspDataService = acspDataService;
-        acspMembershipCollectionMappers = new AcspMembershipCollectionMappers( acspMembershipMapper );
+        acspMembershipCollectionMappers = new AcspMembershipCollectionMappers( acspMembershipMapper, usersService, acspDataService);
     }
 
     @Test
@@ -71,7 +75,7 @@ class AcspMembershipCollectionMappersTest {
         final var userData = testDataManager.fetchUserDtos("TSU002").getFirst();
 
         Mockito.doReturn(acspData).when(acspDataService).fetchAcspData("TSA001");
-        Mockito.doReturn(userData).when(usersService).fetchUserDetails("TSU002");
+        Mockito.doReturn( Map.of( "TSU002", userData ) ).when( usersService ).fetchUserDetails( any( Stream.class ) );
 
         final var dtos = acspMembershipCollectionMappers.daoToDto(List.of(dao), null, null);
         final var dto = dtos.getFirst();
@@ -149,8 +153,7 @@ class AcspMembershipCollectionMappersTest {
         final var acspData = testDataManager.fetchAcspDataDaos("TSA001").getFirst();
         final var page = new PageImpl<>(daos, PageRequest.of(0, 15), 2);
 
-        Mockito.doReturn(userData.getFirst()).when(usersService).fetchUserDetails("TSU001");
-        Mockito.doReturn(userData.getLast()).when(usersService).fetchUserDetails("TSU002");
+        Mockito.doReturn( Map.of( "TSU001", userData.getFirst(), "TSU002", userData.getLast() ) ).when( usersService ).fetchUserDetails( any( Stream.class ) );
 
         final var dtos = acspMembershipCollectionMappers.daoToDto(page, null, acspData);
         final var firstDto = dtos.getItems().getFirst();
@@ -177,7 +180,14 @@ class AcspMembershipCollectionMappersTest {
 
     @Test
     void daoToDtoWithUserDataSuccessfullyMapsToDtoForMiddlePage() {
-        final var daos = testDataManager.fetchAcspMembersDaos("TS001", "TS002");
+        final var firstDao = testDataManager.fetchAcspMembersDaos("TS001" ).getFirst();
+        final var secondDao = testDataManager.fetchAcspMembersDaos("TS001" ).getFirst();
+        secondDao.setId( "TS002" );
+        secondDao.setStatus( "removed" );
+        secondDao.setRemovedBy( "TSU002" );
+        secondDao.setRemovedAt( LocalDateTime.now() );
+        final var daos = List.of( firstDao, secondDao );
+
         final var userData = testDataManager.fetchUserDtos("TSU001" );
         final var acspData = testDataManager.fetchAcspDataDaos("TSA001").getFirst();
         final var page = new PageImpl<>(daos, PageRequest.of(4, 2), 12);

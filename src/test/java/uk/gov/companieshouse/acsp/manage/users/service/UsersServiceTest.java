@@ -8,6 +8,7 @@ import com.google.api.client.http.HttpResponseException.Builder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -16,8 +17,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
+import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.rest.AccountsUserEndpoint;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.accounts.user.model.UsersList;
@@ -36,6 +39,8 @@ class UsersServiceTest {
     @Mock
     PrivateAccountsUserUserGet privateAccountsUserUserGet;
 
+    private final TestDataManager testDataManager = TestDataManager.getInstance();
+
     @InjectMocks
     private UsersService usersService;
 
@@ -43,7 +48,7 @@ class UsersServiceTest {
     void fetchUserDetailsWithNullInputReturnsInternalServerError() throws ApiErrorResponseException, URIValidationException {
         Mockito.doReturn( privateAccountsUserUserGet ).when( accountsUserEndpoint ).createGetUserDetailsRequest( any() );
         Mockito.doThrow( NullPointerException.class ).when( privateAccountsUserUserGet ).execute();
-        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> usersService.fetchUserDetails( null ) );
+        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> usersService.fetchUserDetails( (String) null ) );
     }
 
     @Test
@@ -219,4 +224,28 @@ class UsersServiceTest {
     Assertions.assertThrows(
         InternalServerErrorRuntimeException.class, () -> usersService.doesUserExist(userId));
   }
+
+    @Test
+    void fetchUserDetailsWithNullThrowsNullPointerException(){
+        Assertions.assertThrows( NullPointerException.class, () -> usersService.fetchUserDetails( (Stream<AcspMembersDao>) null ) );
+    }
+
+    @Test
+    void fetchUserDetailsWithEmptyStreamReturnsEmptyMap(){
+        Assertions.assertEquals( Map.of(), usersService.fetchUserDetails( Stream.of() ) );
+    }
+
+    @Test
+    void fetchUserDetailsRetrievesUserDetails() throws ApiErrorResponseException, URIValidationException {
+        final var acspMembers = testDataManager.fetchAcspMembersDaos( "TS001", "NF001" );
+        final var user = testDataManager.fetchUserDtos( "TSU001" ).getFirst();
+
+        Mockito.doReturn( privateAccountsUserUserGet ).when( accountsUserEndpoint ).createGetUserDetailsRequest( any() );
+
+        final var intendedResponse = new ApiResponse<>( 200, Map.of(), user );
+        Mockito.doReturn( intendedResponse ).when( privateAccountsUserUserGet ).execute();
+
+        Assertions.assertEquals( Map.of( "TSU001", user ), usersService.fetchUserDetails( acspMembers.stream() ) );
+    }
+
 }
