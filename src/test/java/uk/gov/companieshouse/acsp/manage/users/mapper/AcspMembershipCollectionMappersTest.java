@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -36,23 +36,14 @@ class AcspMembershipCollectionMappersTest {
     @Mock
     private AcspDataService acspDataService;
 
-    private AcspMembershipMapper acspMembershipMapper;
-
-    private AcspMembershipCollectionMappers acspMembershipCollectionMappers;
+    @InjectMocks
+    private AcspMembershipCollectionMappers acspMembershipCollectionMappers = new AcspMembershipCollectionMappers();
 
     private final TestDataManager testDataManager = TestDataManager.getInstance();
 
     private static final String DEFAULT_DISPLAY_NAME = "Not Provided";
 
     private static final String DEFAULT_KIND = "acsp-membership";
-
-    @BeforeEach
-    void setup(){
-        acspMembershipMapper = new AcspMembershipMapperImpl();
-        acspMembershipMapper.usersService = usersService;
-        acspMembershipMapper.acspDataService = acspDataService;
-        acspMembershipCollectionMappers = new AcspMembershipCollectionMappers( acspMembershipMapper, usersService, acspDataService);
-    }
 
     @Test
     void daoToDtoWithNullInputThrowNullPointerException() {
