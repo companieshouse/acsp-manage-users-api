@@ -1,11 +1,15 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
+import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.rest.AccountsUserEndpoint;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.accounts.user.model.User;
@@ -83,6 +87,17 @@ public class UsersService {
             throw new InternalServerErrorRuntimeException("Search failed to retrieve user details");
         }
 
+    }
+
+    public Map<String, User> fetchUserDetails( final Stream<AcspMembersDao> acspMembers ){
+        final Map<String, User> users = new ConcurrentHashMap<>();
+        acspMembers.map( AcspMembersDao::getUserId )
+                .distinct()
+                .map( this::createFetchUserDetailsRequest )
+                .parallel()
+                .map( Supplier::get )
+                .forEach( user -> users.put( user.getUserId(), user ) );
+        return users;
     }
 
 }
