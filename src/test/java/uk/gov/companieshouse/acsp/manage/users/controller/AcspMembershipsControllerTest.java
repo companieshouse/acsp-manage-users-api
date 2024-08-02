@@ -595,7 +595,7 @@ class AcspMembershipsControllerTest {
                       .content( "{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}" ) )
                   .andReturn();
 
-      Mockito.verify( acspMembersService ).addAcspMembership( eq( targetUserData ), eq( targetAcspData ), eq( "TSA001" ), eq( UserRoleEnum.STANDARD ), eq("TSU001") );
+      Mockito.verify( acspMembersService ).addAcspMembership( targetUserData, targetAcspData, "TSA001", UserRoleEnum.STANDARD,"TSU001" );
 
       assertEquals(201, response.getResponse().getStatus());
     }

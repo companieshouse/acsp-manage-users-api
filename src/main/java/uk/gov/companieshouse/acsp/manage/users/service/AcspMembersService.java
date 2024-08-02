@@ -70,6 +70,7 @@ public class AcspMembersService {
     return includeRemoved ? acspMembersRepository.fetchAllAcspMembersByUserId( userId ) : acspMembersRepository.fetchActiveAcspMembersByUserId( userId );
   }
 
+  @Transactional( readOnly = true )
   public AcspMembershipsList fetchAcspMemberships( final User user, final boolean includeRemoved ) {
     final var acspMembershipDaos = fetchAcspMembershipDaos( user.getUserId(), includeRemoved );
     final var acspMembershipDtos = acspMembershipCollectionMappers.daoToDto( acspMembershipDaos, user, null );
