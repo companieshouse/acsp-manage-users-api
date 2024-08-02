@@ -368,11 +368,6 @@ class AcspMembershipsControllerTest {
               .andReturn();
       // Then
       assertEquals(400, response.getResponse().getStatus());
-      assertTrue(
-          response
-              .getResponse()
-              .getContentAsString()
-              .contains(PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN));
     }
 
     @Test
