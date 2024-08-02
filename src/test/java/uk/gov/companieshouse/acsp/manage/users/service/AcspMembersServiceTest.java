@@ -269,14 +269,14 @@ class AcspMembersServiceTest {
       AcspMembership expectedMembership = new AcspMembership();
 
       when(acspMembersRepository.findById("TS001")).thenReturn(Optional.of(acspMemberDao));
-      when(acspMembershipMapper.daoToDto(acspMemberDao,null,null)).thenReturn(expectedMembership);
+      when(acspMembershipCollectionMappers.daoToDto(acspMemberDao,null,null)).thenReturn(expectedMembership);
 
       Optional<AcspMembership> result = acspMembersService.fetchMembership("TS001");
 
       assertTrue(result.isPresent());
       assertSame(expectedMembership, result.get());
       verify(acspMembersRepository).findById("TS001");
-      verify(acspMembershipMapper).daoToDto(acspMemberDao,null,null);
+      verify(acspMembershipCollectionMappers).daoToDto(acspMemberDao,null,null);
     }
   }
 
@@ -516,7 +516,7 @@ class AcspMembersServiceTest {
       when(acspMembersRepository.insert(any(AcspMembersDao.class))).thenReturn(newAcspMembersDao);
       final var expectedMembership = new AcspMembership();
       expectedMembership.setUserId(user.getUserId());
-      when(acspMembershipMapper.daoToDto(
+      when(acspMembershipCollectionMappers.daoToDto(
               any(AcspMembersDao.class), any(User.class), any(AcspDataDao.class)))
           .thenReturn(expectedMembership);
       // When

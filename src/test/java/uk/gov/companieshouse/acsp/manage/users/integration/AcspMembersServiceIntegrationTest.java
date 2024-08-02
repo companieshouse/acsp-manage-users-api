@@ -242,6 +242,8 @@ class AcspMembersServiceIntegrationTest {
     void fetchMembershipRetrievesMembership() {
       acspMembersRepository.insert(testDataManager.fetchAcspMembersDaos("TS001"));
 
+      Mockito.doReturn( new AcspMembership().id( "TS001" ) ).when( acspMembershipCollectionMappers ).daoToDto( any( AcspMembersDao.class), any(), any() );
+
       Mockito.doReturn(testDataManager.fetchUserDtos("TSU001").getFirst())
           .when(usersService)
           .fetchUserDetails("TSU001");
@@ -485,6 +487,16 @@ class AcspMembersServiceIntegrationTest {
       final var acspNumber = "TS001";
       final var userRole = AcspMembership.UserRoleEnum.ADMIN;
       final var addedByUserId = "COMU001";
+
+      final var userDto = new AcspMembership()
+              .userId( user.getUserId() )
+              .userEmail( user.getEmail() )
+              .userDisplayName( DEFAULT_DISPLAY_NAME )
+              .userRole( userRole )
+              .addedBy( addedByUserId)
+              .acspNumber( acspNumber );
+
+      Mockito.doReturn( userDto ).when( acspMembershipCollectionMappers ).daoToDto( any( AcspMembersDao.class ), any(), any() );
       // When
       final var result =
           acspMembersService.addAcspMembership(user, acspData, acspNumber, userRole, addedByUserId);
