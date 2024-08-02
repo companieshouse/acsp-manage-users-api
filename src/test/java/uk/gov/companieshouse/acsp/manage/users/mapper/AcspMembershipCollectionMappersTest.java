@@ -37,7 +37,7 @@ class AcspMembershipCollectionMappersTest {
     private AcspDataService acspDataService;
 
     @InjectMocks
-    private AcspMembershipCollectionMappers acspMembershipCollectionMappers = new AcspMembershipCollectionMappers();
+    private AcspMembershipCollectionMappers acspMembershipCollectionMappers = new AcspMembershipCollectionMappersImpl();
 
     private final TestDataManager testDataManager = TestDataManager.getInstance();
 

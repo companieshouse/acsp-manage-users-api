@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.mapstruct.Mapper;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
@@ -14,7 +15,8 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsListLinks;
 
 @Component
-public class AcspMembershipCollectionMappers extends AcspMembershipMapperImpl {
+@Mapper( componentModel = "spring" )
+public abstract class AcspMembershipCollectionMappers extends AcspMembershipMapper {
 
     private static final String END_POINT_URL_TEMPLATE = "/acsps/%s/memberships";
 
