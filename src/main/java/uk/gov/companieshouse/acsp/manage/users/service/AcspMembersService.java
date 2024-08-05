@@ -65,23 +65,16 @@ public class AcspMembersService {
     return acspMembershipCollectionMappers.daoToDto( acspMemberDaos, null, acspDataDao );
   }
 
-  @Transactional(readOnly = true)
-  public AcspMembershipsList fetchAcspMemberships(final User user, final boolean includeRemoved) {
-    LOG.debug(
-        String.format(
-            "Fetching ACSP memberships from the repository for user ID: %s, include removed: %b",
-            user.getUserId(), includeRemoved));
+  @Transactional( readOnly = true )
+  public List<AcspMembersDao> fetchAcspMembershipDaos( final String userId, final boolean includeRemoved ) {
+    return includeRemoved ? acspMembersRepository.fetchAllAcspMembersByUserId( userId ) : acspMembersRepository.fetchActiveAcspMembersByUserId( userId );
+  }
 
-    List<AcspMembersDao> acspMembers;
-    if (includeRemoved) {
-      acspMembers = acspMembersRepository.fetchAllAcspMembersByUserId(user.getUserId());
-    } else {
-      acspMembers = acspMembersRepository.fetchActiveAcspMembersByUserId(user.getUserId());
-    }
-
-    final var acspMembershipsList = new AcspMembershipsList();
-    acspMembershipsList.setItems( acspMembershipCollectionMappers.daoToDto( acspMembers, user, null ) );
-    return acspMembershipsList;
+  @Transactional( readOnly = true )
+  public AcspMembershipsList fetchAcspMemberships( final User user, final boolean includeRemoved ) {
+    final var acspMembershipDaos = fetchAcspMembershipDaos( user.getUserId(), includeRemoved );
+    final var acspMembershipDtos = acspMembershipCollectionMappers.daoToDto( acspMembershipDaos, user, null );
+    return new AcspMembershipsList().items( acspMembershipDtos );
   }
 
   @Transactional(readOnly = true)

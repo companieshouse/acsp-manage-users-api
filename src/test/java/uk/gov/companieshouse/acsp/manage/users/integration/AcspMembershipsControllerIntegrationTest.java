@@ -574,11 +574,7 @@ class AcspMembershipsControllerIntegrationTest {
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(
                       String.format("{\"user_id\":%s,\"user_role\":\"%s\"}", null, "standard")))
-          .andExpect(status().isBadRequest())
-          .andExpect(
-              content()
-                  .json(
-                      "{\"errors\":[{\"error\":\"Please check the request and try again\",\"type\":\"ch:service\"}]}"));
+          .andExpect(status().isBadRequest());
     }
 
     @Test

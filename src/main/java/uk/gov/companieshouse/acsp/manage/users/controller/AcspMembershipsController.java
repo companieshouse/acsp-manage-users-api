@@ -22,6 +22,7 @@ import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.api.AcspMembershipsInterface;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyLookup;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPost;
@@ -29,15 +30,14 @@ import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 
 import static uk.gov.companieshouse.acsp.manage.users.model.ErrorCode.*;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isOAuth2Request;
 
 @Controller
 public class AcspMembershipsController implements AcspMembershipsInterface {
 
-  private static final Logger LOG =
-      LoggerFactory.getLogger(StaticPropertyUtil.APPLICATION_NAMESPACE);
+  private static final Logger LOG = LoggerFactory.getLogger( StaticPropertyUtil.APPLICATION_NAMESPACE );
 
-  private static final String PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN =
-      "Please check the request and try again";
+  private static final String PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN = "Please check the request and try again";
   private static final String ACSP_NUMBER_KEY = "acspNumber";
   private static final String REQUEST_ID_KEY = "requestId";
 
@@ -45,104 +45,73 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
   private final AcspDataService acspDataService;
   private final AcspMembersService acspMembersService;
 
-  public AcspMembershipsController(
-      final UsersService usersService,
-      final AcspDataService acspDataService,
-      final AcspMembersService acspMembersService) {
+  public AcspMembershipsController( final UsersService usersService, final AcspDataService acspDataService, final AcspMembersService acspMembersService ) {
     this.usersService = usersService;
     this.acspDataService = acspDataService;
     this.acspMembersService = acspMembersService;
   }
 
-  @Override
-  public ResponseEntity<AcspMembership> addMemberForAcsp(
-      final String xRequestId, final String acspNumber, final RequestBodyPost requestBodyPost) {
-    LOG.info(
-        String.format(
-            "Received request for POST `/%s/memberships` with X-Request-Id: %s, user email: %s, and user role: %s",
-            acspNumber, xRequestId, requestBodyPost.getUserId(), requestBodyPost.getUserRole()));
+  private void throwBadRequestWhenActionIsNotPermittedByOAuth2User( final String requestingUserId, final String acspNumber, final UserRoleEnum role ) {
+    final var requestingUserMembership =
+            acspMembersService.fetchActiveAcspMembership( requestingUserId, acspNumber )
+                    .orElseThrow( () -> {
+                      LOG.error( "Requesting user is not a member of the acsp" );
+                      return new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
+                    } );
 
-    if (Objects.isNull(requestBodyPost.getUserId())) {
-      LOG.infoContext(xRequestId, "User ID for the target user not provided", null);
-      throw new BadRequestRuntimeException(PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN);
+    if ( UserRoleEnum.STANDARD.getValue().equals( requestingUserMembership.getUserRole() ) ){
+      LOG.error( "Standard user is not permitted to create membership" );
+      throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
+    }
+
+    if ( UserRoleEnum.ADMIN.getValue().equals( requestingUserMembership.getUserRole() ) && UserRoleEnum.OWNER.equals( role ) ){
+      LOG.error( "Admin user is not permitted to create owner membership" );
+      throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
+    }
+
+  }
+
+  @Override
+  public ResponseEntity<AcspMembership> addMemberForAcsp( final String xRequestId, final String acspNumber, final RequestBodyPost requestBodyPost ) {
+    final var targetUserId = requestBodyPost.getUserId();
+    final var targetUserRole = AcspMembership.UserRoleEnum.fromValue( requestBodyPost.getUserRole().getValue() );
+
+    LOG.infoContext( xRequestId, String.format( "Attempting to create %s membership for user %s at Acsp %s", targetUserRole.getValue(), targetUserId, acspNumber ), null );
+
+    User targetUser;
+    try {
+      targetUser = usersService.fetchUserDetails( targetUserId );
+    } catch ( NotFoundRuntimeException exception ) {
+      LOG.error( "Could not find user" );
+      throw new BadRequestRuntimeException( ERROR_CODE_1001.getCode() );
     }
 
     AcspDataDao acspDataDao;
     try {
-      acspDataDao = acspDataService.fetchAcspData(acspNumber);
-    } catch (NotFoundRuntimeException exception) {
-      LOG.infoContext(xRequestId, exception.getLocalizedMessage(), null);
-      throw new BadRequestRuntimeException(PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN);
+      acspDataDao = acspDataService.fetchAcspData( acspNumber );
+    } catch ( NotFoundRuntimeException exception ) {
+      LOG.error("Could not find Acsp" );
+      throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
     }
 
-    this.validateLoggedInUserAuthorisationToAddNewMemberForAcsp(
-        xRequestId, acspNumber, requestBodyPost);
-
-    User user;
-    try {
-      user = usersService.fetchUserDetails(requestBodyPost.getUserId());
-    } catch (NotFoundRuntimeException exception) {
-      LOG.infoContext(xRequestId, exception.getLocalizedMessage(), null);
-      throw new BadRequestRuntimeException(ERROR_CODE_1001.getCode());
+    final var memberships = acspMembersService.fetchAcspMembershipDaos( targetUserId, false );
+    if ( !memberships.isEmpty() ) {
+      LOG.error( "User already has an active ACSP membership" );
+      throw new BadRequestRuntimeException( ERROR_CODE_1002.getCode() );
     }
 
-    final var memberships = acspMembersService.fetchAcspMemberships(user, false);
-    if (!memberships.getItems().isEmpty()) {
-      LOG.infoContext(
-          xRequestId,
-          String.format("User with ID %s already has an active ACSP membership", user.getUserId()),
-          null);
-      throw new BadRequestRuntimeException(ERROR_CODE_1002.getCode());
+    final var requestingUserId = Optional.ofNullable( UserContext.getLoggedUser() ).map( User::getUserId ).orElse( null );
+    if ( isOAuth2Request() ){
+      throwBadRequestWhenActionIsNotPermittedByOAuth2User( requestingUserId, acspNumber, targetUserRole );
     }
 
-    final var loggedUser = UserContext.getLoggedUser();
-    final var userRole =
-        AcspMembership.UserRoleEnum.fromValue(requestBodyPost.getUserRole().getValue());
-    final var addedAcspMembership =
-        acspMembersService.addAcspMembership(
-            user,
-            acspDataDao,
-            acspNumber,
-            userRole,
-            Objects.requireNonNull(loggedUser).getUserId());
+    final var membership = acspMembersService.addAcspMembership( targetUser, acspDataDao, acspNumber, targetUserRole, requestingUserId );
 
-    return new ResponseEntity<>(addedAcspMembership, HttpStatus.CREATED);
+    LOG.infoContext( xRequestId, String.format( "Successfully created %s membership for user %s at Acsp %s", targetUserRole.getValue(), targetUserId, acspNumber ), null );
+
+    return new ResponseEntity<>( membership, HttpStatus.CREATED );
   }
 
-  private void validateLoggedInUserAuthorisationToAddNewMemberForAcsp(
-      final String xRequestId, final String acspNumber, final RequestBodyPost requestBodyPost) {
-    final var isOauth2 = RequestContextUtil.isOAuth2Request();
-    final var loggedUser = Objects.requireNonNull(UserContext.getLoggedUser());
-    if (isOauth2) {
-      final var loggedUserMemberships = acspMembersService.fetchAcspMemberships(loggedUser, false);
-      final var acspMembership =
-          loggedUserMemberships.getItems().stream()
-              .filter(membership -> membership.getAcspNumber().equals(acspNumber))
-              .findFirst();
-      if (acspMembership.isPresent()) {
-        final var loggedInUserRole = acspMembership.get().getUserRole().getValue();
-        final var newUserRole = requestBodyPost.getUserRole().getValue();
-        final var isStandardUser =
-            AcspMembership.UserRoleEnum.STANDARD.getValue().equals(loggedInUserRole);
-        final var isAdminAddingOwner =
-            AcspMembership.UserRoleEnum.ADMIN.getValue().equals(loggedInUserRole)
-                && AcspMembership.UserRoleEnum.OWNER.getValue().equals(newUserRole);
-        if (isStandardUser || isAdminAddingOwner) {
-          final var message = getErrorMessage(isStandardUser, loggedUser);
-          LOG.infoContext(xRequestId, message, null);
-          throw new BadRequestRuntimeException(PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN);
-        }
-      }
-    }
-  }
-
-  private String getErrorMessage(final boolean isStandardUser, final User loggedUser) {
-    return String.format(
-        "User with ID %s and %s role is not authorised to add %s for ACSP",
-        loggedUser.getUserId(),
-        isStandardUser ? "standard" : "admin",
-        isStandardUser ? "a member" : "an owner member");
-  }
 
   @Override
   public ResponseEntity<AcspMembershipsList> findMembershipsForUserAndAcsp(
