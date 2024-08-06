@@ -5,9 +5,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import uk.gov.companieshouse.acsp.manage.users.interceptor.AcspCreationPermissionInterceptor;
 import uk.gov.companieshouse.acsp.manage.users.interceptor.AuthorizationAndInternalUserInterceptors;
 import uk.gov.companieshouse.acsp.manage.users.interceptor.AuthorizationInterceptor;
 import uk.gov.companieshouse.acsp.manage.users.interceptor.LoggingInterceptor;
+import uk.gov.companieshouse.api.interceptor.TokenPermissionsInterceptor;
+
 
 @Configuration
 public class InterceptorConfig implements WebMvcConfigurer {
@@ -20,15 +23,17 @@ public class InterceptorConfig implements WebMvcConfigurer {
     private final AuthorizationInterceptor authorizationInterceptor;
     private final AuthorizationAndInternalUserInterceptors authorizationAndInternalUserInterceptors;
 
-  public InterceptorConfig(
-      final LoggingInterceptor loggingInterceptor,
-      @Qualifier("authorizationInterceptor")
-          final AuthorizationInterceptor authorizationInterceptor,
-      final AuthorizationAndInternalUserInterceptors authorizationAndInternalUserInterceptors) {
+    private final AcspCreationPermissionInterceptor acspPermissionInterceptor;
+
+
+  public InterceptorConfig( final LoggingInterceptor loggingInterceptor, @Qualifier("authorizationInterceptor") final AuthorizationInterceptor authorizationInterceptor, final AuthorizationAndInternalUserInterceptors authorizationAndInternalUserInterceptors,
+          final AcspCreationPermissionInterceptor acspPermissionInterceptor
+          ) {
         this.loggingInterceptor = loggingInterceptor;
         this.authorizationInterceptor = authorizationInterceptor;
         this.authorizationAndInternalUserInterceptors = authorizationAndInternalUserInterceptors;
-    }
+      this.acspPermissionInterceptor = acspPermissionInterceptor;
+  }
 
     @Override
     public void addInterceptors(@NonNull final InterceptorRegistry registry) {
@@ -48,6 +53,22 @@ public class InterceptorConfig implements WebMvcConfigurer {
         registry.addInterceptor( authorizationAndInternalUserInterceptors )
                 .addPathPatterns( OAUTH_AND_KEY_PROTECTED_ENDPOINTS )
                 .excludePathPatterns( HEALTH_CHECK_ENDPOINT, OAUTH_PROTECTED_ENDPOINTS );
+
+
+
+
+
+
+        registry.addInterceptor( new TokenPermissionsInterceptor() )
+                .addPathPatterns( "/acsps/*/memberships" );
+
+        registry.addInterceptor( acspPermissionInterceptor )
+                .addPathPatterns( "/acsps/*/memberships" );
+
+
+
+
+
     }
 
 }
