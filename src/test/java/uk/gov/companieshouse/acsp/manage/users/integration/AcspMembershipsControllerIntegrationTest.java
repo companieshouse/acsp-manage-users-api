@@ -68,7 +68,7 @@ class AcspMembershipsControllerIntegrationTest {
     @Autowired
     private AcspMembersRepository acspMembersRepository;
 
-    private final TestDataManager testDataManager = TestDataManager.getInstance();
+    private static final TestDataManager testDataManager = TestDataManager.getInstance();
 
     @MockBean
     private EmailProducer emailProducer;
@@ -539,8 +539,8 @@ class AcspMembershipsControllerIntegrationTest {
         static Stream<Arguments> addMemberForAcspWithUserIdWithIncorrectPermissionsTestData(){
             return Stream.of(
                     Arguments.of( "COMU002", "{\"user_id\":\"COMU002\",\"user_role\":\"standard\"}", "acsp_members=read" ),
-                    Arguments.of( "COMU007", "{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}", "acsp_members=read acsp_id=COMA001" ),
-                    Arguments.of( "COMU005", "{\"user_id\":\"COMU001\",\"user_role\":\"owner\"}", "acsp_members=read acsp_id=COMA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" )
+                    Arguments.of( "COMU007", "{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}", testDataManager.fetchTokenPermissions( "COM007" ) ),
+                    Arguments.of( "COMU005", "{\"user_id\":\"COMU001\",\"user_role\":\"owner\"}", testDataManager.fetchTokenPermissions( "COM005" ) )
             );
         }
 
@@ -576,7 +576,7 @@ class AcspMembershipsControllerIntegrationTest {
                             .header("Eric-identity", "TSU001")
                             .header("ERIC-Identity-Type", "oauth2")
                             .header("ERIC-Authorised-Key-Roles", "*")
-                            .header( "Eric-Authorised-Token-Permissions", "acsp_members=read acsp_id=TSA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" )
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "TS001" ) )
                             .contentType(MediaType.APPLICATION_JSON)
                             .content( "{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}" ) )
                     .andExpect( status().isCreated() );
@@ -655,7 +655,7 @@ class AcspMembershipsControllerIntegrationTest {
 
     @AfterEach
     public void after() {
-    mongoTemplate.dropCollection(AcspMembersDao.class);
-  }
+        mongoTemplate.dropCollection(AcspMembersDao.class);
+    }
 
 }

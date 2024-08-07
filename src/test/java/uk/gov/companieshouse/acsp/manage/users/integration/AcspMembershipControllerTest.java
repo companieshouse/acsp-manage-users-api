@@ -59,7 +59,7 @@ class AcspMembershipControllerTest {
     @Autowired
     private AcspMembersRepository acspMembersRepository;
 
-    private final TestDataManager testDataManager = TestDataManager.getInstance();
+    private static final TestDataManager testDataManager = TestDataManager.getInstance();
 
     @MockBean
     private EmailProducer emailProducer;
@@ -275,11 +275,11 @@ class AcspMembershipControllerTest {
 
     private static Stream<Arguments> membershipRemovalSuccessScenarios() {
         return Stream.of(
-                Arguments.of( "WIT004", "WIT001", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-                Arguments.of( "WIT004", "WIT002", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-                Arguments.of( "WIT004", "WIT003", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-                Arguments.of( "NEI004", "NEI002", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-                Arguments.of( "NEI004", "NEI003", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" )
+                Arguments.of( "WIT004", "WIT001", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+                Arguments.of( "WIT004", "WIT002", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+                Arguments.of( "WIT004", "WIT003", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+                Arguments.of( "NEI004", "NEI002", testDataManager.fetchTokenPermissions( "NEI004" ) ),
+                Arguments.of( "NEI004", "NEI003", testDataManager.fetchTokenPermissions( "NEI004" ) )
         );
     }
 
@@ -313,10 +313,10 @@ class AcspMembershipControllerTest {
 
     private static Stream<Arguments> membershipRemovalFailureScenarios(){
         return Stream.of(
-                Arguments.of( "NEI004", "NEI001", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-                Arguments.of( "XME004", "XME001", "acsp_id=XMEA001 acsp_members=read" ),
-                Arguments.of( "XME004", "XME002", "acsp_id=XMEA001 acsp_members=read" ),
-                Arguments.of( "XME004", "XME003", "acsp_id=XMEA001 acsp_members=read" )
+                Arguments.of( "NEI004", "NEI001", testDataManager.fetchTokenPermissions( "NEI004" ) ),
+                Arguments.of( "XME004", "XME001", testDataManager.fetchTokenPermissions( "XME004" ) ),
+                Arguments.of( "XME004", "XME002", testDataManager.fetchTokenPermissions( "XME004" ) ),
+                Arguments.of( "XME004", "XME003", testDataManager.fetchTokenPermissions( "XME004" ) )
         );
     }
 
@@ -342,19 +342,19 @@ class AcspMembershipControllerTest {
 
     private static Stream<Arguments> membershipUpdateRoleSuccessScenarios(){
         return Stream.of(
-            Arguments.of( "WIT004", "WIT001", "owner", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-            Arguments.of( "WIT004", "WIT002", "owner", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-            Arguments.of( "WIT004", "WIT003", "owner", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-            Arguments.of( "WIT004", "WIT001", "admin", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-            Arguments.of( "WIT004", "WIT001", "standard", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-            Arguments.of( "WIT004", "WIT002", "admin", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-            Arguments.of( "WIT004", "WIT002", "standard", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-            Arguments.of( "WIT004", "WIT003", "admin", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-            Arguments.of( "WIT004", "WIT003", "standard", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-            Arguments.of( "NEI004", "NEI002", "admin", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-            Arguments.of( "NEI004", "NEI002", "standard", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-            Arguments.of( "NEI004", "NEI003", "admin", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-            Arguments.of( "NEI004", "NEI003", "standard", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" )
+            Arguments.of( "WIT004", "WIT001", "owner", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+            Arguments.of( "WIT004", "WIT002", "owner", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+            Arguments.of( "WIT004", "WIT003", "owner", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+            Arguments.of( "WIT004", "WIT001", "admin", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+            Arguments.of( "WIT004", "WIT001", "standard", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+            Arguments.of( "WIT004", "WIT002", "admin", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+            Arguments.of( "WIT004", "WIT002", "standard", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+            Arguments.of( "WIT004", "WIT003", "admin", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+            Arguments.of( "WIT004", "WIT003", "standard", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+            Arguments.of( "NEI004", "NEI002", "admin", testDataManager.fetchTokenPermissions( "NEI004" ) ),
+            Arguments.of( "NEI004", "NEI002", "standard", testDataManager.fetchTokenPermissions( "NEI004" ) ),
+            Arguments.of( "NEI004", "NEI003", "admin", testDataManager.fetchTokenPermissions( "NEI004" ) ),
+            Arguments.of( "NEI004", "NEI003", "standard", testDataManager.fetchTokenPermissions( "NEI004" ) )
         );
     }
 
@@ -388,20 +388,20 @@ class AcspMembershipControllerTest {
 
     private static Stream<Arguments> membershipUpdateRoleFailureScenarios(){
         return Stream.of(
-            Arguments.of( "NEI004", "NEI001", "owner", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-            Arguments.of( "NEI004", "NEI002", "owner", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-            Arguments.of( "NEI004", "NEI003", "owner", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-            Arguments.of( "NEI004", "NEI001", "admin", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-            Arguments.of( "NEI004", "NEI001", "standard", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
-            Arguments.of( "XME004", "XME001", "owner", "acsp_id=XMEA001 acsp_members=read" ),
-            Arguments.of( "XME004", "XME001", "admin", "acsp_id=XMEA001 acsp_members=read" ),
-            Arguments.of( "XME004", "XME001", "standard", "acsp_id=XMEA001 acsp_members=read" ),
-            Arguments.of( "XME004", "XME002", "owner", "acsp_id=XMEA001 acsp_members=read" ),
-            Arguments.of( "XME004", "XME002", "admin", "acsp_id=XMEA001 acsp_members=read" ),
-            Arguments.of( "XME004", "XME002", "standard", "acsp_id=XMEA001 acsp_members=read" ),
-            Arguments.of( "XME004", "XME003", "owner", "acsp_id=XMEA001 acsp_members=read" ),
-            Arguments.of( "XME004", "XME003", "admin", "acsp_id=XMEA001 acsp_members=read" ),
-            Arguments.of( "XME004", "XME003", "standard", "acsp_id=XMEA001 acsp_members=read" )
+            Arguments.of( "NEI004", "NEI001", "owner", testDataManager.fetchTokenPermissions( "NEI004" ) ),
+            Arguments.of( "NEI004", "NEI002", "owner", testDataManager.fetchTokenPermissions( "NEI004" ) ),
+            Arguments.of( "NEI004", "NEI003", "owner", testDataManager.fetchTokenPermissions( "NEI004" ) ),
+            Arguments.of( "NEI004", "NEI001", "admin", testDataManager.fetchTokenPermissions( "NEI004" ) ),
+            Arguments.of( "NEI004", "NEI001", "standard", testDataManager.fetchTokenPermissions( "NEI004" ) ),
+            Arguments.of( "XME004", "XME001", "owner", testDataManager.fetchTokenPermissions( "XME004" ) ),
+            Arguments.of( "XME004", "XME001", "admin", testDataManager.fetchTokenPermissions( "XME004" ) ),
+            Arguments.of( "XME004", "XME001", "standard", testDataManager.fetchTokenPermissions( "XME004" ) ),
+            Arguments.of( "XME004", "XME002", "owner", testDataManager.fetchTokenPermissions( "XME004" ) ),
+            Arguments.of( "XME004", "XME002", "admin", testDataManager.fetchTokenPermissions( "XME004" ) ),
+            Arguments.of( "XME004", "XME002", "standard", testDataManager.fetchTokenPermissions( "XME004" ) ),
+            Arguments.of( "XME004", "XME003", "owner", testDataManager.fetchTokenPermissions( "XME004" ) ),
+            Arguments.of( "XME004", "XME003", "admin", testDataManager.fetchTokenPermissions( "XME004" ) ),
+            Arguments.of( "XME004", "XME003", "standard", testDataManager.fetchTokenPermissions( "XME004" ) )
         );
     }
 
@@ -438,7 +438,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" )
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
-                        .header( "Eric-Authorised-Token-Permissions", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" )
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_role\":\"standard\",\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isOk() );
