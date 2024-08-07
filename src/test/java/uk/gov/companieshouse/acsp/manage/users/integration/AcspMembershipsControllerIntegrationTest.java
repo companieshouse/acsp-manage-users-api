@@ -716,7 +716,7 @@ class AcspMembershipsControllerIntegrationTest {
                       .header("Eric-identity", "COMU007")
                       .header("ERIC-Identity-Type", "oauth2")
                       .header("ERIC-Authorised-Key-Roles", "*")
-                      .header( "Eric-Authorised-Token-Permissions", "acsp_members=read acsp_id=COMA001" )
+                      .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM007" ) )
                       .contentType(MediaType.APPLICATION_JSON)
                       .content( String.format("{\"user_id\":\"%s\",\"user_role\":\"%s\"}", "COMU001", "standard") ) )
               .andExpect(status().isBadRequest());
@@ -735,7 +735,7 @@ class AcspMembershipsControllerIntegrationTest {
                       .header("Eric-identity", "COMU005")
                       .header("ERIC-Identity-Type", "oauth2")
                       .header("ERIC-Authorised-Key-Roles", "*")
-                      .header( "Eric-Authorised-Token-Permissions", "acsp_members=read acsp_id=COMA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" )
+                      .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM005" ) )
                       .contentType(MediaType.APPLICATION_JSON)
                       .content( "{\"user_id\":\"COMU001\",\"user_role\":\"owner\"}" ) )
               .andExpect(status().isBadRequest());
@@ -761,7 +761,7 @@ class AcspMembershipsControllerIntegrationTest {
                       .header("Eric-identity", "TSU001")
                       .header("ERIC-Identity-Type", "oauth2")
                       .header("ERIC-Authorised-Key-Roles", "*")
-                          .header( "Eric-Authorised-Token-Permissions", "acsp_members=read acsp_id=TSA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" )
+                          .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "TS001" ) )
                           .contentType(MediaType.APPLICATION_JSON)
                       .content("{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}"))
               .andReturn();

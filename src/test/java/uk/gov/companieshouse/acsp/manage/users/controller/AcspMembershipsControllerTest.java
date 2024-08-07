@@ -527,7 +527,7 @@ class AcspMembershipsControllerTest {
                       .header("Eric-identity", loggedUserId)
                       .header("ERIC-Identity-Type", "oauth2")
                       .header("ERIC-Authorised-Key-Roles", "*")
-                          .header( "Eric-Authorised-Token-Permissions", "acsp_members=read acsp_id=COMA001" )
+                          .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM007" ) )
                           .contentType(MediaType.APPLICATION_JSON)
                       .content(
                           String.format(
@@ -566,7 +566,7 @@ class AcspMembershipsControllerTest {
                       .header("Eric-identity", loggedUserId)
                       .header("ERIC-Identity-Type", "oauth2")
                       .header("ERIC-Authorised-Key-Roles", "*")
-                          .header( "Eric-Authorised-Token-Permissions", "acsp_members=read acsp_id=COMA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" )
+                          .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM005" ) )
                           .contentType(MediaType.APPLICATION_JSON)
                       .content(
                           String.format(
@@ -601,7 +601,7 @@ class AcspMembershipsControllerTest {
                       .header("Eric-identity", "TSU001")
                       .header("ERIC-Identity-Type", "oauth2")
                       .header("ERIC-Authorised-Key-Roles", "*")
-                          .header( "Eric-Authorised-Token-Permissions", "acsp_members=read acsp_id=TSA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" )
+                          .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "TS001" ) )
                           .contentType(MediaType.APPLICATION_JSON)
                       .content( "{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}" ) )
                   .andReturn();
