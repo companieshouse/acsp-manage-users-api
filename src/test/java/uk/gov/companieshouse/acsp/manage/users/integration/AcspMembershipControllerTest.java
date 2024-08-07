@@ -76,7 +76,8 @@ class AcspMembershipControllerTest {
         mockMvc.perform( get( "/acsps/memberships/TS001" )
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
-                        .header("ERIC-Authorised-Key-Roles", "*") )
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
                 .andExpect( status().isBadRequest() );
     }
 
@@ -86,7 +87,8 @@ class AcspMembershipControllerTest {
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
-                        .header("ERIC-Authorised-Key-Roles", "*") )
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
                 .andExpect( status().isBadRequest() );
     }
 
@@ -96,7 +98,8 @@ class AcspMembershipControllerTest {
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
-                        .header("ERIC-Authorised-Key-Roles", "*") )
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
                 .andExpect( status().isNotFound() );
     }
 
@@ -114,7 +117,8 @@ class AcspMembershipControllerTest {
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
-                        .header("ERIC-Authorised-Key-Roles", "*") )
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
                 .andExpect( status().isOk() );
 
         final var acspMembership = parseResponseTo( response, AcspMembership.class );
@@ -148,7 +152,8 @@ class AcspMembershipControllerTest {
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "key")
-                        .header("ERIC-Authorised-Key-Roles", "*") )
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
                 .andExpect( status().isOk() );
     }
 
@@ -158,6 +163,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isBadRequest() );
@@ -170,6 +176,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isBadRequest() );
@@ -186,6 +193,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isNotFound() );
@@ -198,9 +206,11 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
                         .contentType( MediaType.APPLICATION_JSON ) )
                 .andExpect( status().isBadRequest() );
     }
+
 
     static Stream<Arguments> updateAcspMembershipForAcspAndIdWithMalformedBodyTestData(){
         return Stream.of(
@@ -220,10 +230,13 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( requestBody )  )
                 .andExpect( status().isBadRequest() );
     }
+
+
 
     @Test
     void updateAcspMembershipForAcspAndIdReturnsBadRequestWhenAttemptingToRemoveLastOwner() throws Exception {
@@ -236,6 +249,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isBadRequest() );
@@ -253,6 +267,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "COMU001" )
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isNotFound() );
@@ -260,17 +275,17 @@ class AcspMembershipControllerTest {
 
     private static Stream<Arguments> membershipRemovalSuccessScenarios() {
         return Stream.of(
-                Arguments.of( "WIT004", "WIT001" ),
-                Arguments.of( "WIT004", "WIT002" ),
-                Arguments.of( "WIT004", "WIT003" ),
-                Arguments.of( "NEI004", "NEI002" ),
-                Arguments.of( "NEI004", "NEI003" )
+                Arguments.of( "WIT004", "WIT001", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+                Arguments.of( "WIT004", "WIT002", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+                Arguments.of( "WIT004", "WIT003", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+                Arguments.of( "NEI004", "NEI002", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+                Arguments.of( "NEI004", "NEI003", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" )
         );
     }
 
     @ParameterizedTest
     @MethodSource( "membershipRemovalSuccessScenarios" )
-    void updateAcspMembershipForAcspAndIdWithPrivilegedCallerSuccessfullyRemovesMembership( final String requestingUserMembershipId, final String targetUserMembershipId ) throws Exception {
+    void updateAcspMembershipForAcspAndIdWithPrivilegedCallerSuccessfullyRemovesMembership( final String requestingUserMembershipId, final String targetUserMembershipId, final String tokenPermissions ) throws Exception {
         final var acspMembersDaos = testDataManager.fetchAcspMembersDaos( requestingUserMembershipId, targetUserMembershipId );
         final var originalDao = acspMembersDaos.getLast();
         final var requestUserId = acspMembersDaos.getFirst().getUserId();
@@ -283,6 +298,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", requestUserId )
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", tokenPermissions )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isOk() );
@@ -297,16 +313,16 @@ class AcspMembershipControllerTest {
 
     private static Stream<Arguments> membershipRemovalFailureScenarios(){
         return Stream.of(
-                Arguments.of( "NEI004", "NEI001" ),
-                Arguments.of( "XME004", "XME001" ),
-                Arguments.of( "XME004", "XME002" ),
-                Arguments.of( "XME004", "XME003" )
+                Arguments.of( "NEI004", "NEI001", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+                Arguments.of( "XME004", "XME001", "acsp_id=XMEA001 acsp_members=read" ),
+                Arguments.of( "XME004", "XME002", "acsp_id=XMEA001 acsp_members=read" ),
+                Arguments.of( "XME004", "XME003", "acsp_id=XMEA001 acsp_members=read" )
         );
     }
 
     @ParameterizedTest
     @MethodSource( "membershipRemovalFailureScenarios" )
-    void updateAcspMembershipForAcspAndIdWithUnprivilegedCallerReturnsBadRequestWhenAttemptingToRemoveMembership( final String requestingUserMembershipId, final String targetUserMembershipId ) throws Exception {
+    void updateAcspMembershipForAcspAndIdWithUnprivilegedCallerReturnsBadRequestWhenAttemptingToRemoveMembership( final String requestingUserMembershipId, final String targetUserMembershipId, final String tokenPermissions ) throws Exception {
         final var acspMembersDaos = testDataManager.fetchAcspMembersDaos( requestingUserMembershipId, targetUserMembershipId );
         final var requestUserId = acspMembersDaos.getFirst().getUserId();
 
@@ -318,6 +334,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", requestUserId )
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", tokenPermissions )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isBadRequest() );
@@ -325,25 +342,25 @@ class AcspMembershipControllerTest {
 
     private static Stream<Arguments> membershipUpdateRoleSuccessScenarios(){
         return Stream.of(
-            Arguments.of( "WIT004", "WIT001", "owner" ),
-            Arguments.of( "WIT004", "WIT002", "owner" ),
-            Arguments.of( "WIT004", "WIT003", "owner" ),
-            Arguments.of( "WIT004", "WIT001", "admin" ),
-            Arguments.of( "WIT004", "WIT001", "standard" ),
-            Arguments.of( "WIT004", "WIT002", "admin" ),
-            Arguments.of( "WIT004", "WIT002", "standard" ),
-            Arguments.of( "WIT004", "WIT003", "admin" ),
-            Arguments.of( "WIT004", "WIT003", "standard" ),
-            Arguments.of( "NEI004", "NEI002", "admin" ),
-            Arguments.of( "NEI004", "NEI002", "standard" ),
-            Arguments.of( "NEI004", "NEI003", "admin" ),
-            Arguments.of( "NEI004", "NEI003", "standard" )
+            Arguments.of( "WIT004", "WIT001", "owner", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+            Arguments.of( "WIT004", "WIT002", "owner", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+            Arguments.of( "WIT004", "WIT003", "owner", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+            Arguments.of( "WIT004", "WIT001", "admin", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+            Arguments.of( "WIT004", "WIT001", "standard", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+            Arguments.of( "WIT004", "WIT002", "admin", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+            Arguments.of( "WIT004", "WIT002", "standard", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+            Arguments.of( "WIT004", "WIT003", "admin", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+            Arguments.of( "WIT004", "WIT003", "standard", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+            Arguments.of( "NEI004", "NEI002", "admin", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+            Arguments.of( "NEI004", "NEI002", "standard", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+            Arguments.of( "NEI004", "NEI003", "admin", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+            Arguments.of( "NEI004", "NEI003", "standard", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" )
         );
     }
 
     @ParameterizedTest
     @MethodSource( "membershipUpdateRoleSuccessScenarios" )
-    void updateAcspMembershipForAcspAndIdWithPrivilegedCallerSuccessfullyUpdatesMembership( final String requestingUserMembershipId, final String targetUserMembershipId, final String userRole ) throws Exception {
+    void updateAcspMembershipForAcspAndIdWithPrivilegedCallerSuccessfullyUpdatesMembership( final String requestingUserMembershipId, final String targetUserMembershipId, final String userRole, final String tokenPermissions ) throws Exception {
         final var acspMembersDaos = testDataManager.fetchAcspMembersDaos( requestingUserMembershipId, targetUserMembershipId );
         final var originalDao = acspMembersDaos.getLast();
         final var requestUserId = acspMembersDaos.getFirst().getUserId();
@@ -356,6 +373,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", requestUserId )
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", tokenPermissions )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( String.format( "{\"user_role\":\"%s\"}", userRole ) ) )
                 .andExpect( status().isOk() );
@@ -370,26 +388,26 @@ class AcspMembershipControllerTest {
 
     private static Stream<Arguments> membershipUpdateRoleFailureScenarios(){
         return Stream.of(
-            Arguments.of( "NEI004", "NEI001", "owner" ),
-            Arguments.of( "NEI004", "NEI002", "owner" ),
-            Arguments.of( "NEI004", "NEI003", "owner" ),
-            Arguments.of( "NEI004", "NEI001", "admin" ),
-            Arguments.of( "NEI004", "NEI001", "standard" ),
-            Arguments.of( "XME004", "XME001", "owner" ),
-            Arguments.of( "XME004", "XME001", "admin" ),
-            Arguments.of( "XME004", "XME001", "standard" ),
-            Arguments.of( "XME004", "XME002", "owner" ),
-            Arguments.of( "XME004", "XME002", "admin" ),
-            Arguments.of( "XME004", "XME002", "standard" ),
-            Arguments.of( "XME004", "XME003", "owner" ),
-            Arguments.of( "XME004", "XME003", "admin" ),
-            Arguments.of( "XME004", "XME003", "standard" )
+            Arguments.of( "NEI004", "NEI001", "owner", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+            Arguments.of( "NEI004", "NEI002", "owner", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+            Arguments.of( "NEI004", "NEI003", "owner", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+            Arguments.of( "NEI004", "NEI001", "admin", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+            Arguments.of( "NEI004", "NEI001", "standard", "acsp_id=NEIA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" ),
+            Arguments.of( "XME004", "XME001", "owner", "acsp_id=XMEA001 acsp_members=read" ),
+            Arguments.of( "XME004", "XME001", "admin", "acsp_id=XMEA001 acsp_members=read" ),
+            Arguments.of( "XME004", "XME001", "standard", "acsp_id=XMEA001 acsp_members=read" ),
+            Arguments.of( "XME004", "XME002", "owner", "acsp_id=XMEA001 acsp_members=read" ),
+            Arguments.of( "XME004", "XME002", "admin", "acsp_id=XMEA001 acsp_members=read" ),
+            Arguments.of( "XME004", "XME002", "standard", "acsp_id=XMEA001 acsp_members=read" ),
+            Arguments.of( "XME004", "XME003", "owner", "acsp_id=XMEA001 acsp_members=read" ),
+            Arguments.of( "XME004", "XME003", "admin", "acsp_id=XMEA001 acsp_members=read" ),
+            Arguments.of( "XME004", "XME003", "standard", "acsp_id=XMEA001 acsp_members=read" )
         );
     }
 
     @ParameterizedTest
     @MethodSource( "membershipUpdateRoleFailureScenarios" )
-    void updateAcspMembershipForAcspAndIdWithUnprivilegedCallerReturnsBadRequestWhenAttemptingToUpdateRole( final String requestingUserMembershipId, final String targetUserMembershipId, final String userRole ) throws Exception {
+    void updateAcspMembershipForAcspAndIdWithUnprivilegedCallerReturnsBadRequestWhenAttemptingToUpdateRole( final String requestingUserMembershipId, final String targetUserMembershipId, final String userRole, final String tokenPermissions ) throws Exception {
         final var acspMembersDaos = testDataManager.fetchAcspMembersDaos( requestingUserMembershipId, targetUserMembershipId );
         final var requestUserId = acspMembersDaos.getFirst().getUserId();
 
@@ -401,6 +419,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", requestUserId )
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", tokenPermissions )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( String.format( "{\"user_role\":\"%s\"}", userRole ) ) )
                 .andExpect( status().isBadRequest() );
@@ -419,6 +438,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" )
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_role\":\"standard\",\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isOk() );
@@ -443,6 +463,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "COMU001" )
                         .header("ERIC-Identity-Type", "key")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_id=COMA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_role\":\"standard\",\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isOk() );

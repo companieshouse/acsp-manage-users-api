@@ -21,7 +21,6 @@ import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.api.AcspMembershipsInterface;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
-import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyLookup;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPost;
@@ -31,6 +30,8 @@ import uk.gov.companieshouse.logging.LoggerFactory;
 
 import static uk.gov.companieshouse.acsp.manage.users.model.ErrorCode.*;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isOAuth2Request;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsActiveMemberOfAcsp;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsPermittedToCreateMembershipWith;
 
 @Controller
 public class AcspMembershipsController implements AcspMembershipsInterface {
@@ -51,26 +52,6 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
     this.acspProfileService = acspProfileService;
     this.acspMembersService = acspMembersService;
     this.emailService = emailService;
-  }
-
-  private void throwBadRequestWhenActionIsNotPermittedByOAuth2User( final String requestingUserId, final String acspNumber, final UserRoleEnum role ) {
-    final var requestingUserMembership =
-            acspMembersService.fetchActiveAcspMembership( requestingUserId, acspNumber )
-                    .orElseThrow( () -> {
-                      LOG.error( "Requesting user is not a member of the Acsp" );
-                      return new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
-                    } );
-
-    if ( UserRoleEnum.STANDARD.getValue().equals( requestingUserMembership.getUserRole() ) ){
-      LOG.error( "Standard user is not permitted to create membership" );
-      throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
-    }
-
-    if ( UserRoleEnum.ADMIN.getValue().equals( requestingUserMembership.getUserRole() ) && UserRoleEnum.OWNER.equals( role ) ){
-      LOG.error( "Admin user is not permitted to create owner membership" );
-      throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
-    }
-
   }
 
   @Override
@@ -102,8 +83,9 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
 
     final var requestingUser = UserContext.getLoggedUser();
     final var requestingUserId = Optional.ofNullable( requestingUser ).map( User::getUserId ).orElse( null );
-    if ( isOAuth2Request() ){
-      throwBadRequestWhenActionIsNotPermittedByOAuth2User( requestingUserId, acspNumber, targetUserRole );
+    if ( isOAuth2Request() && ( !requestingUserIsActiveMemberOfAcsp( acspNumber ) || !requestingUserIsPermittedToCreateMembershipWith( targetUserRole ) ) ){
+        LOG.error( String.format( "User is not permitted to create %s membership", targetUserRole.getValue() ) );
+        throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
     }
 
     final var membership = acspMembersService.addAcspMembership( targetUser, acspProfile, acspNumber, targetUserRole, requestingUserId );

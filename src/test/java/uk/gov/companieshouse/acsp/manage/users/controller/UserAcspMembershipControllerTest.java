@@ -34,7 +34,8 @@ class UserAcspMembershipControllerTest {
         mockMvc.perform( get( "/user/acsps/memberships")
                         .header( "Eric-identity", "COMU002" )
                         .header( "ERIC-Identity-Type", "oauth2" )
-                        .header( "ERIC-Authorised-Key-Roles", "*" ) )
+                        .header( "ERIC-Authorised-Key-Roles", "*" )
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ) )
                 .andExpect( status().isBadRequest() );
     }
 
@@ -44,7 +45,8 @@ class UserAcspMembershipControllerTest {
                         .header( "X-Request-Id", "theId123" )
                         .header( "Eric-identity", "COMU002" )
                         .header( "ERIC-Identity-Type", "oauth2" )
-                        .header( "ERIC-Authorised-Key-Roles", "*" ) )
+                        .header( "ERIC-Authorised-Key-Roles", "*" )
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ) )
                 .andExpect( status().isBadRequest() );
     }
 

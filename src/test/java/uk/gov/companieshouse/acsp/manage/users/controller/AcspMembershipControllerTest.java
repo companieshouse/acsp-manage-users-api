@@ -60,7 +60,8 @@ class AcspMembershipControllerTest {
         mockMvc.perform( get( "/acsps/memberships/TS001" )
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
-                        .header("ERIC-Authorised-Key-Roles", "*") )
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ) )
                 .andExpect( status().isBadRequest() );
     }
 
@@ -70,7 +71,8 @@ class AcspMembershipControllerTest {
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
-                        .header("ERIC-Authorised-Key-Roles", "*") )
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ) )
                 .andExpect( status().isBadRequest() );
     }
 
@@ -80,7 +82,8 @@ class AcspMembershipControllerTest {
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
-                        .header("ERIC-Authorised-Key-Roles", "*") )
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ) )
                 .andExpect( status().isNotFound() );
     }
 
@@ -92,7 +95,8 @@ class AcspMembershipControllerTest {
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
-                        .header("ERIC-Authorised-Key-Roles", "*") )
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ) )
                 .andExpect( status().isOk() );
     }
 
@@ -104,7 +108,8 @@ class AcspMembershipControllerTest {
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "key")
-                        .header("ERIC-Authorised-Key-Roles", "*") )
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ) )
                 .andExpect( status().isOk() );
     }
 
@@ -114,6 +119,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isBadRequest() );
@@ -126,6 +132,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isBadRequest() );
@@ -141,6 +148,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isNotFound() );
@@ -153,15 +161,16 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
                         .contentType( MediaType.APPLICATION_JSON ) )
                 .andExpect( status().isBadRequest() );
     }
 
     static Stream<Arguments> updateAcspMembershipForAcspAndIdWithMalformedBodyTestData(){
         return Stream.of(
-            Arguments.of( "{}" ),
-            Arguments.of( "{\"user_status\":\"complicated\"}" ),
-            Arguments.of( "{\"user_role\":\"jester\"}" )
+                Arguments.of( "{}" ),
+                Arguments.of( "{\"user_status\":\"complicated\"}" ),
+                Arguments.of( "{\"user_role\":\"jester\"}" )
         );
     }
 
@@ -175,6 +184,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( requestBody )  )
                 .andExpect( status().isBadRequest() );
@@ -193,6 +203,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isBadRequest() );
@@ -211,6 +222,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "COMU001" )
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isNotFound() );
@@ -229,6 +241,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "WITU002" )
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_role\":\"owner\"}" ) )
                 .andExpect( status().isBadRequest() );
@@ -247,6 +260,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" )
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_id=XMEA001 acsp_members=read" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_role\":\"standard\"}" ) )
                 .andExpect( status().isBadRequest() );
@@ -266,6 +280,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" )
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_id=COMA001 acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_role\":\"standard\"}" ) )
                 .andExpect( status().isBadRequest() );
@@ -285,6 +300,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" )
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_role\":\"standard\",\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isOk() );
@@ -306,6 +322,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "COMU001" )
                         .header("ERIC-Identity-Type", "key")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_role\":\"standard\",\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isOk() );

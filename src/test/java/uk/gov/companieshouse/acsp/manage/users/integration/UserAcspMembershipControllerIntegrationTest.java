@@ -72,8 +72,9 @@ class UserAcspMembershipControllerIntegrationTest {
         mockMvc.perform(get("/user/acsps/memberships")
                     .header("Eric-identity", "COMU002")
                     .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*"))
-            .andExpect(status().isBadRequest());
+                    .header("ERIC-Authorised-Key-Roles", "*")
+                    .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -82,8 +83,9 @@ class UserAcspMembershipControllerIntegrationTest {
                     .header("X-Request-Id", "theId123")
                     .header("Eric-identity", "COMU002")
                     .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*"))
-            .andExpect(status().isBadRequest());
+                    .header("ERIC-Authorised-Key-Roles", "*")
+                    .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -98,8 +100,9 @@ class UserAcspMembershipControllerIntegrationTest {
                 .header("X-Request-Id", "theId123")
                 .header("Eric-identity", "COMU002")
                 .header("ERIC-Identity-Type", "oauth2")
-                .header("ERIC-Authorised-Key-Roles", "*"))
-        .andExpect(status().isOk());
+                .header("ERIC-Authorised-Key-Roles", "*")
+                .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
+                .andExpect(status().isOk());
 
         final var acspMembershipsList = parseResponseTo( response, AcspMembershipsList.class );
 
@@ -118,7 +121,8 @@ class UserAcspMembershipControllerIntegrationTest {
                     .header("X-Request-Id", "theId123")
                     .header("Eric-identity", "COMU002")
                     .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*"))
+                    .header("ERIC-Authorised-Key-Roles", "*")
+                    .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
             .andExpect(status().isOk());
 
         final var acspMemberships = parseResponseTo( response, AcspMembershipsList.class ).getItems();
