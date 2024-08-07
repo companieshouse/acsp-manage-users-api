@@ -3,6 +3,7 @@ package uk.gov.companieshouse.acsp.manage.users.interceptor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_IDENTITY_TYPE;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +32,7 @@ class AcspDataRetrievalPermissionInterceptorTest {
     @Test
     void prehandleWithoutPermissionReturnsFalse() throws InvalidTokenPermissionException {
         MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader( ERIC_IDENTITY_TYPE, "oauth2" );
         request.addHeader( "Eric-Authorised-Token-Permissions", "" );
 
         ServletRequestAttributes requestAttributes = new ServletRequestAttributes( request );
@@ -47,6 +49,7 @@ class AcspDataRetrievalPermissionInterceptorTest {
     @Test
     void prehandleWithPermissionReturnsTrue() throws InvalidTokenPermissionException {
         MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader( ERIC_IDENTITY_TYPE, "oauth2" );
         request.addHeader( "Eric-Authorised-Token-Permissions", "acsp_members=read" );
 
         ServletRequestAttributes requestAttributes = new ServletRequestAttributes( request );
