@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.acsp.manage.users.interceptor;
 
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isOAuth2Request;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsPermittedToRetrieveAcspData;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,6 +17,10 @@ public class AcspDataRetrievalPermissionInterceptor implements HandlerIntercepto
     private static final Logger LOGGER = LoggerFactory.getLogger( StaticPropertyUtil.APPLICATION_NAMESPACE );
 
     public boolean preHandle( final HttpServletRequest request, final HttpServletResponse response, final Object handler ) {
+        if ( !isOAuth2Request() ){
+            return true;
+        }
+
         if ( requestingUserIsPermittedToRetrieveAcspData() ){
             return true;
         }
