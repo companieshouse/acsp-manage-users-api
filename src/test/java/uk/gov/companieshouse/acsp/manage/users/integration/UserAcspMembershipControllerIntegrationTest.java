@@ -98,7 +98,8 @@ class UserAcspMembershipControllerIntegrationTest {
             get("/user/acsps/memberships")
                 .header("Eric-identity", testUserId)
                 .header("ERIC-Identity-Type", "oauth2")
-                .header("ERIC-Authorised-Key-Roles", "*"))
+                .header("ERIC-Authorised-Key-Roles", "*")
+                    .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
         .andExpect(status().isBadRequest());
   }
 
@@ -111,7 +112,8 @@ class UserAcspMembershipControllerIntegrationTest {
                 .header("X-Request-Id", "theId123")
                 .header("Eric-identity", testUserId)
                 .header("ERIC-Identity-Type", "oauth2")
-                .header("ERIC-Authorised-Key-Roles", "*"))
+                .header("ERIC-Authorised-Key-Roles", "*")
+                    .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
         .andExpect(status().isBadRequest());
   }
 
@@ -138,7 +140,8 @@ class UserAcspMembershipControllerIntegrationTest {
                     .header("X-Request-Id", "theId123")
                     .header("Eric-identity", testUserId)
                     .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*"))
+                    .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
             .andExpect(status().isOk())
             .andReturn()
             .getResponse();
@@ -176,7 +179,8 @@ class UserAcspMembershipControllerIntegrationTest {
                     .header("X-Request-Id", "theId123")
                     .header("Eric-identity", testUserId)
                     .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*"))
+                    .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
             .andExpect(status().isOk())
             .andReturn()
             .getResponse();
