@@ -304,7 +304,8 @@ class AcspMembershipsControllerTest {
                       .header("Eric-identity", loggedUserId)
                       .header("ERIC-Identity-Type", "oauth2")
                       .header("ERIC-Authorised-Key-Roles", "*")
-                      .contentType(MediaType.APPLICATION_JSON)
+                          .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                          .contentType(MediaType.APPLICATION_JSON)
                       .content(
                           String.format(
                               "{\"user_id\":\"%s\",\"user_role\":\"%s\"}",
@@ -336,7 +337,8 @@ class AcspMembershipsControllerTest {
                       .header("Eric-identity", loggedUserId)
                       .header("ERIC-Identity-Type", "oauth2")
                       .header("ERIC-Authorised-Key-Roles", "*")
-                      .contentType(MediaType.APPLICATION_JSON)
+                          .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                          .contentType(MediaType.APPLICATION_JSON)
                       .content(
                           String.format(
                               "{\"user_id\":\"%s\",\"user_role\":\"%s\"}",
@@ -360,7 +362,8 @@ class AcspMembershipsControllerTest {
                       .header("Eric-identity", loggedUserId)
                       .header("ERIC-Identity-Type", "oauth2")
                       .header("ERIC-Authorised-Key-Roles", "*")
-                      .contentType(MediaType.APPLICATION_JSON)
+                          .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                          .contentType(MediaType.APPLICATION_JSON)
                       .content(
                           String.format(
                               "{\"user_id\":%s,\"user_role\":\"%s\"}",
@@ -384,7 +387,8 @@ class AcspMembershipsControllerTest {
                       .header("Eric-identity", loggedUserId)
                       .header("ERIC-Identity-Type", "oauth2")
                       .header("ERIC-Authorised-Key-Roles", "*")
-                      .contentType(MediaType.APPLICATION_JSON)
+                          .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                          .contentType(MediaType.APPLICATION_JSON)
                       .content(
                           String.format(
                               "{\"user_id\":\"%s\",\"user_role\":%s}",
@@ -408,7 +412,8 @@ class AcspMembershipsControllerTest {
                       .header("Eric-identity", loggedUserId)
                       .header("ERIC-Identity-Type", "oauth2")
                       .header("ERIC-Authorised-Key-Roles", "*")
-                      .contentType(MediaType.APPLICATION_JSON)
+                          .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                          .contentType(MediaType.APPLICATION_JSON)
                       .content(
                           String.format(
                               "{\"user_id\":\"%s\",\"user_role\":\"%s\"}",
@@ -434,7 +439,8 @@ class AcspMembershipsControllerTest {
                       .header("Eric-identity", loggedUserId)
                       .header("ERIC-Identity-Type", "oauth2")
                       .header("ERIC-Authorised-Key-Roles", "*")
-                      .contentType(MediaType.APPLICATION_JSON)
+                          .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                          .contentType(MediaType.APPLICATION_JSON)
                       .content(
                           String.format(
                               "{\"user_id\":\"%s\",\"user_role\":\"%s\"}",
@@ -467,7 +473,8 @@ class AcspMembershipsControllerTest {
                       .header("Eric-identity", loggedUserId)
                       .header("ERIC-Identity-Type", "oauth2")
                       .header("ERIC-Authorised-Key-Roles", "*")
-                      .contentType(MediaType.APPLICATION_JSON)
+                          .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                          .contentType(MediaType.APPLICATION_JSON)
                       .content(
                           String.format(
                               "{\"user_id\":\"%s\",\"user_role\":\"%s\"}",
@@ -487,7 +494,8 @@ class AcspMembershipsControllerTest {
                       .header("Eric-identity", "COMU002")
                       .header("ERIC-Identity-Type", "oauth2")
                       .header("ERIC-Authorised-Key-Roles", "*")
-                      .contentType(MediaType.APPLICATION_JSON)
+                          .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                          .contentType(MediaType.APPLICATION_JSON)
                       .content( "{\"user_id\":\"COMU002\",\"user_role\":\"standard\"}") )
               .andReturn();
 
@@ -519,7 +527,8 @@ class AcspMembershipsControllerTest {
                       .header("Eric-identity", loggedUserId)
                       .header("ERIC-Identity-Type", "oauth2")
                       .header("ERIC-Authorised-Key-Roles", "*")
-                      .contentType(MediaType.APPLICATION_JSON)
+                          .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM007" ) )
+                          .contentType(MediaType.APPLICATION_JSON)
                       .content(
                           String.format(
                               "{\"user_id\":\"%s\",\"user_role\":\"%s\"}",
@@ -557,7 +566,8 @@ class AcspMembershipsControllerTest {
                       .header("Eric-identity", loggedUserId)
                       .header("ERIC-Identity-Type", "oauth2")
                       .header("ERIC-Authorised-Key-Roles", "*")
-                      .contentType(MediaType.APPLICATION_JSON)
+                          .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM005" ) )
+                          .contentType(MediaType.APPLICATION_JSON)
                       .content(
                           String.format(
                               "{\"user_id\":\"%s\",\"user_role\":\"%s\"}",
@@ -591,7 +601,8 @@ class AcspMembershipsControllerTest {
                       .header("Eric-identity", "TSU001")
                       .header("ERIC-Identity-Type", "oauth2")
                       .header("ERIC-Authorised-Key-Roles", "*")
-                      .contentType(MediaType.APPLICATION_JSON)
+                          .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "TS001" ) )
+                          .contentType(MediaType.APPLICATION_JSON)
                       .content( "{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}" ) )
                   .andReturn();
 
