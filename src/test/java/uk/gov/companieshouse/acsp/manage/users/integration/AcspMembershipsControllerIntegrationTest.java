@@ -12,17 +12,14 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.testcontainers.containers.MongoDBContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
@@ -53,14 +50,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @AutoConfigureMockMvc
 @SpringBootTest
-@Testcontainers
 @ExtendWith(MockitoExtension.class)
 @Tag("integration-test")
 class AcspMembershipsControllerIntegrationTest {
-
-  @Container
-  @ServiceConnection
-  static MongoDBContainer container = new MongoDBContainer("mongo:5");
 
   @Autowired MongoTemplate mongoTemplate;
 
