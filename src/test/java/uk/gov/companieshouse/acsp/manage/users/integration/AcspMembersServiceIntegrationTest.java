@@ -1,15 +1,5 @@
 package uk.gov.companieshouse.acsp.manage.users.integration;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.when;
-
-import java.io.IOException;
-import java.util.List;
-
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
@@ -41,6 +31,13 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserStatusEnum;
 import uk.gov.companieshouse.api.sdk.ApiClientService;
 
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.when;
+
 @SpringBootTest
 @ExtendWith(MockitoExtension.class)
 @Testcontainers
@@ -49,7 +46,7 @@ class AcspMembersServiceIntegrationTest {
 
     @Container
     @ServiceConnection
-    static MongoDBContainer container = new MongoDBContainer("mongo:6.0.16");
+    static MongoDBContainer container = new MongoDBContainer("mongo:5");
 
     @Autowired
     private MongoTemplate mongoTemplate;
@@ -82,10 +79,6 @@ class AcspMembersServiceIntegrationTest {
 
     private User testUser;
 
-    @BeforeAll
-    public static void beforeAll() throws IOException, InterruptedException {
-        container.execInContainer("mongosh");
-    }
 
     @BeforeEach
     public void setup() {

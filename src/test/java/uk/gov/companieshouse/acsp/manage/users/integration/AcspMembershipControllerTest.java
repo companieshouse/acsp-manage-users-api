@@ -1,18 +1,11 @@
 package uk.gov.companieshouse.acsp.manage.users.integration;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.localDateTimeToNormalisedString;
-import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.reduceTimestampResolution;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
-import java.io.IOException;
-import java.util.stream.Stream;
-
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -44,6 +37,14 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRole
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserStatusEnum;
 import uk.gov.companieshouse.api.sdk.ApiClientService;
 
+import java.util.stream.Stream;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.localDateTimeToNormalisedString;
+import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.reduceTimestampResolution;
+
 @AutoConfigureMockMvc
 @SpringBootTest
 @Testcontainers
@@ -53,7 +54,7 @@ class AcspMembershipControllerTest {
 
     @Container
     @ServiceConnection
-    static MongoDBContainer container = new MongoDBContainer(DockerImageName.parse("mongo:6.0.16"));
+    static MongoDBContainer container = new MongoDBContainer(DockerImageName.parse("mongo:5"));
 
 
     @Autowired
@@ -85,11 +86,6 @@ class AcspMembershipControllerTest {
     private static final String DEFAULT_DISPLAY_NAME = "Not Provided";
 
     private static final String DEFAULT_KIND = "acsp-membership";
-
-    @BeforeAll
-    public static void beforeAll() throws IOException, InterruptedException {
-        container.execInContainer("mongosh");
-    }
 
     @Test
     void getAcspMembershipForAcspAndIdWithoutXRequestIdReturnsBadRequest() throws Exception {
