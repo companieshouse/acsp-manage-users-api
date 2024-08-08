@@ -11,16 +11,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -82,6 +81,11 @@ class AcspMembershipsControllerIntegrationTest {
   @MockBean private AcspDataService acspDataService;
 
   @Autowired private AcspMembersRepository acspMembersRepository;
+
+  @BeforeAll
+  public static void beforeAll() throws IOException, InterruptedException {
+      container.execInContainer("mongosh");
+  }
 
   private void mockFetchUserDetailsFor(String... userIds) {
     Arrays.stream(userIds)

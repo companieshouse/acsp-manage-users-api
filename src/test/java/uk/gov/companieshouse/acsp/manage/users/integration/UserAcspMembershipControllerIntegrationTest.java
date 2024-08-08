@@ -2,10 +2,7 @@ package uk.gov.companieshouse.acsp.manage.users.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -29,6 +26,7 @@ import uk.gov.companieshouse.api.InternalApiClient;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
 import uk.gov.companieshouse.api.sdk.ApiClientService;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -83,6 +81,10 @@ class UserAcspMembershipControllerIntegrationTest {
                     .when(acspDataService)
                     .fetchAcspData(acspNumber));
   }
+  @BeforeAll
+  public static void beforeAll() throws IOException, InterruptedException {
+        container.execInContainer("mongosh");
+    }
 
   @BeforeEach
   void setUp() {
