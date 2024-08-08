@@ -17,7 +17,6 @@ import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.PaginationValidatorUtil;
-import uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.api.AcspMembershipsInterface;
@@ -55,7 +54,7 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
     final var requestingUserMembership =
             acspMembersService.fetchActiveAcspMembership( requestingUserId, acspNumber )
                     .orElseThrow( () -> {
-                      LOG.error( "Requesting user is not a member of the acsp" );
+                      LOG.error( "Requesting user is not a member of the Acsp" );
                       return new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
                     } );
 
@@ -82,7 +81,6 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
     try {
       targetUser = usersService.fetchUserDetails( targetUserId );
     } catch ( NotFoundRuntimeException exception ) {
-      LOG.error( "Could not find user" );
       throw new BadRequestRuntimeException( ERROR_CODE_1001.getCode() );
     }
 
@@ -90,13 +88,12 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
     try {
       acspDataDao = acspDataService.fetchAcspData( acspNumber );
     } catch ( NotFoundRuntimeException exception ) {
-      LOG.error("Could not find Acsp" );
       throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
     }
 
     final var memberships = acspMembersService.fetchAcspMembershipDaos( targetUserId, false );
     if ( !memberships.isEmpty() ) {
-      LOG.error( "User already has an active ACSP membership" );
+      LOG.error( "User already has an active Acsp membership" );
       throw new BadRequestRuntimeException( ERROR_CODE_1002.getCode() );
     }
 
@@ -124,7 +121,7 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
     logMap.put(ACSP_NUMBER_KEY, acspNumber);
     logMap.put("includeRemoved", includeRemoved);
     logMap.put("userEmail", requestBody.getUserEmail());
-    LOG.info("Getting members for ACSP & User email", logMap);
+    LOG.info("Getting members for Acsp & User email", logMap);
 
     if (Objects.isNull(requestBody.getUserEmail())) {
       LOG.error(String.format("%s: A user email was not provided.", requestId));
@@ -154,7 +151,7 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
     logMap.put(REQUEST_ID_KEY, requestId);
     logMap.put("userEmail", userEmail);
     logMap.put(ACSP_NUMBER_KEY, acspNumber);
-    LOG.info("Getting members for ACSP & User email", successLogMap);
+    LOG.info("Getting members for Acsp & User email", successLogMap);
 
     return new ResponseEntity<>(acspMembershipsList, HttpStatus.OK);
   }
@@ -174,7 +171,7 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
     logMap.put("pageIndex", pageIndex);
     logMap.put("itemsPerPage", itemsPerPage);
     logMap.put("role", role);
-    LOG.info("Getting members for ACSP", logMap);
+    LOG.info("Getting members for Acsp", logMap);
 
     final boolean roleIsValid =
         Optional.ofNullable(role)
@@ -211,7 +208,7 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
     logMap.put(
         "membersCount",
         Optional.ofNullable(acspMembershipsList.getItems()).map(List::size).orElse(0));
-    LOG.info("Getting members for ACSP", successLogMap);
+    LOG.info("Getting members for Acsp", successLogMap);
 
     return new ResponseEntity<>(acspMembershipsList, HttpStatus.OK);
   }
