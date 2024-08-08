@@ -3,13 +3,10 @@ package uk.gov.companieshouse.acsp.manage.users.integration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
 import java.util.List;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -48,7 +45,12 @@ class AcspMembersRepositoryIntegrationTest {
 
   @Autowired private AcspMembersRepository acspMembersRepository;
 
-  @BeforeEach
+    @BeforeAll
+    public static void beforeAll() throws IOException, InterruptedException {
+        container.execInContainer("mongosh");
+    }
+
+    @BeforeEach
   void setUp() {
     acspMembersRepository.deleteAll();
   }

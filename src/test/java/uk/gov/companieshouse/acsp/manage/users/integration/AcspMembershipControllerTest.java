@@ -8,11 +8,11 @@ import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.reduceTim
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+import java.io.IOException;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -30,6 +30,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
@@ -52,7 +53,8 @@ class AcspMembershipControllerTest {
 
     @Container
     @ServiceConnection
-    static MongoDBContainer container = new MongoDBContainer("mongo:6.0.16");
+    static MongoDBContainer container = new MongoDBContainer(DockerImageName.parse("mongo:6.0.16"));
+
 
     @Autowired
     MongoTemplate mongoTemplate;
@@ -84,8 +86,14 @@ class AcspMembershipControllerTest {
 
     private static final String DEFAULT_KIND = "acsp-membership";
 
+    @BeforeAll
+    public static void beforeAll() throws IOException, InterruptedException {
+        container.execInContainer("mongosh");
+    }
+
     @Test
     void getAcspMembershipForAcspAndIdWithoutXRequestIdReturnsBadRequest() throws Exception {
+
         mockMvc.perform( get( "/acsps/memberships/TS001" )
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
