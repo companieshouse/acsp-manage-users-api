@@ -42,7 +42,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 @Tag("integration-test")
 class UserAcspMembershipControllerIntegrationTest {
-  @Container @ServiceConnection static MongoDBContainer container = new MongoDBContainer("mongo:5");
+
+  @Container
+  @ServiceConnection
+  static MongoDBContainer container = new MongoDBContainer("mongo:6.0.16");
 
   @Autowired MongoTemplate mongoTemplate;
 
