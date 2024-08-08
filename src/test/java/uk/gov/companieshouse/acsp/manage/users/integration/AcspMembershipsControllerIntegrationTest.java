@@ -1,24 +1,8 @@
 package uk.gov.companieshouse.acsp.manage.users.integration;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -53,6 +37,20 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyLookup;
 import uk.gov.companieshouse.api.sdk.ApiClientService;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 @AutoConfigureMockMvc
 @SpringBootTest
 @Testcontainers
@@ -62,7 +60,7 @@ class AcspMembershipsControllerIntegrationTest {
 
   @Container
   @ServiceConnection
-  static MongoDBContainer container = new MongoDBContainer("mongo:6.0.16");
+  static MongoDBContainer container = new MongoDBContainer("mongo:5");
 
   @Autowired MongoTemplate mongoTemplate;
 
@@ -81,11 +79,6 @@ class AcspMembershipsControllerIntegrationTest {
   @MockBean private AcspDataService acspDataService;
 
   @Autowired private AcspMembersRepository acspMembersRepository;
-
-  @BeforeAll
-  public static void beforeAll() throws IOException, InterruptedException {
-      container.execInContainer("mongosh");
-  }
 
   private void mockFetchUserDetailsFor(String... userIds) {
     Arrays.stream(userIds)

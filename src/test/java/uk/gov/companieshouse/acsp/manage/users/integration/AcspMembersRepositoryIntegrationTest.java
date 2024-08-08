@@ -1,11 +1,5 @@
 package uk.gov.companieshouse.acsp.manage.users.integration;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.io.IOException;
-import java.util.List;
-
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -26,6 +20,11 @@ import uk.gov.companieshouse.acsp.manage.users.utils.ApiClientUtil;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 @SpringBootTest
 @Testcontainers(parallel = true)
 @Tag("integration-test")
@@ -33,7 +32,7 @@ class AcspMembersRepositoryIntegrationTest {
 
   @Container
   @ServiceConnection
-  static MongoDBContainer container = new MongoDBContainer("mongo:6.0.16");
+  static MongoDBContainer container = new MongoDBContainer("mongo:5");
 
   @Autowired private MongoTemplate mongoTemplate;
 
@@ -45,10 +44,6 @@ class AcspMembersRepositoryIntegrationTest {
 
   @Autowired private AcspMembersRepository acspMembersRepository;
 
-    @BeforeAll
-    public static void beforeAll() throws IOException, InterruptedException {
-        container.execInContainer("mongosh");
-    }
 
     @BeforeEach
   void setUp() {
