@@ -34,8 +34,9 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 @Tag("integration-test")
 class AcspMembersRepositoryIntegrationTest {
 
-  @Container @ServiceConnection
-  private static MongoDBContainer container = new MongoDBContainer("mongo:5");
+  @Container
+  @ServiceConnection
+  static MongoDBContainer container = new MongoDBContainer("mongo:6.0.16");
 
   @Autowired private MongoTemplate mongoTemplate;
 

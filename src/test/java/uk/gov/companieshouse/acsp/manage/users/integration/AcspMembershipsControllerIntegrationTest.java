@@ -61,7 +61,9 @@ import uk.gov.companieshouse.api.sdk.ApiClientService;
 @Tag("integration-test")
 class AcspMembershipsControllerIntegrationTest {
 
-  @Container @ServiceConnection static MongoDBContainer container = new MongoDBContainer("mongo:5");
+  @Container
+  @ServiceConnection
+  static MongoDBContainer container = new MongoDBContainer("mongo:6.0.16");
 
   @Autowired MongoTemplate mongoTemplate;
 
