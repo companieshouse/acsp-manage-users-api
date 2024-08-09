@@ -38,7 +38,7 @@ public class UserAcspMembershipController implements UserAcspMembershipInterface
     LOG.infoContext(
         xRequestId,
         String.format(
-            "Successfully fetched ACSP memberships for the user with ID %s",
+            "Successfully fetched Acsp memberships for the user %s",
             loggedUser.getUserId()),
         null);
     return new ResponseEntity<>(acspMemberships, HttpStatus.OK);
