@@ -128,7 +128,7 @@ public class AcspMembersService {
   public AcspMembershipsList fetchAcspMemberships( final User user, final boolean includeRemoved, final String acspNumber ) {
     LOG.debug(
         String.format(
-            "Fetching ACSP memberships from the repository for user ID: %s, include removed: %b, acsp number: %s",
+            "Fetching Acsp memberships from the repository for user ID: %s, include removed: %b, acsp number: %s",
             user.getUserId(), includeRemoved, acspNumber));
 
     List<AcspMembersDao> acspMembers;
