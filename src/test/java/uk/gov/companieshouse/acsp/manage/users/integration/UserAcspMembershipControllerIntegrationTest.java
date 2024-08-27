@@ -10,7 +10,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -27,6 +26,8 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
 import uk.gov.companieshouse.api.sdk.ApiClientService;
 
 import java.util.Arrays;
+import uk.gov.companieshouse.email_producer.EmailProducer;
+import uk.gov.companieshouse.email_producer.factory.KafkaProducerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -54,6 +55,12 @@ class UserAcspMembershipControllerIntegrationTest {
   @MockBean private AcspDataService acspDataService;
 
   @Autowired private AcspMembersRepository acspMembersRepository;
+
+  @MockBean
+  private EmailProducer emailProducer;
+
+  @MockBean
+  private KafkaProducerFactory kafkaProducerFactory;
 
   private final TestDataManager testDataManager = TestDataManager.getInstance();
   private String testUserId;
