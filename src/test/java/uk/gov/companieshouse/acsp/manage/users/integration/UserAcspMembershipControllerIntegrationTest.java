@@ -20,6 +20,8 @@ import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
 
 import java.util.Arrays;
+import uk.gov.companieshouse.email_producer.EmailProducer;
+import uk.gov.companieshouse.email_producer.factory.KafkaProducerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -47,6 +49,12 @@ class UserAcspMembershipControllerIntegrationTest {
 
     @Autowired
     private AcspMembersRepository acspMembersRepository;
+
+    @MockBean
+    private EmailProducer emailProducer;
+
+    @MockBean
+    private KafkaProducerFactory kafkaProducerFactory;
 
     private static final TestDataManager testDataManager = TestDataManager.getInstance();
 
