@@ -32,10 +32,10 @@ class AcspMembershipControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    ApiClientService apiClientService;
+    private ApiClientService apiClientService;
 
     @MockBean
-    InternalApiClient internalApiClient;
+    private InternalApiClient internalApiClient;
 
     @MockBean
     private UsersService usersService;
@@ -49,7 +49,7 @@ class AcspMembershipControllerTest {
     @MockBean
     private AcspMembersService acspMembersService;
 
-    private final TestDataManager testDataManager = TestDataManager.getInstance();
+    private static final TestDataManager testDataManager = TestDataManager.getInstance();
 
     @Test
     void getAcspMembershipForAcspAndIdWithoutXRequestIdReturnsBadRequest() throws Exception {

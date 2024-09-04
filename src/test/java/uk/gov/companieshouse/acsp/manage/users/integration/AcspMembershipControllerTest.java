@@ -1,7 +1,5 @@
 package uk.gov.companieshouse.acsp.manage.users.integration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
@@ -13,7 +11,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -25,13 +22,10 @@ import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
-import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
-import uk.gov.companieshouse.api.InternalApiClient;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserStatusEnum;
-import uk.gov.companieshouse.api.sdk.ApiClientService;
 
 import java.util.stream.Stream;
 
@@ -40,6 +34,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.localDateTimeToNormalisedString;
 import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.reduceTimestampResolution;
+import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
 
 @AutoConfigureMockMvc
 @SpringBootTest
@@ -48,21 +43,10 @@ import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.reduceTim
 class AcspMembershipControllerTest {
 
     @Autowired
-    MongoTemplate mongoTemplate;
+    private MongoTemplate mongoTemplate;
 
     @Autowired
-    public MockMvc mockMvc;
-
-    @MockBean
-    ApiClientService apiClientService;
-
-    @MockBean
-    InternalApiClient internalApiClient;
-
-    @MockBean
-    StaticPropertyUtil staticPropertyUtil;
-
-    private final TestDataManager testDataManager = TestDataManager.getInstance();
+    private MockMvc mockMvc;
 
     @MockBean
     private UsersService usersService;
@@ -73,13 +57,14 @@ class AcspMembershipControllerTest {
     @Autowired
     private AcspMembersRepository acspMembersRepository;
 
+    private final TestDataManager testDataManager = TestDataManager.getInstance();
+
     private static final String DEFAULT_DISPLAY_NAME = "Not Provided";
 
     private static final String DEFAULT_KIND = "acsp-membership";
 
     @Test
     void getAcspMembershipForAcspAndIdWithoutXRequestIdReturnsBadRequest() throws Exception {
-
         mockMvc.perform( get( "/acsps/memberships/TS001" )
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
@@ -121,13 +106,9 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*") )
-                .andExpect( status().isOk() )
-                .andReturn()
-                .getResponse();
+                .andExpect( status().isOk() );
 
-        final var objectMapper = new ObjectMapper();
-        objectMapper.registerModule( new JavaTimeModule() );
-        final var acspMembership = objectMapper.readValue( response.getContentAsByteArray(), AcspMembership.class );
+        final var acspMembership = parseResponseTo( response, AcspMembership.class );
 
         Assertions.assertEquals( dao.getEtag(), acspMembership.getEtag() );
         Assertions.assertEquals( "TS001", acspMembership.getId() );
@@ -148,8 +129,7 @@ class AcspMembershipControllerTest {
 
     @Test
     void getAcspMembershipForAcspAndIdWithApiKeySucceeds() throws Exception {
-        final var dao = testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst();
-        acspMembersRepository.insert( dao );
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001" ) );
 
         Mockito.doReturn( testDataManager.fetchUserDtos( "TSU001" ).getFirst() ).when( usersService ).fetchUserDetails( "TSU001" );
         Mockito.doReturn( testDataManager.fetchAcspDataDaos( "TSA001" ).getFirst() ).when( acspDataService ).fetchAcspData( "TSA001" );
@@ -187,9 +167,8 @@ class AcspMembershipControllerTest {
 
     @Test
     void updateAcspMembershipForAcspAndIdWithNonexistentMembershipIdReturnsNotFound() throws Exception {
-        final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT004" );
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
 
-        acspMembersRepository.insert( acspMemberDaos );
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT001" )
@@ -215,9 +194,8 @@ class AcspMembershipControllerTest {
 
     @Test
     void updateAcspMembershipForAcspAndIdWithEmptyRequestBodyReturnsBadRequest() throws Exception {
-        final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT001", "WIT004" );
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT001", "WIT004" ) );
 
-        acspMembersRepository.insert( acspMemberDaos );
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT001" )
@@ -232,9 +210,8 @@ class AcspMembershipControllerTest {
 
     @Test
     void updateAcspMembershipForAcspAndIdWithMalformedStatusReturnsBadRequest() throws Exception {
-        final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT001", "WIT004" );
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT001", "WIT004" ) );
 
-        acspMembersRepository.insert( acspMemberDaos );
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT001" )
@@ -249,9 +226,8 @@ class AcspMembershipControllerTest {
 
     @Test
     void updateAcspMembershipForAcspAndIdWithMalformedRoleReturnsBadRequest() throws Exception {
-        final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT001", "WIT004" );
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT001", "WIT004" ) );
 
-        acspMembersRepository.insert( acspMemberDaos );
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT001" )
@@ -266,9 +242,8 @@ class AcspMembershipControllerTest {
 
     @Test
     void updateAcspMembershipForAcspAndIdReturnsBadRequestWhenAttemptingToRemoveLastOwner() throws Exception {
-        final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT004" );
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
 
-        acspMembersRepository.insert( acspMemberDaos );
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT004" )
@@ -284,9 +259,8 @@ class AcspMembershipControllerTest {
 
     @Test
     void updateAcspMembershipForAcspAndIdWithInactiveCallerReturnsNotFound() throws Exception {
-        final var acspMembersDaos = testDataManager.fetchAcspMembersDaos( "COM001", "COM004" );
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM001", "COM004" ) );
 
-        acspMembersRepository.insert( acspMembersDaos );
         Mockito.doReturn( testDataManager.fetchUserDtos( "COMU001" ).getFirst() ).when( usersService ).fetchUserDetails( "COMU001" );
 
         mockMvc.perform( patch( "/acsps/memberships/COM004" )
