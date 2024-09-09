@@ -1,16 +1,12 @@
 package uk.gov.companieshouse.acsp.manage.users.integration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -21,10 +17,7 @@ import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
-import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
-import uk.gov.companieshouse.api.InternalApiClient;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
-import uk.gov.companieshouse.api.sdk.ApiClientService;
 
 import java.util.Arrays;
 
@@ -32,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
 
 @AutoConfigureMockMvc
 @ExtendWith(MockitoExtension.class)
@@ -39,153 +33,96 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 class UserAcspMembershipControllerIntegrationTest {
 
-  @Autowired MongoTemplate mongoTemplate;
+    @Autowired
+    private MongoTemplate mongoTemplate;
 
-  @Autowired public MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvc;
 
-  @MockBean ApiClientService apiClientService;
+    @MockBean
+    private UsersService usersService;
 
-  @MockBean InternalApiClient internalApiClient;
+    @MockBean
+    private AcspDataService acspDataService;
 
-  @MockBean StaticPropertyUtil staticPropertyUtil;
+    @Autowired
+    private AcspMembersRepository acspMembersRepository;
 
-  @MockBean private UsersService usersService;
+    private static final TestDataManager testDataManager = TestDataManager.getInstance();
 
-  @MockBean private AcspDataService acspDataService;
+    private void mockFetchUserDetailsFor( final String... userIds ) {
+        Arrays.stream( userIds ).forEach( userId -> Mockito.doReturn( testDataManager.fetchUserDtos( userId ).getFirst() ).when( usersService ).fetchUserDetails( userId ) );
+    }
 
-  @Autowired private AcspMembersRepository acspMembersRepository;
+    private void mockFetchAcspDataFor( final String... acspNumbers ) {
+        Arrays.stream(acspNumbers).forEach( acspNumber -> Mockito.doReturn( testDataManager.fetchAcspDataDaos( acspNumber ).getFirst() ).when( acspDataService ).fetchAcspData( acspNumber ) );
+    }
 
-  private final TestDataManager testDataManager = TestDataManager.getInstance();
-  private String testUserId;
+    @Test
+    void getAcspMembershipsForUserIdWithoutXRequestIdReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/user/acsps/memberships")
+                    .header("Eric-identity", "COMU002")
+                    .header("ERIC-Identity-Type", "oauth2")
+                    .header("ERIC-Authorised-Key-Roles", "*"))
+            .andExpect(status().isBadRequest());
+    }
 
-  private void mockFetchUserDetailsFor(String... userIds) {
-    Arrays.stream(userIds)
-        .forEach(
-            userId ->
-                Mockito.doReturn(testDataManager.fetchUserDtos(userId).getFirst())
-                    .when(usersService)
-                    .fetchUserDetails(userId));
-  }
+    @Test
+    void getAcspMembershipsForUserIdWithWrongIncludeRemovedParameterInBodyReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/user/acsps/memberships?include_removed=null")
+                    .header("X-Request-Id", "theId123")
+                    .header("Eric-identity", "COMU002")
+                    .header("ERIC-Identity-Type", "oauth2")
+                    .header("ERIC-Authorised-Key-Roles", "*"))
+            .andExpect(status().isBadRequest());
+    }
 
-  private void mockFetchAcspDataFor(String... acspNumbers) {
-    Arrays.stream(acspNumbers)
-        .forEach(
-            acspNumber ->
-                Mockito.doReturn(testDataManager.fetchAcspDataDaos(acspNumber).getFirst())
-                    .when(acspDataService)
-                    .fetchAcspData(acspNumber));
-  }
+    @Test
+    void getAcspMembershipsForUserIdWhoHasNoAcspMemebershipsReturnsEmptyAcspMembershipsList() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001", "TS002", "COM001", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016" ) );
 
-  @BeforeEach
-  void setUp() {
-    testUserId = "COMU002";
-  }
+        mockFetchUserDetailsFor("COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008", "COMU009", "COMU010", "COMU011", "COMU012", "COMU013", "COMU014", "COMU015", "COMU016");
+        mockFetchAcspDataFor("COMA001");
 
-  @AfterEach
-  public void after() {
-    mongoTemplate.dropCollection(AcspMembersDao.class);
-  }
-
-  @Test
-  void getAcspMembershipsForUserIdWithoutXRequestIdReturnsBadRequest() throws Exception {
-    mockMvc
-        .perform(
-            get("/user/acsps/memberships")
-                .header("Eric-identity", testUserId)
-                .header("ERIC-Identity-Type", "oauth2")
-                .header("ERIC-Authorised-Key-Roles", "*"))
-        .andExpect(status().isBadRequest());
-  }
-
-  @Test
-  void getAcspMembershipsForUserIdWithWrongIncludeRemovedParameterInBodyReturnsBadRequest()
-      throws Exception {
-    mockMvc
-        .perform(
-            get("/user/acsps/memberships?include_removed=null")
+        final var response =
+        mockMvc.perform(get("/user/acsps/memberships")
                 .header("X-Request-Id", "theId123")
-                .header("Eric-identity", testUserId)
+                .header("Eric-identity", "COMU002")
                 .header("ERIC-Identity-Type", "oauth2")
                 .header("ERIC-Authorised-Key-Roles", "*"))
-        .andExpect(status().isBadRequest());
-  }
+        .andExpect(status().isOk());
 
-  @Test
-  void getAcspMembershipsForUserIdWhoHasNoAcspMemebershipsReturnsEmptyAcspMembershipsList()
-      throws Exception {
-    // Given
-    final var acspMemberDaos =
-        testDataManager.fetchAcspMembersDaos(
-            "COM001", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009",
-            "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016");
+        final var acspMembershipsList = parseResponseTo( response, AcspMembershipsList.class );
 
-    acspMembersRepository.insert(acspMemberDaos);
-    acspMembersRepository.insert(testDataManager.fetchAcspMembersDaos("TS001", "TS002"));
-    mockFetchUserDetailsFor(
-        "COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008",
-        "COMU009", "COMU010", "COMU011", "COMU012", "COMU013", "COMU014", "COMU015", "COMU016");
-    mockFetchAcspDataFor("COMA001");
-    // When
-    final var response =
-        mockMvc
-            .perform(
-                get("/user/acsps/memberships")
+        assertTrue(acspMembershipsList.getItems().isEmpty());
+    }
+
+    @Test
+    void getAcspMembershipsForUserIdWhoHasAcspMemebershipsReturnsNonEmptyAcspMembershipsList() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001", "TS002", "COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016" ) );
+
+        mockFetchUserDetailsFor( "COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008", "COMU009", "COMU010", "COMU011", "COMU012", "COMU013", "COMU014", "COMU015", "COMU016" );
+        mockFetchAcspDataFor( "COMA001" );
+
+        final var response =
+        mockMvc.perform(get("/user/acsps/memberships")
                     .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", testUserId)
+                    .header("Eric-identity", "COMU002")
                     .header("ERIC-Identity-Type", "oauth2")
                     .header("ERIC-Authorised-Key-Roles", "*"))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse();
+            .andExpect(status().isOk());
 
-    final var objectMapper = new ObjectMapper();
-    objectMapper.registerModule(new JavaTimeModule());
-    final var acspMembershipsList =
-        objectMapper.readValue(response.getContentAsString(), AcspMembershipsList.class);
+        final var acspMemberships = parseResponseTo( response, AcspMembershipsList.class ).getItems();
 
-    final var acspMemberships = acspMembershipsList.getItems();
-    // Then
-    assertTrue(acspMemberships.isEmpty());
-  }
+        assertEquals(1, acspMemberships.size());
+        assertEquals("COM002", acspMemberships.getFirst().getId());
+        assertEquals("COMU002", acspMemberships.getFirst().getUserId());
+        assertEquals("COMA001", acspMemberships.getFirst().getAcspNumber());
+    }
 
-  @Test
-  void getAcspMembershipsForUserIdWhoHasAcspMemebershipsReturnsNonEmptyAcspMembershipsList()
-      throws Exception {
-    // Given
-    final var acspMemberDaos =
-        testDataManager.fetchAcspMembersDaos(
-            "COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008",
-            "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016");
+    @AfterEach
+    public void after() {
+        mongoTemplate.dropCollection(AcspMembersDao.class);
+    }
 
-    acspMembersRepository.insert(acspMemberDaos);
-    acspMembersRepository.insert(testDataManager.fetchAcspMembersDaos("TS001", "TS002"));
-    mockFetchUserDetailsFor(
-        "COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008",
-        "COMU009", "COMU010", "COMU011", "COMU012", "COMU013", "COMU014", "COMU015", "COMU016");
-    mockFetchAcspDataFor("COMA001");
-    // When
-    final var response =
-        mockMvc
-            .perform(
-                get("/user/acsps/memberships")
-                    .header("X-Request-Id", "theId123")
-                    .header("Eric-identity", testUserId)
-                    .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*"))
-            .andExpect(status().isOk())
-            .andReturn()
-            .getResponse();
-
-    final var objectMapper = new ObjectMapper();
-    objectMapper.registerModule(new JavaTimeModule());
-    final var acspMembershipsList =
-        objectMapper.readValue(response.getContentAsString(), AcspMembershipsList.class);
-
-    final var acspMemberships = acspMembershipsList.getItems();
-    // Then
-    assertEquals(1, acspMemberships.size());
-    assertEquals("COM002", acspMemberships.getFirst().getId());
-    assertEquals(testUserId, acspMemberships.getFirst().getUserId());
-    assertEquals("COMA001", acspMemberships.getFirst().getAcspNumber());
-  }
 }

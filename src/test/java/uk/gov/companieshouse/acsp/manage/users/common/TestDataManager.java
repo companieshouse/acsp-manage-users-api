@@ -1,10 +1,12 @@
 package uk.gov.companieshouse.acsp.manage.users.common;
 
 import static uk.gov.companieshouse.GenerateEtagUtil.generateEtag;
+import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.localDateTimeToOffsetDateTime;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -13,6 +15,8 @@ import java.util.stream.Collectors;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.api.accounts.user.model.User;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.AcspStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 
@@ -841,5 +845,40 @@ public class TestDataManager {
                 .map( Supplier::get )
                 .collect( Collectors.toList() );
     }
+
+    private AcspMembership fetchAcspMembershipDto( final String id ){
+        final var acspMembersDao = fetchAcspMembersDaos( id ).getFirst();
+        final var userData = fetchUserDtos( acspMembersDao.getUserId() ).getFirst();
+        final var acspData = fetchAcspDataDaos( acspMembersDao.getAcspNumber() ).getFirst();
+
+        return new AcspMembership()
+                .id( acspMembersDao.getId() )
+                .userId( acspMembersDao.getUserId() )
+                .userEmail( userData.getEmail() )
+                .userDisplayName( Objects.isNull( userData.getDisplayName() ) ? "Not Provided" : userData.getDisplayName() )
+                .acspNumber( acspMembersDao.getAcspNumber() )
+                .acspName( acspData.getAcspName() )
+                .acspStatus( AcspStatusEnum.fromValue( acspData.getAcspStatus() ) )
+                .userRole( UserRoleEnum.fromValue( acspMembersDao.getUserRole() ) )
+                .membershipStatus( MembershipStatusEnum.fromValue( acspMembersDao.getStatus() ) )
+                .addedAt( localDateTimeToOffsetDateTime( acspMembersDao.getAddedAt() ) )
+                .addedBy( acspMembersDao.getAddedBy() )
+                .removedAt( localDateTimeToOffsetDateTime( acspMembersDao.getRemovedAt() ) )
+                .removedBy( acspMembersDao.getRemovedBy() )
+                .kind( "acsp-membership" )
+                .etag( acspMembersDao.getEtag() );
+    }
+
+
+    public List<AcspMembership> fetchAcspMembershipDtos( final String... ids ){
+        final var acspMembershipDtos = new LinkedList<AcspMembership>();
+        for ( final String id: ids ) {
+            final var acspMembershipDto = fetchAcspMembershipDto( id );
+            acspMembershipDtos.add( acspMembershipDto );
+        }
+        return acspMembershipDtos;
+    }
+
+
 
 }
