@@ -27,7 +27,7 @@ public abstract class AcspMembershipMapper {
     @Autowired
     protected AcspDataService acspDataService;
 
-    private final String DEFAULT_DISPLAY_NAME = "Not Provided";
+    private final static String DEFAULT_DISPLAY_NAME = "Not Provided";
 
     protected OffsetDateTime localDateTimeToOffsetDateTime( final LocalDateTime localDateTime ) {
         return Objects.isNull( localDateTime ) ? null : OffsetDateTime.of( localDateTime, ZoneOffset.UTC );

@@ -498,54 +498,29 @@ class AcspMembershipsControllerIntegrationTest {
                     .andExpect( status().isBadRequest() );
         }
 
-        @Test
-        void addMemberForAcspWithUserIdThatAlreadyHasActiveMembershipReturnsBadRequest() throws Exception {
-            acspMembersRepository.insert(testDataManager.fetchAcspMembersDaos("COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "NEI003"));
-
-            mockFetchUserDetailsFor("COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008", "COMU009", "NEIU003");
-            mockFetchAcspDataFor("COMA001");
-
-            mockMvc.perform( post( "/acsps/COMA001/memberships" )
-                            .header("X-Request-Id", "theId123")
-                            .header("Eric-identity", "COMU002")
-                            .header("ERIC-Identity-Type", "oauth2")
-                            .header("ERIC-Authorised-Key-Roles", "*")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content( "{\"user_id\":\"COMU002\",\"user_role\":\"standard\"}") )
-                    .andExpect( status().isBadRequest() );
+        static Stream<Arguments> addMemberForAcspWithUserIdWithIncorrectPermissionsTestData(){
+            return Stream.of(
+                    Arguments.of( "COMU002", "{\"user_id\":\"COMU002\",\"user_role\":\"standard\"}" ),
+                    Arguments.of( "COMU007", "{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}" ),
+                    Arguments.of( "COMU005", "{\"user_id\":\"COMU001\",\"user_role\":\"owner\"}" )
+            );
         }
 
-        @Test
-        void addMemberForAcspWithLoggedStandardUserReturnsBadRequest() throws Exception {
+        @ParameterizedTest
+        @MethodSource( "addMemberForAcspWithUserIdWithIncorrectPermissionsTestData" )
+        void addMemberForAcspWithUserIdThatAlreadyHasActiveMembershipReturnsBadRequest( final String ericIdentity, final String requestBody ) throws Exception {
             acspMembersRepository.insert(testDataManager.fetchAcspMembersDaos("COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "NEI003"));
 
             mockFetchUserDetailsFor("COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008", "COMU009", "NEIU003");
             mockFetchAcspDataFor("COMA001");
 
             mockMvc.perform( post( "/acsps/COMA001/memberships" )
-                            .header("X-Request-Id", "theId123")
-                            .header("Eric-identity", "COMU007")
-                            .header("ERIC-Identity-Type", "oauth2")
-                            .header("ERIC-Authorised-Key-Roles", "*")
+                            .header("X-Request-Id", "theId123" )
+                            .header("Eric-identity", ericIdentity )
+                            .header("ERIC-Identity-Type", "oauth2" )
+                            .header("ERIC-Authorised-Key-Roles", "*" )
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content( "{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}" ) )
-                    .andExpect( status().isBadRequest() );
-        }
-
-        @Test
-        void addMemberForAcspWithLoggedAdminUserAndNewOwnerUserReturnsBadRequest() throws Exception {
-            acspMembersRepository.insert(testDataManager.fetchAcspMembersDaos("COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "NEI003"));
-
-            mockFetchUserDetailsFor("COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008", "COMU009", "NEIU003");
-            mockFetchAcspDataFor("COMA001");
-
-            mockMvc.perform( post( "/acsps/COMA001/memberships" )
-                            .header("X-Request-Id", "theId123")
-                            .header("Eric-identity", "COMU005")
-                            .header("ERIC-Identity-Type", "oauth2")
-                            .header("ERIC-Authorised-Key-Roles", "*")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content( "{\"user_id\":\"COMU001\",\"user_role\":\"owner\"}" ) )
+                            .content( requestBody ) )
                     .andExpect( status().isBadRequest() );
         }
 

@@ -81,7 +81,7 @@ class AcspMembershipMapperTest {
         final var acspMembership = new AcspMembership().userId( "TSU002" );
         final var userDetails = testDataManager.fetchUserDtos( "TSU002" ).getFirst();
 
-        Mockito.doReturn( userDetails ).when( usersService ).fetchUserDetails( eq( "TSU002" ) );
+        Mockito.doReturn( userDetails ).when( usersService ).fetchUserDetails( "TSU002" );
 
         acspMembershipMapper.enrichWithUserDetails( acspMembership, null );
 

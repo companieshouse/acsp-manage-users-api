@@ -53,7 +53,9 @@ public class AcspMembersDao {
     @Version
     private Integer version;
 
-    public AcspMembersDao(){}
+    public AcspMembersDao(){
+        // Empty constructor
+    }
 
     public String getId() {
         return id;

@@ -192,26 +192,17 @@ class AcspMembershipControllerTest {
                 .andExpect( status().isBadRequest() );
     }
 
-    @Test
-    void updateAcspMembershipForAcspAndIdWithEmptyRequestBodyReturnsBadRequest() throws Exception {
-        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT001", "WIT004" ) );
-
-        Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-        mockMvc.perform( patch( "/acsps/memberships/WIT001" )
-                        .header("X-Request-Id", "theId123")
-                        .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                        .header("ERIC-Identity-Type", "oauth2")
-                        .header("ERIC-Authorised-Key-Roles", "*")
-                        .contentType( MediaType.APPLICATION_JSON )
-                        .content( "{}" )  )
-                .andExpect( status().isBadRequest() );
+    static Stream<Arguments> updateAcspMembershipForAcspAndIdWithMalformedBodyTestData(){
+        return Stream.of(
+                Arguments.of( "{}" ),
+                Arguments.of( "{\"user_status\":\"complicated\"}" ),
+                Arguments.of( "{\"user_role\":\"jester\"}" )
+        );
     }
 
-    @Test
-    void updateAcspMembershipForAcspAndIdWithMalformedStatusReturnsBadRequest() throws Exception {
-        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT001", "WIT004" ) );
-
+    @ParameterizedTest
+    @MethodSource( "updateAcspMembershipForAcspAndIdWithMalformedBodyTestData" )
+    void updateAcspMembershipForAcspAndIdWithEmptyRequestBodyReturnsBadRequest( final String requestBody ) throws Exception {
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT001" )
@@ -220,23 +211,7 @@ class AcspMembershipControllerTest {
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
                         .contentType( MediaType.APPLICATION_JSON )
-                        .content( "{\"user_status\":\"complicated\"}" ) )
-                .andExpect( status().isBadRequest() );
-    }
-
-    @Test
-    void updateAcspMembershipForAcspAndIdWithMalformedRoleReturnsBadRequest() throws Exception {
-        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT001", "WIT004" ) );
-
-        Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-        mockMvc.perform( patch( "/acsps/memberships/WIT001" )
-                        .header("X-Request-Id", "theId123")
-                        .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                        .header("ERIC-Identity-Type", "oauth2")
-                        .header("ERIC-Authorised-Key-Roles", "*")
-                        .contentType( MediaType.APPLICATION_JSON )
-                        .content( "{\"user_role\":\"jester\"}" ) )
+                        .content( requestBody )  )
                 .andExpect( status().isBadRequest() );
     }
 
