@@ -140,7 +140,7 @@ import static org.mockito.ArgumentMatchers.any;
 
     @Test
     void createGetUserDetailsRequestWithNullInputThrowsNullPointerException(){
-        Assertions.assertThrows( NullPointerException.class, () -> accountsUserEndpoint.createGetUserDetailsRequest( null ).execute() );
+        Assertions.assertThrows( NullPointerException.class, () -> accountsUserEndpoint.createGetUserDetailsRequest( null ) );
     }
 
     @Test

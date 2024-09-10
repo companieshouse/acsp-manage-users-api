@@ -5,8 +5,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -130,7 +134,7 @@ class AcspMembershipControllerTest {
     @Test
     void updateAcspMembershipForAcspAndIdWithNonexistentMembershipIdReturnsNotFound() throws Exception {
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-        Mockito.doReturn( Optional.empty() ).when( acspMembersService ).fetchMembershipDao( eq( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ) );
+        Mockito.doReturn( Optional.empty() ).when( acspMembersService ).fetchMembershipDao( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT001" )
                         .header("X-Request-Id", "theId123")
@@ -153,22 +157,17 @@ class AcspMembershipControllerTest {
                 .andExpect( status().isBadRequest() );
     }
 
-    @Test
-    void updateAcspMembershipForAcspAndIdWithEmptyRequestBodyReturnsBadRequest() throws Exception {
-        Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-        mockMvc.perform( patch( "/acsps/memberships/WIT001" )
-                        .header("X-Request-Id", "theId123")
-                        .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                        .header("ERIC-Identity-Type", "oauth2")
-                        .header("ERIC-Authorised-Key-Roles", "*")
-                        .contentType( MediaType.APPLICATION_JSON )
-                        .content( "{}" )  )
-                .andExpect( status().isBadRequest() );
+    static Stream<Arguments> updateAcspMembershipForAcspAndIdWithMalformedBodyTestData(){
+        return Stream.of(
+            Arguments.of( "{}" ),
+            Arguments.of( "{\"user_status\":\"complicated\"}" ),
+            Arguments.of( "{\"user_role\":\"jester\"}" )
+        );
     }
 
-    @Test
-    void updateAcspMembershipForAcspAndIdWithMalformedStatusReturnsBadRequest() throws Exception {
+    @ParameterizedTest
+    @MethodSource( "updateAcspMembershipForAcspAndIdWithMalformedBodyTestData" )
+    void updateAcspMembershipForAcspAndIdWithEmptyRequestBodyReturnsBadRequest( final String requestBody ) throws Exception {
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT001" )
@@ -177,21 +176,7 @@ class AcspMembershipControllerTest {
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
                         .contentType( MediaType.APPLICATION_JSON )
-                        .content( "{\"user_status\":\"complicated\"}" ) )
-                .andExpect( status().isBadRequest() );
-    }
-
-    @Test
-    void updateAcspMembershipForAcspAndIdWithMalformedRoleReturnsBadRequest() throws Exception {
-        Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-        mockMvc.perform( patch( "/acsps/memberships/WIT001" )
-                        .header("X-Request-Id", "theId123")
-                        .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                        .header("ERIC-Identity-Type", "oauth2")
-                        .header("ERIC-Authorised-Key-Roles", "*")
-                        .contentType( MediaType.APPLICATION_JSON )
-                        .content( "{\"user_role\":\"jester\"}" ) )
+                        .content( requestBody )  )
                 .andExpect( status().isBadRequest() );
     }
 
@@ -200,8 +185,8 @@ class AcspMembershipControllerTest {
         final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT004" ).getFirst();
 
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-        Mockito.doReturn( Optional.of( acspMemberDaos ) ).when( acspMembersService ).fetchMembershipDao( eq( "WIT004" ) );
-        Mockito.doReturn( 1 ).when( acspMembersService ).fetchNumberOfActiveOwners( eq( "WITA004" ) );
+        Mockito.doReturn( Optional.of( acspMemberDaos ) ).when( acspMembersService ).fetchMembershipDao( "WIT004" );
+        Mockito.doReturn( 1 ).when( acspMembersService ).fetchNumberOfActiveOwners( "WITA004" );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT004" )
                         .header("X-Request-Id", "theId123")
@@ -218,8 +203,8 @@ class AcspMembershipControllerTest {
         final var acspMembersDaos = testDataManager.fetchAcspMembersDaos( "COM001", "COM004" );
 
         Mockito.doReturn( testDataManager.fetchUserDtos( "COMU001" ).getFirst() ).when( usersService ).fetchUserDetails( "COMU001" );
-        Mockito.doReturn( Optional.of( acspMembersDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( eq( "COM004" ) );
-        Mockito.doReturn( Optional.empty() ).when( acspMembersService ).fetchActiveAcspMembership( eq( "COMU001" ), eq( "COMA001" ) );
+        Mockito.doReturn( Optional.of( acspMembersDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( "COM004" );
+        Mockito.doReturn( Optional.empty() ).when( acspMembersService ).fetchActiveAcspMembership( "COMU001",  "COMA001" );
 
         mockMvc.perform( patch( "/acsps/memberships/COM004" )
                         .header("X-Request-Id", "theId123")
@@ -236,7 +221,7 @@ class AcspMembershipControllerTest {
         final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT004", "WIT002" );
 
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-        Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( eq( "WIT002" ) );
+        Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( "WIT002" );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT002" )
                         .header("X-Request-Id", "theId123")
@@ -253,8 +238,8 @@ class AcspMembershipControllerTest {
         final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME004", "XME002" );
 
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-        Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( eq( "XME002" ) );
-        Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( eq( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ), eq( "XMEA001" ) );
+        Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( "XME002" );
+        Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "XMEA001" );
 
         mockMvc.perform( patch( "/acsps/memberships/XME002" )
                         .header("X-Request-Id", "theId123")
@@ -271,9 +256,9 @@ class AcspMembershipControllerTest {
         final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "COM004", "COM002" );
 
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-        Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( eq( "COM002" ) );
-        Mockito.doReturn( 2 ).when( acspMembersService ).fetchNumberOfActiveOwners( eq( "COMA001" ) );
-        Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( eq( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ), eq( "COMA001" ) );
+        Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( "COM002" );
+        Mockito.doReturn( 2 ).when( acspMembersService ).fetchNumberOfActiveOwners( "COMA001" );
+        Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "COMA001" );
 
         mockMvc.perform( patch( "/acsps/memberships/COM002" )
                         .header("X-Request-Id", "theId123")
@@ -290,9 +275,9 @@ class AcspMembershipControllerTest {
         final var acspMembersDaos = testDataManager.fetchAcspMembersDaos( "WIT004", "WIT002" );
 
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-        Mockito.doReturn( Optional.of( acspMembersDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( eq( "WIT002" ) );
-        Mockito.doReturn( 2 ).when( acspMembersService ).fetchNumberOfActiveOwners( eq( "WITA001" ) );
-        Mockito.doReturn( Optional.of( acspMembersDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( eq( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ), eq( "WITA001" ) );
+        Mockito.doReturn( Optional.of( acspMembersDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( "WIT002" );
+        Mockito.doReturn( 2 ).when( acspMembersService ).fetchNumberOfActiveOwners( "WITA001" );
+        Mockito.doReturn( Optional.of( acspMembersDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT002" )
                         .header("X-Request-Id", "theId123")
@@ -303,7 +288,7 @@ class AcspMembershipControllerTest {
                         .content( "{\"user_role\":\"standard\",\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isOk() );
 
-        Mockito.verify( acspMembersService ).updateMembership( eq( "WIT002" ), eq( UserStatusEnum.REMOVED ), eq( UserRoleEnum.STANDARD ), eq( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ) );
+        Mockito.verify( acspMembersService ).updateMembership( "WIT002", UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
     }
 
     @Test
@@ -311,9 +296,9 @@ class AcspMembershipControllerTest {
         final var acspMembersDaos = testDataManager.fetchAcspMembersDaos( "COM001", "COM004" );
 
         Mockito.doReturn( testDataManager.fetchUserDtos( "COMU001" ).getFirst() ).when( usersService ).fetchUserDetails( "COMU001" );
-        Mockito.doReturn( Optional.of( acspMembersDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( eq( "COM004" ) );
-        Mockito.doReturn( 2 ).when( acspMembersService ).fetchNumberOfActiveOwners( eq( "COMA001" ) );
-        Mockito.doReturn( Optional.of( acspMembersDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( eq( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ), eq( "COMA001" ) );
+        Mockito.doReturn( Optional.of( acspMembersDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( "COM004" );
+        Mockito.doReturn( 2 ).when( acspMembersService ).fetchNumberOfActiveOwners( "COMA001" );
+        Mockito.doReturn( Optional.of( acspMembersDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "COMA001" );
 
         mockMvc.perform( patch( "/acsps/memberships/COM004" )
                         .header("X-Request-Id", "theId123")

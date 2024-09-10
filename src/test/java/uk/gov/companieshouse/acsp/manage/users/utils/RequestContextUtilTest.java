@@ -14,7 +14,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 @ExtendWith( MockitoExtension.class )
 @Tag( "unit-test" )
-public class RequestContextUtilTest {
+class RequestContextUtilTest {
 
     @Test
     void isOAuth2RequestReturnsTrueIfEricIdentityTypeIsOAuth2(){

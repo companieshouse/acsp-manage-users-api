@@ -23,7 +23,9 @@ public class AcspDataDao {
     @Version
     private Integer version;
 
-    public AcspDataDao(){};
+    public AcspDataDao(){
+        // Empty constructor
+    }
 
     public String getId() {
         return id;

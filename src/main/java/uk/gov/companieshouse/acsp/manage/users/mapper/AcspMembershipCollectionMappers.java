@@ -20,12 +20,14 @@ public abstract class AcspMembershipCollectionMappers extends AcspMembershipMapp
 
     private static final String END_POINT_URL_TEMPLATE = "/acsps/%s/memberships";
 
+    private static final String PAGINATION_URL_TEMPLATE =  "%s?page_index=%d&items_per_page=%d";
+
     private AcspMembershipsList enrichWithMetadata( final Page<AcspMembership> page, final String endpointUrl ) {
         final var pageIndex = page.getNumber();
         final var itemsPerPage = page.getSize();
-        final var self = String.format( "%s?page_index=%d&items_per_page=%d", endpointUrl, pageIndex, itemsPerPage );
-        final var next = page.isLast() ? "" : String.format( "%s?page_index=%d&items_per_page=%d", endpointUrl, pageIndex + 1, itemsPerPage );
-        final var previous = page.isFirst() ? "" : String.format( "%s?page_index=%d&items_per_page=%d", endpointUrl, pageIndex - 1, itemsPerPage );
+        final var self = String.format( PAGINATION_URL_TEMPLATE, endpointUrl, pageIndex, itemsPerPage );
+        final var next = page.isLast() ? "" : String.format( PAGINATION_URL_TEMPLATE, endpointUrl, pageIndex + 1, itemsPerPage );
+        final var previous = page.isFirst() ? "" : String.format( PAGINATION_URL_TEMPLATE, endpointUrl, pageIndex - 1, itemsPerPage );
         final var links = new AcspMembershipsListLinks().self( self ).next( next ).previous( previous );
 
         return new AcspMembershipsList()
