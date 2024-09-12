@@ -20,7 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
-import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
@@ -52,7 +52,7 @@ class AcspMembershipControllerTest {
     private UsersService usersService;
 
     @MockBean
-    private AcspDataService acspDataService;
+    private AcspProfileService acspProfileService;
 
     @Autowired
     private AcspMembersRepository acspMembersRepository;
@@ -98,7 +98,8 @@ class AcspMembershipControllerTest {
         acspMembersRepository.insert( dao );
 
         Mockito.doReturn( testDataManager.fetchUserDtos( "TSU001" ).getFirst() ).when( usersService ).fetchUserDetails( "TSU001" );
-        Mockito.doReturn( testDataManager.fetchAcspDataDaos( "TSA001" ).getFirst() ).when( acspDataService ).fetchAcspData( "TSA001" );
+        Mockito.doReturn( testDataManager.fetchAcspProfiles( "TSA001" ).getFirst() ).when(
+                acspProfileService).fetchAcspProfile( "TSA001" );
 
         final var response =
         mockMvc.perform( get( "/acsps/memberships/TS001" )
@@ -132,7 +133,8 @@ class AcspMembershipControllerTest {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001" ) );
 
         Mockito.doReturn( testDataManager.fetchUserDtos( "TSU001" ).getFirst() ).when( usersService ).fetchUserDetails( "TSU001" );
-        Mockito.doReturn( testDataManager.fetchAcspDataDaos( "TSA001" ).getFirst() ).when( acspDataService ).fetchAcspData( "TSA001" );
+        Mockito.doReturn( testDataManager.fetchAcspProfiles( "TSA001" ).getFirst() ).when(
+                acspProfileService).fetchAcspProfile( "TSA001" );
 
         mockMvc.perform( get( "/acsps/memberships/TS001" )
                         .header("X-Request-Id", "theId123")

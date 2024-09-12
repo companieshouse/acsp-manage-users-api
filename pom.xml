@@ -19,7 +19,7 @@
         <maven-surefire-plugin.version>3.3.0</maven-surefire-plugin.version>
         <structured-logging.version>3.0.10</structured-logging.version>
         <rest-service-common-library-version>2.0.2</rest-service-common-library-version>
-        <private-api-sdk-java.version>4.0.185</private-api-sdk-java.version>
+        <private-api-sdk-java.version>4.0.194</private-api-sdk-java.version>
         <api-sdk-manager-java-library.version>3.0.5</api-sdk-manager-java-library.version>
         <api-security-java-version>2.0.6</api-security-java-version>
         <org.mapstruct.version>1.6.0.RC1</org.mapstruct.version>

@@ -18,7 +18,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
-import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
@@ -45,7 +45,7 @@ class AcspMembershipControllerTest {
     private UsersService usersService;
 
     @MockBean
-    private AcspDataService acspDataService;
+    private AcspProfileService acspProfileService;
 
     @MockBean
     private StaticPropertyUtil staticPropertyUtil;

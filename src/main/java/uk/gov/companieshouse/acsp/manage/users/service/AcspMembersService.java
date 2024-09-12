@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipCollectionMappers;
-import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
@@ -23,6 +22,7 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserStatusEnum;
+import uk.gov.companieshouse.api.acspprofile.AcspProfile;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 
@@ -41,7 +41,7 @@ public class AcspMembersService {
   }
 
   @Transactional(readOnly = true)
-  public AcspMembershipsList findAllByAcspNumberAndRole( final String acspNumber, final AcspDataDao acspDataDao, final String role, final boolean includeRemoved, final int pageIndex, final int itemsPerPage ) {
+  public AcspMembershipsList findAllByAcspNumberAndRole( final String acspNumber, final AcspProfile acspProfile, final String role, final boolean includeRemoved, final int pageIndex, final int itemsPerPage ) {
     final Pageable pageable = PageRequest.of(pageIndex, itemsPerPage);
     Page<AcspMembersDao> acspMemberDaos;
 
@@ -62,7 +62,7 @@ public class AcspMembersService {
       }
     }
 
-    return acspMembershipCollectionMappers.daoToDto( acspMemberDaos, null, acspDataDao );
+    return acspMembershipCollectionMappers.daoToDto( acspMemberDaos, null, acspProfile );
   }
 
   @Transactional( readOnly = true )
@@ -161,8 +161,8 @@ public class AcspMembersService {
     return acspMembersRepository.insert(newAcspMembersDao);
   }
 
-  public AcspMembership addAcspMembership( final User user, final AcspDataDao acspData, final String acspNumber, final AcspMembership.UserRoleEnum userRole, final String addedByUserId ) {
+  public AcspMembership addAcspMembership( final User user, final AcspProfile acspProfile, final String acspNumber, final AcspMembership.UserRoleEnum userRole, final String addedByUserId ) {
     final var acspMembersDao = addAcspMember(user.getUserId(), acspNumber, userRole, addedByUserId);
-    return acspMembershipCollectionMappers.daoToDto( acspMembersDao, user, acspData );
+    return acspMembershipCollectionMappers.daoToDto( acspMembersDao, user, acspProfile );
   }
 }

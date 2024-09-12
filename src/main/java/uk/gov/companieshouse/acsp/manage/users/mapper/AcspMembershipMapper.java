@@ -10,13 +10,13 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.springframework.beans.factory.annotation.Autowired;
-import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
-import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.AcspStatusEnum;
+import uk.gov.companieshouse.api.acspprofile.AcspProfile;
 
 @Mapper( componentModel = "spring" )
 public abstract class AcspMembershipMapper {
@@ -25,7 +25,7 @@ public abstract class AcspMembershipMapper {
     protected UsersService usersService;
 
     @Autowired
-    protected AcspDataService acspDataService;
+    protected AcspProfileService acspProfileService;
 
     private static final String DEFAULT_DISPLAY_NAME = "Not Provided";
 
@@ -43,16 +43,16 @@ public abstract class AcspMembershipMapper {
     }
 
     @AfterMapping
-    protected void enrichWithAcspDetails( @MappingTarget final AcspMembership acspMembership, @Context AcspDataDao acspDetails ){
-        if ( Objects.isNull( acspDetails ) ){
-            acspDetails = acspDataService.fetchAcspData( acspMembership.getAcspNumber() );
+    protected void enrichWithAcspProfile( @MappingTarget final AcspMembership acspMembership, @Context AcspProfile acspProfile ){
+        if ( Objects.isNull( acspProfile ) ){
+            acspProfile = acspProfileService.fetchAcspProfile( acspMembership.getAcspNumber() );
         }
-        acspMembership.setAcspName( acspDetails.getAcspName() );
-        acspMembership.setAcspStatus( AcspStatusEnum.fromValue( acspDetails.getAcspStatus() ) );
+        acspMembership.setAcspName( acspProfile.getName() );
+        acspMembership.setAcspStatus( AcspStatusEnum.fromValue( acspProfile.getStatus().getValue() ) );
     }
 
     @Mapping( target = "userRole", expression = "java(AcspMembership.UserRoleEnum.fromValue(acspMembersDao.getUserRole()))" )
     @Mapping( target = "membershipStatus", expression = "java(AcspMembership.MembershipStatusEnum.fromValue(acspMembersDao.getStatus()))" )
-    public abstract AcspMembership daoToDto( final AcspMembersDao acspMembersDao, @Context final User user, @Context final AcspDataDao acspData );
+    public abstract AcspMembership daoToDto( final AcspMembersDao acspMembersDao, @Context final User user, @Context final AcspProfile acspProfile );
 
 }

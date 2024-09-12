@@ -19,7 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
@@ -41,7 +41,7 @@ class AcspMembershipsControllerTest {
     private UsersService usersService;
 
     @MockBean
-    private AcspDataService acspDataService;
+    private AcspProfileService acspProfileService;
 
     @MockBean
     private AcspMembersService acspMembersService;
@@ -53,10 +53,10 @@ class AcspMembershipsControllerTest {
 
         @Test
         void getMembersForAcspReturnsOk() throws Exception {
-            final var acspDataDao = testDataManager.fetchAcspDataDaos( "COMA001" ).getFirst();
+            final var acspProfile = testDataManager.fetchAcspProfiles( "COMA001" ).getFirst();
 
-            Mockito.doReturn( acspDataDao ).when( acspDataService ).fetchAcspData("COMA001");
-            Mockito.doReturn( new AcspMembershipsList() ).when( acspMembersService ).findAllByAcspNumberAndRole( "COMA001", acspDataDao, "owner", false, 0, 15 );
+            Mockito.doReturn( acspProfile ).when(acspProfileService).fetchAcspProfile("COMA001");
+            Mockito.doReturn( new AcspMembershipsList() ).when( acspMembersService ).findAllByAcspNumberAndRole( "COMA001", acspProfile, "owner", false, 0, 15 );
 
             final var response =
             mockMvc.perform( get( "/acsps/COMA001/memberships?include_removed=false&role=owner&page_index=0&items_per_page=15" )
@@ -73,10 +73,10 @@ class AcspMembershipsControllerTest {
 
         @Test
         void getMembersForAcspWithInvalidRoleThrowsBadRequestException() throws Exception {
-            final var acspDataDao = testDataManager.fetchAcspDataDaos( "COMA001" ).getFirst();
+            final var acspProfile = testDataManager.fetchAcspProfiles( "COMA001" ).getFirst();
 
-            Mockito.doReturn( acspDataDao ).when( acspDataService ).fetchAcspData("COMA001");
-            Mockito.doReturn( new AcspMembershipsList() ).when( acspMembersService ).findAllByAcspNumberAndRole( "COMA001", acspDataDao, "owner", false, 0, 15 );
+            Mockito.doReturn( acspProfile ).when(acspProfileService).fetchAcspProfile("COMA001");
+            Mockito.doReturn( new AcspMembershipsList() ).when( acspMembersService ).findAllByAcspNumberAndRole( "COMA001", acspProfile, "owner", false, 0, 15 );
 
             mockMvc.perform( get( "/acsps/COMA001/memberships?include_removed=false&role=invalid_role&page_index=0&items_per_page=15" )
                             .header("X-Request-Id", "theId123")
@@ -88,10 +88,10 @@ class AcspMembershipsControllerTest {
 
         @Test
         void getMembersForAcspWithoutRoleReturnsOk() throws Exception {
-            final var acspDataDao = testDataManager.fetchAcspDataDaos( "COMA001" ).getFirst();
+            final var acspProfile = testDataManager.fetchAcspProfiles( "COMA001" ).getFirst();
 
-            Mockito.doReturn( acspDataDao ).when( acspDataService ).fetchAcspData("COMA001");
-            Mockito.doReturn( new AcspMembershipsList() ).when( acspMembersService ).findAllByAcspNumberAndRole( "COMA001", acspDataDao, null, true, 0, 20 );
+            Mockito.doReturn( acspProfile ).when(acspProfileService).fetchAcspProfile("COMA001");
+            Mockito.doReturn( new AcspMembershipsList() ).when( acspMembersService ).findAllByAcspNumberAndRole( "COMA001", acspProfile, null, true, 0, 20 );
 
             final var response =
                     mockMvc.perform( get( "/acsps/COMA001/memberships?include_removed=true&page_index=0&items_per_page=20" )
@@ -112,13 +112,13 @@ class AcspMembershipsControllerTest {
 
         @Test
         void findMembershipsForUserAndAcspReturnsOk() throws Exception {
-            final var acspDataDao = testDataManager.fetchAcspDataDaos( "COMA001" ).getFirst();
+            final var acspProfile = testDataManager.fetchAcspProfiles( "COMA001" ).getFirst();
             final var user = testDataManager.fetchUserDtos( "TSU001" ).getFirst();
             final var usersList = new UsersList();
             usersList.add( user );
 
             Mockito.doReturn( usersList ).when( usersService ).searchUserDetails( List.of( "buzz.lightyear@toystory.com" ) );
-            Mockito.doReturn( acspDataDao ).when( acspDataService ).fetchAcspData( "COMA001" );
+            Mockito.doReturn( acspProfile ).when(acspProfileService).fetchAcspProfile( "COMA001" );
             Mockito.doReturn( new AcspMembershipsList() ).when( acspMembersService ).fetchAcspMemberships( user, false, "COMA001" );
 
             final var response =
@@ -239,7 +239,7 @@ class AcspMembershipsControllerTest {
 
         @Test
         void addMemberForAcspWithNonexistentAcspNumberReturnsBadRequest() throws Exception {
-            Mockito.doThrow( new NotFoundRuntimeException( "", "" ) ).when( acspDataService ).fetchAcspData( "TSA001" );
+            Mockito.doThrow( new NotFoundRuntimeException( "", "" ) ).when(acspProfileService).fetchAcspProfile( "TSA001" );
 
             mockMvc.perform( post( "/acsps/TSA001/memberships" )
                             .header( "X-Request-Id", "theId123" )
@@ -284,12 +284,12 @@ class AcspMembershipsControllerTest {
         @Test
         void addMemberForAcspWithLoggedStandardUserReturnsBadRequest() throws Exception {
             final var users = testDataManager.fetchUserDtos( "COMU007", "COMU001" );
-            final var acsp = testDataManager.fetchAcspDataDaos( "COMA001" ).getFirst();
+            final var acspProfile = testDataManager.fetchAcspProfiles( "COMA001" ).getFirst();
             final var membership = testDataManager.fetchAcspMembersDaos( "COM007" ).getFirst();
 
             Mockito.doReturn( users.getFirst() ).when( usersService ).fetchUserDetails( "COMU007" );
             Mockito.doReturn( users.getLast() ).when( usersService ).fetchUserDetails( "COMU001" );
-            Mockito.doReturn( acsp ).when( acspDataService ).fetchAcspData( "COMA001" );
+            Mockito.doReturn( acspProfile ).when(acspProfileService).fetchAcspProfile( "COMA001" );
             Mockito.doReturn( Optional.of( membership ) ).when( acspMembersService ).fetchActiveAcspMembership( "COMU007", "COMA001" );
 
             mockMvc.perform( post( "/acsps/COMA001/memberships" )
@@ -305,12 +305,12 @@ class AcspMembershipsControllerTest {
         @Test
         void addMemberForAcspWithLoggedAdminUserAndNewOwnerUserReturnsBadRequest() throws Exception {
             final var users = testDataManager.fetchUserDtos( "COMU005", "COMU001" );
-            final var acsp = testDataManager.fetchAcspDataDaos( "COMA001" ).getFirst();
+            final var acspProfile = testDataManager.fetchAcspProfiles( "COMA001" ).getFirst();
             final var membership = testDataManager.fetchAcspMembersDaos( "COM005" ).getFirst();
 
             Mockito.doReturn( users.getFirst() ).when( usersService ).fetchUserDetails( "COMU005" );
             Mockito.doReturn( users.getLast() ).when( usersService ).fetchUserDetails( "COMU001" );
-            Mockito.doReturn( acsp ).when( acspDataService ).fetchAcspData( "COMA001" );
+            Mockito.doReturn( acspProfile ).when(acspProfileService).fetchAcspProfile( "COMA001" );
             Mockito.doReturn( Optional.of( membership ) ).when( acspMembersService ).fetchActiveAcspMembership( "COMU005", "COMA001" );
 
             mockMvc.perform( post( "/acsps/COMA001/memberships" )
@@ -326,11 +326,11 @@ class AcspMembershipsControllerTest {
         @Test
         void addMemberForAcspWithCorrectDataReturnsAddedAcspMembership() throws Exception {
             final var targetUserData = testDataManager.fetchUserDtos( "COMU001" ).getFirst();
-            final var targetAcspData = testDataManager.fetchAcspDataDaos( "TSA001" ).getFirst();
+            final var targetAcspProfile = testDataManager.fetchAcspProfiles( "TSA001" ).getFirst();
 
             Mockito.doReturn( testDataManager.fetchUserDtos( "TSU001" ).getFirst() ).when( usersService ).fetchUserDetails( "TSU001" );
             Mockito.doReturn( targetUserData ).when( usersService ).fetchUserDetails( "COMU001" );
-            Mockito.doReturn( targetAcspData ).when( acspDataService ).fetchAcspData( "TSA001" );
+            Mockito.doReturn( targetAcspProfile ).when(acspProfileService).fetchAcspProfile( "TSA001" );
             Mockito.doReturn( List.of() ).when( acspMembersService ).fetchAcspMembershipDaos( "COMU001", false );
             Mockito.doReturn( Optional.of( testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
 
@@ -343,7 +343,7 @@ class AcspMembershipsControllerTest {
                             .content( "{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}" ) )
                     .andExpect( status().isCreated() );
 
-            Mockito.verify( acspMembersService ).addAcspMembership( targetUserData, targetAcspData, "TSA001", UserRoleEnum.STANDARD,"TSU001" );
+            Mockito.verify( acspMembersService ).addAcspMembership( targetUserData, targetAcspProfile, "TSA001", UserRoleEnum.STANDARD,"TSU001" );
         }
 
     }
