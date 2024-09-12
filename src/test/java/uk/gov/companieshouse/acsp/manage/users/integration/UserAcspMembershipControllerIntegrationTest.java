@@ -15,7 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
-import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
 
@@ -43,7 +43,7 @@ class UserAcspMembershipControllerIntegrationTest {
     private UsersService usersService;
 
     @MockBean
-    private AcspDataService acspDataService;
+    private AcspProfileService acspProfileService;
 
     @Autowired
     private AcspMembersRepository acspMembersRepository;
@@ -54,8 +54,9 @@ class UserAcspMembershipControllerIntegrationTest {
         Arrays.stream( userIds ).forEach( userId -> Mockito.doReturn( testDataManager.fetchUserDtos( userId ).getFirst() ).when( usersService ).fetchUserDetails( userId ) );
     }
 
-    private void mockFetchAcspDataFor( final String... acspNumbers ) {
-        Arrays.stream(acspNumbers).forEach( acspNumber -> Mockito.doReturn( testDataManager.fetchAcspDataDaos( acspNumber ).getFirst() ).when( acspDataService ).fetchAcspData( acspNumber ) );
+    private void mockFetchAcspProfilesFor( final String... acspNumbers ) {
+        Arrays.stream(acspNumbers).forEach( acspNumber -> Mockito.doReturn( testDataManager.fetchAcspProfiles( acspNumber ).getFirst() ).when(
+                acspProfileService).fetchAcspProfile( acspNumber ) );
     }
 
     @Test
@@ -82,7 +83,7 @@ class UserAcspMembershipControllerIntegrationTest {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001", "TS002", "COM001", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016" ) );
 
         mockFetchUserDetailsFor("COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008", "COMU009", "COMU010", "COMU011", "COMU012", "COMU013", "COMU014", "COMU015", "COMU016");
-        mockFetchAcspDataFor("COMA001");
+        mockFetchAcspProfilesFor("COMA001");
 
         final var response =
         mockMvc.perform(get("/user/acsps/memberships")
@@ -102,7 +103,7 @@ class UserAcspMembershipControllerIntegrationTest {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001", "TS002", "COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016" ) );
 
         mockFetchUserDetailsFor( "COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008", "COMU009", "COMU010", "COMU011", "COMU012", "COMU013", "COMU014", "COMU015", "COMU016" );
-        mockFetchAcspDataFor( "COMA001" );
+        mockFetchAcspProfilesFor( "COMA001" );
 
         final var response =
         mockMvc.perform(get("/user/acsps/memberships")

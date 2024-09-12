@@ -11,9 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
 import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
-import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.PaginationValidatorUtil;
@@ -25,6 +24,7 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRole
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyLookup;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPost;
+import uk.gov.companieshouse.api.acspprofile.AcspProfile;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 
@@ -41,12 +41,12 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
   private static final String REQUEST_ID_KEY = "requestId";
 
   private final UsersService usersService;
-  private final AcspDataService acspDataService;
+  private final AcspProfileService acspProfileService;
   private final AcspMembersService acspMembersService;
 
-  public AcspMembershipsController( final UsersService usersService, final AcspDataService acspDataService, final AcspMembersService acspMembersService ) {
+  public AcspMembershipsController( final UsersService usersService, final AcspProfileService acspProfileService, final AcspMembersService acspMembersService ) {
     this.usersService = usersService;
-    this.acspDataService = acspDataService;
+    this.acspProfileService = acspProfileService;
     this.acspMembersService = acspMembersService;
   }
 
@@ -84,9 +84,9 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
       throw new BadRequestRuntimeException( ERROR_CODE_1001.getCode() );
     }
 
-    AcspDataDao acspDataDao;
+    AcspProfile acspProfile;
     try {
-      acspDataDao = acspDataService.fetchAcspData( acspNumber );
+      acspProfile = acspProfileService.fetchAcspProfile( acspNumber );
     } catch ( NotFoundRuntimeException exception ) {
       throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
     }
@@ -102,7 +102,7 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
       throwBadRequestWhenActionIsNotPermittedByOAuth2User( requestingUserId, acspNumber, targetUserRole );
     }
 
-    final var membership = acspMembersService.addAcspMembership( targetUser, acspDataDao, acspNumber, targetUserRole, requestingUserId );
+    final var membership = acspMembersService.addAcspMembership( targetUser, acspProfile, acspNumber, targetUserRole, requestingUserId );
 
     LOG.infoContext( xRequestId, String.format( "Successfully created %s membership for user %s at Acsp %s", targetUserRole.getValue(), targetUserId, acspNumber ), null );
 
@@ -141,8 +141,7 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
                 });
     final var user = usersList.getFirst();
 
-    // This will probably be replaced by the ACSP Data Sync API once available.
-    acspDataService.fetchAcspData(acspNumber); // can throw 404.
+    acspProfileService.fetchAcspProfile(acspNumber);
 
     final var acspMembershipsList =
         acspMembersService.fetchAcspMemberships(user, includeRemoved, acspNumber);
@@ -190,13 +189,12 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
     final var paginationParams =
         PaginationValidatorUtil.validateAndGetParams(pageIndex, itemsPerPage);
 
-    // This will probably be replaced by the ACSP Data Sync API once available.
-    final var acspDataDao = acspDataService.fetchAcspData(acspNumber);
+    final var acspProfile = acspProfileService.fetchAcspProfile(acspNumber);
 
     final var acspMembershipsList =
         acspMembersService.findAllByAcspNumberAndRole(
             acspNumber,
-            acspDataDao,
+            acspProfile,
             role,
             includeRemoved,
             paginationParams.pageIndex,

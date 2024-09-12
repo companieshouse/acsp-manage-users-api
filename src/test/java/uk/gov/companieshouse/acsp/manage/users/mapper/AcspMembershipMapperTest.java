@@ -14,7 +14,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
-import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.AcspStatusEnum;
@@ -29,7 +29,7 @@ class AcspMembershipMapperTest {
     private UsersService usersService;
 
     @Mock
-    private AcspDataService acspDataService;
+    private AcspProfileService acspProfileService;
 
     private AcspMembershipMapper acspMembershipMapper;
 
@@ -43,7 +43,7 @@ class AcspMembershipMapperTest {
     void setup() {
         acspMembershipMapper = new AcspMembershipMapperImpl();
         acspMembershipMapper.usersService = usersService;
-        acspMembershipMapper.acspDataService = acspDataService;
+        acspMembershipMapper.acspProfileService = acspProfileService;
     }
 
     @Test
@@ -90,24 +90,24 @@ class AcspMembershipMapperTest {
     }
 
     @Test
-    void enrichWithAcspDetailsEnrichesWithNameAndStatus(){
+    void enrichWithAcspProfileEnrichesWithNameAndStatus(){
         final var acspMembership = new AcspMembership().userId( "TSU002" );
-        final var acspDetails = testDataManager.fetchAcspDataDaos( "TSA001" ).getFirst();
+        final var acspProfile = testDataManager.fetchAcspProfiles( "TSA001" ).getFirst();
 
-        acspMembershipMapper.enrichWithAcspDetails( acspMembership, acspDetails );
+        acspMembershipMapper.enrichWithAcspProfile( acspMembership, acspProfile );
 
         Assertions.assertEquals( "Toy Story", acspMembership.getAcspName() );
         Assertions.assertEquals( AcspStatusEnum.ACTIVE, acspMembership.getAcspStatus() );
     }
 
     @Test
-    void enrichWithAcspDetailsWithoutAcspDetailsRetrievesNameAndStatus(){
+    void enrichWithAcspProfileWithoutAcspProfileRetrievesNameAndStatus(){
         final var acspMembership = new AcspMembership().acspNumber( "TSA001" );
-        final var acspDetails = testDataManager.fetchAcspDataDaos( "TSA001" ).getFirst();
+        final var acspProfile = testDataManager.fetchAcspProfiles( "TSA001" ).getFirst();
 
-        Mockito.doReturn( acspDetails ).when( acspDataService ).fetchAcspData( "TSA001" );
+        Mockito.doReturn( acspProfile ).when(acspProfileService).fetchAcspProfile( "TSA001" );
 
-        acspMembershipMapper.enrichWithAcspDetails( acspMembership, null );
+        acspMembershipMapper.enrichWithAcspProfile( acspMembership, null );
 
         Assertions.assertEquals( "Toy Story", acspMembership.getAcspName() );
         Assertions.assertEquals( AcspStatusEnum.ACTIVE, acspMembership.getAcspStatus() );
@@ -121,10 +121,10 @@ class AcspMembershipMapperTest {
     @Test
     void daoToDtoAppliedToPartialDaoSuccessfullyMapsToDto() {
         final var dao = testDataManager.fetchAcspMembersDaos("TS001").getFirst();
-        final var acspData = testDataManager.fetchAcspDataDaos("TSA001").getFirst();
+        final var acspProfile = testDataManager.fetchAcspProfiles("TSA001").getFirst();
         final var userData = testDataManager.fetchUserDtos("TSU001").getFirst();
 
-        Mockito.doReturn(acspData).when(acspDataService).fetchAcspData("TSA001");
+        Mockito.doReturn(acspProfile).when(acspProfileService).fetchAcspProfile("TSA001");
         Mockito.doReturn(userData).when(usersService).fetchUserDetails("TSU001");
 
         final var dto = acspMembershipMapper.daoToDto(dao, null, null);
@@ -149,10 +149,10 @@ class AcspMembershipMapperTest {
     @Test
     void daoToDtoAppliedToCompleteDaoSuccessfullyMapsToDto() {
         final var dao = testDataManager.fetchAcspMembersDaos("TS002").getFirst();
-        final var acspData = testDataManager.fetchAcspDataDaos("TSA001").getFirst();
+        final var acspProfile = testDataManager.fetchAcspProfiles("TSA001").getFirst();
         final var userData = testDataManager.fetchUserDtos("TSU002").getFirst();
 
-        Mockito.doReturn(acspData).when(acspDataService).fetchAcspData("TSA001");
+        Mockito.doReturn(acspProfile).when(acspProfileService).fetchAcspProfile("TSA001");
         Mockito.doReturn(userData).when(usersService).fetchUserDetails("TSU002");
 
         final var dto = acspMembershipMapper.daoToDto(dao, null, null);
@@ -177,10 +177,10 @@ class AcspMembershipMapperTest {
     @Test
     void daoToDtoWithThreeParametersAppliedToPartialDaoSuccessfullyMapsToDto() {
         final var dao = testDataManager.fetchAcspMembersDaos("TS001").getFirst();
-        final var acspData = testDataManager.fetchAcspDataDaos("TSA001").getFirst();
+        final var acspProfile = testDataManager.fetchAcspProfiles("TSA001").getFirst();
         final var userData = testDataManager.fetchUserDtos("TSU001").getFirst();
 
-        final var dto = acspMembershipMapper.daoToDto(dao, userData, acspData);
+        final var dto = acspMembershipMapper.daoToDto(dao, userData, acspProfile);
 
         Assertions.assertEquals(dao.getEtag(), dto.getEtag());
         Assertions.assertEquals("TS001", dto.getId());
@@ -189,8 +189,8 @@ class AcspMembershipMapperTest {
         Assertions.assertEquals(userData.getEmail(), dto.getUserEmail());
         Assertions.assertEquals(UserRoleEnum.OWNER, dto.getUserRole());
         Assertions.assertEquals("TSA001", dto.getAcspNumber());
-        Assertions.assertEquals(acspData.getAcspName(), dto.getAcspName());
-        Assertions.assertEquals(acspData.getAcspStatus(), dto.getAcspStatus().getValue());
+        Assertions.assertEquals(acspProfile.getName(), dto.getAcspName());
+        Assertions.assertEquals(acspProfile.getStatus().getValue(), dto.getAcspStatus().getValue());
         Assertions.assertEquals(localDateTimeToNormalisedString(dao.getAddedAt()), reduceTimestampResolution(dto.getAddedAt().toString()));
         Assertions.assertNull(dto.getAddedBy());
         Assertions.assertNull(dto.getRemovedBy());
@@ -202,10 +202,10 @@ class AcspMembershipMapperTest {
     @Test
     void daoToDtoWithThreeParametersAppliedToCompleteDaoSuccessfullyMapsToDto() {
         final var dao = testDataManager.fetchAcspMembersDaos("TS002").getFirst();
-        final var acspData = testDataManager.fetchAcspDataDaos("TSA001").getFirst();
+        final var acspProfile = testDataManager.fetchAcspProfiles("TSA001").getFirst();
         final var userData = testDataManager.fetchUserDtos("TSU002").getFirst();
 
-        final var dto = acspMembershipMapper.daoToDto(dao, userData, acspData);
+        final var dto = acspMembershipMapper.daoToDto(dao, userData, acspProfile);
 
         Assertions.assertEquals(dao.getEtag(), dto.getEtag());
         Assertions.assertEquals("TS002", dto.getId());
@@ -214,8 +214,8 @@ class AcspMembershipMapperTest {
         Assertions.assertEquals(userData.getEmail(), dto.getUserEmail());
         Assertions.assertEquals(UserRoleEnum.ADMIN, dto.getUserRole());
         Assertions.assertEquals("TSA001", dto.getAcspNumber());
-        Assertions.assertEquals(acspData.getAcspName(), dto.getAcspName());
-        Assertions.assertEquals(acspData.getAcspStatus(), dto.getAcspStatus().getValue());
+        Assertions.assertEquals(acspProfile.getName(), dto.getAcspName());
+        Assertions.assertEquals(acspProfile.getStatus().getValue(), dto.getAcspStatus().getValue());
         Assertions.assertEquals(localDateTimeToNormalisedString(dao.getAddedAt()), reduceTimestampResolution(dto.getAddedAt().toString()));
         Assertions.assertEquals("TSU001", dto.getAddedBy());
         Assertions.assertEquals("TSU001", dto.getRemovedBy());

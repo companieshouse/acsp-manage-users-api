@@ -21,7 +21,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
-import uk.gov.companieshouse.acsp.manage.users.service.AcspDataService;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
@@ -34,7 +34,7 @@ class AcspMembershipCollectionMappersTest {
     private UsersService usersService;
 
     @Mock
-    private AcspDataService acspDataService;
+    private AcspProfileService acspProfileService;
 
     @InjectMocks
     private AcspMembershipCollectionMappers acspMembershipCollectionMappers = new AcspMembershipCollectionMappersImpl();
@@ -48,24 +48,24 @@ class AcspMembershipCollectionMappersTest {
     @Test
     void daoToDtoWithNullInputThrowNullPointerException() {
         final var userData = testDataManager.fetchUserDtos("TSU001").getFirst();
-        final var acspData = testDataManager.fetchAcspDataDaos( "TSA001" ).getFirst();
-        Assertions.assertThrows(NullPointerException.class, () -> acspMembershipCollectionMappers.daoToDto( (List<AcspMembersDao>) null, userData, acspData ) );
+        final var acspProfile = testDataManager.fetchAcspProfiles( "TSA001" ).getFirst();
+        Assertions.assertThrows(NullPointerException.class, () -> acspMembershipCollectionMappers.daoToDto( (List<AcspMembersDao>) null, userData, acspProfile ) );
     }
 
     @Test
     void daoToDtoWithEmptyListReturnsEmptyList() {
         final var userData = testDataManager.fetchUserDtos("TSU001").getFirst();
-        final var acspData = testDataManager.fetchAcspDataDaos( "TSA001" ).getFirst();
-        Assertions.assertEquals(List.of(), acspMembershipCollectionMappers.daoToDto( List.of(), userData, acspData ) );
+        final var acspProfile = testDataManager.fetchAcspProfiles( "TSA001" ).getFirst();
+        Assertions.assertEquals(List.of(), acspMembershipCollectionMappers.daoToDto( List.of(), userData, acspProfile ) );
     }
 
     @Test
-    void daoToDtoWithoutUserDataOrAcspDataSuccessfullyMapsToDto() {
+    void daoToDtoWithoutUserDataOrAcspProfileSuccessfullyMapsToDto() {
         final var dao = testDataManager.fetchAcspMembersDaos("TS002").getFirst();
-        final var acspData = testDataManager.fetchAcspDataDaos("TSA001").getFirst();
+        final var acspProfile = testDataManager.fetchAcspProfiles("TSA001").getFirst();
         final var userData = testDataManager.fetchUserDtos("TSU002").getFirst();
 
-        Mockito.doReturn(acspData).when(acspDataService).fetchAcspData("TSA001");
+        Mockito.doReturn(acspProfile).when(acspProfileService).fetchAcspProfile("TSA001");
         Mockito.doReturn( Map.of( "TSU002", userData ) ).when( usersService ).fetchUserDetails( any( Stream.class ) );
 
         final var dtos = acspMembershipCollectionMappers.daoToDto(List.of(dao), null, null);
@@ -90,12 +90,12 @@ class AcspMembershipCollectionMappersTest {
     }
 
     @Test
-    void daoToDtoWithUserDataAndAcspDataSuccessfullyMapsToDto() {
+    void daoToDtoWithUserDataAndAcspProfileSuccessfullyMapsToDto() {
         final var dao = testDataManager.fetchAcspMembersDaos("TS002").getFirst();
-        final var acspData = testDataManager.fetchAcspDataDaos("TSA001").getFirst();
+        final var acspProfile = testDataManager.fetchAcspProfiles("TSA001").getFirst();
         final var userData = testDataManager.fetchUserDtos("TSU002").getFirst();
 
-        final var dtos = acspMembershipCollectionMappers.daoToDto(List.of(dao), userData, acspData);
+        final var dtos = acspMembershipCollectionMappers.daoToDto(List.of(dao), userData, acspProfile);
         final var dto = dtos.getFirst();
 
         Assertions.assertEquals( 1, dtos.size() );
@@ -119,19 +119,19 @@ class AcspMembershipCollectionMappersTest {
     @Test
     void daoToDtoPageWithNullInputThrowNullPointerException() {
         final var userData = testDataManager.fetchUserDtos("TSU001").getFirst();
-        final var acspData = testDataManager.fetchAcspDataDaos( "TSA001" ).getFirst();
-        Assertions.assertThrows(NullPointerException.class, () -> acspMembershipCollectionMappers.daoToDto( (Page<AcspMembersDao>) null, userData, acspData ) );
+        final var acspProfile = testDataManager.fetchAcspProfiles( "TSA001" ).getFirst();
+        Assertions.assertThrows(NullPointerException.class, () -> acspMembershipCollectionMappers.daoToDto( (Page<AcspMembersDao>) null, userData, acspProfile ) );
     }
 
     @Test
     void daoToDtoWithEmptyPageReturnsEmptyAcspMembershipsList() {
         final var userData = testDataManager.fetchUserDtos("TSU001").getFirst();
-        final var acspData = testDataManager.fetchAcspDataDaos( "TSA001" ).getFirst();
-        Assertions.assertTrue( acspMembershipCollectionMappers.daoToDto( Page.empty(), userData, acspData ).getItems().isEmpty() );
+        final var acspProfile = testDataManager.fetchAcspProfiles( "TSA001" ).getFirst();
+        Assertions.assertTrue( acspMembershipCollectionMappers.daoToDto( Page.empty(), userData, acspProfile ).getItems().isEmpty() );
     }
 
     @Test
-    void daoToDtoWithNullAcspDataThrowsIllegalArgumentException(){
+    void daoToDtoWithNullAcspProfileThrowsIllegalArgumentException(){
         final var daos = testDataManager.fetchAcspMembersDaos("TS001", "TS002");
         final var page = new PageImpl<>(daos, PageRequest.of(4, 2), 12);
         Assertions.assertThrows( IllegalArgumentException.class, () -> acspMembershipCollectionMappers.daoToDto(page, null, null ) );
@@ -141,12 +141,12 @@ class AcspMembershipCollectionMappersTest {
     void daoToDtoWithoutUserDataSuccessfullyMapsToDtoForOnlyPage() {
         final var daos = testDataManager.fetchAcspMembersDaos("TS001", "TS002");
         final var userData = testDataManager.fetchUserDtos("TSU001", "TSU002");
-        final var acspData = testDataManager.fetchAcspDataDaos("TSA001").getFirst();
+        final var acspProfile = testDataManager.fetchAcspProfiles("TSA001").getFirst();
         final var page = new PageImpl<>(daos, PageRequest.of(0, 15), 2);
 
         Mockito.doReturn( Map.of( "TSU001", userData.getFirst(), "TSU002", userData.getLast() ) ).when( usersService ).fetchUserDetails( any( Stream.class ) );
 
-        final var dtos = acspMembershipCollectionMappers.daoToDto(page, null, acspData);
+        final var dtos = acspMembershipCollectionMappers.daoToDto(page, null, acspProfile);
         final var firstDto = dtos.getItems().getFirst();
         final var secondDto = dtos.getItems().getLast();
 
@@ -180,10 +180,10 @@ class AcspMembershipCollectionMappersTest {
         final var daos = List.of( firstDao, secondDao );
 
         final var userData = testDataManager.fetchUserDtos("TSU001" );
-        final var acspData = testDataManager.fetchAcspDataDaos("TSA001").getFirst();
+        final var acspProfile = testDataManager.fetchAcspProfiles("TSA001").getFirst();
         final var page = new PageImpl<>(daos, PageRequest.of(4, 2), 12);
 
-        final var dtos = acspMembershipCollectionMappers.daoToDto(page, userData.getFirst(), acspData);
+        final var dtos = acspMembershipCollectionMappers.daoToDto(page, userData.getFirst(), acspProfile);
         final var firstDto = dtos.getItems().getFirst();
         final var secondDto = dtos.getItems().getLast();
 

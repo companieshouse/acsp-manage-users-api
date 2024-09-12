@@ -12,13 +12,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import uk.gov.companieshouse.acsp.manage.users.model.AcspDataDao;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.AcspStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
+import uk.gov.companieshouse.api.acspprofile.AcspProfile;
+import uk.gov.companieshouse.api.acspprofile.AcspProfile.StatusEnum;
 
 public class TestDataManager {
 
@@ -33,7 +34,7 @@ public class TestDataManager {
 
     private final Map<String, Supplier<AcspMembersDao>> acspMembersDaoSuppliers = new HashMap<>();
     private final Map<String, Supplier<User>> userDtoSuppliers = new HashMap<>();
-    private final Map<String, Supplier<AcspDataDao>> acspDataDaoSuppliers = new HashMap<>();
+    private final Map<String, Supplier<AcspProfile>> acspProfileSuppliers = new HashMap<>();
 
     private void instantiateAcspMembersDaoSuppliers(){
         final Supplier<AcspMembersDao> ToyStoryBuzzAcspMembersDao = () -> {
@@ -763,66 +764,66 @@ public class TestDataManager {
 
     }
 
-    private void instantiateAcspDataDaoSuppliers(){
-        final Supplier<AcspDataDao> ToyStoryAcspDataDao = () -> {
-            final var acspDataDao = new AcspDataDao();
-            acspDataDao.setId("TSA001");
-            acspDataDao.setAcspName( "Toy Story" );
-            acspDataDao.setAcspStatus("active");
-            return acspDataDao;
+    private void instantiateAcspProfileSuppliers(){
+        final Supplier<AcspProfile> ToyStoryAcspProfile = () -> {
+            final var acspProfile = new AcspProfile();
+            acspProfile.setNumber("TSA001");
+            acspProfile.setName( "Toy Story" );
+            acspProfile.setStatus( StatusEnum.ACTIVE );
+            return acspProfile;
         };
-        acspDataDaoSuppliers.put( "TSA001", ToyStoryAcspDataDao );
+        acspProfileSuppliers.put( "TSA001", ToyStoryAcspProfile );
 
-        final Supplier<AcspDataDao> NetflixAcspDataDao = () -> {
-            final var acspDataDao = new AcspDataDao();
-            acspDataDao.setId("NFA001");
-            acspDataDao.setAcspName( "Netflix" );
-            acspDataDao.setAcspStatus("active");
-            return acspDataDao;
+        final Supplier<AcspProfile> NetflixAcspProfile = () -> {
+            final var acspProfile = new AcspProfile();
+            acspProfile.setNumber("NFA001");
+            acspProfile.setName( "Netflix" );
+            acspProfile.setStatus( StatusEnum.ACTIVE );
+            return acspProfile;
         };
-        acspDataDaoSuppliers.put( "NFA001", NetflixAcspDataDao );
+        acspProfileSuppliers.put( "NFA001", NetflixAcspProfile );
 
-        final Supplier<AcspDataDao> comedyAcspDataDao = () -> {
-            final var acspDataDao = new AcspDataDao();
-            acspDataDao.setId("COMA001");
-            acspDataDao.setAcspName( "Comedy" );
-            acspDataDao.setAcspStatus("active");
-            return acspDataDao;
+        final Supplier<AcspProfile> comedyAcspProfile = () -> {
+            final var acspProfile = new AcspProfile();
+            acspProfile.setNumber( "COMA001" );
+            acspProfile.setName( "Comedy" );
+            acspProfile.setStatus( StatusEnum.ACTIVE );
+            return acspProfile;
         };
-        acspDataDaoSuppliers.put( "COMA001", comedyAcspDataDao );
+        acspProfileSuppliers.put( "COMA001", comedyAcspProfile );
 
-        final Supplier<AcspDataDao> witcherDataDao = () -> {
-            final var acspDataDao = new AcspDataDao();
-            acspDataDao.setId("WITA001");
-            acspDataDao.setAcspName( "Witcher" );
-            acspDataDao.setAcspStatus("active");
-            return acspDataDao;
+        final Supplier<AcspProfile> witcherAcspProfile = () -> {
+            final var acspProfile = new AcspProfile();
+            acspProfile.setNumber("WITA001");
+            acspProfile.setName( "Witcher" );
+            acspProfile.setStatus( StatusEnum.ACTIVE );
+            return acspProfile;
         };
-        acspDataDaoSuppliers.put( "WITA001", witcherDataDao );
+        acspProfileSuppliers.put( "WITA001", witcherAcspProfile );
 
-        final Supplier<AcspDataDao> neighboursDataDao = () -> {
-            final var acspDataDao = new AcspDataDao();
-            acspDataDao.setId("NEIA001");
-            acspDataDao.setAcspName( "Neighbours" );
-            acspDataDao.setAcspStatus("active");
-            return acspDataDao;
+        final Supplier<AcspProfile> neighboursAcspProfile = () -> {
+            final var acspProfile = new AcspProfile();
+            acspProfile.setNumber("NEIA001");
+            acspProfile.setName( "Neighbours" );
+            acspProfile.setStatus( StatusEnum.ACTIVE );
+            return acspProfile;
         };
-        acspDataDaoSuppliers.put( "NEIA001", neighboursDataDao );
+        acspProfileSuppliers.put( "NEIA001", neighboursAcspProfile );
 
-        final Supplier<AcspDataDao> xmenDataDao = () -> {
-            final var acspDataDao = new AcspDataDao();
-            acspDataDao.setId("XMEA001");
-            acspDataDao.setAcspName( "XMen" );
-            acspDataDao.setAcspStatus("active");
-            return acspDataDao;
+        final Supplier<AcspProfile> xmenAcspProfile = () -> {
+            final var acspProfile = new AcspProfile();
+            acspProfile.setNumber("XMEA001");
+            acspProfile.setName( "XMen" );
+            acspProfile.setStatus( StatusEnum.ACTIVE );
+            return acspProfile;
         };
-        acspDataDaoSuppliers.put( "XMEA001", xmenDataDao );
+        acspProfileSuppliers.put( "XMEA001", xmenAcspProfile );
     }
 
     private TestDataManager(){
         instantiateAcspMembersDaoSuppliers();
         instantiateUserDtoSuppliers();
-        instantiateAcspDataDaoSuppliers();
+        instantiateAcspProfileSuppliers();
     }
 
     public List<AcspMembersDao> fetchAcspMembersDaos( final String... ids ){
@@ -839,9 +840,9 @@ public class TestDataManager {
                      .collect( Collectors.toList() );
     }
 
-    public List<AcspDataDao> fetchAcspDataDaos( final String... ids ){
+    public List<AcspProfile> fetchAcspProfiles( final String... ids ){
         return Arrays.stream( ids )
-                .map( acspDataDaoSuppliers::get )
+                .map( acspProfileSuppliers::get )
                 .map( Supplier::get )
                 .collect( Collectors.toList() );
     }
@@ -849,7 +850,7 @@ public class TestDataManager {
     private AcspMembership fetchAcspMembershipDto( final String id ){
         final var acspMembersDao = fetchAcspMembersDaos( id ).getFirst();
         final var userData = fetchUserDtos( acspMembersDao.getUserId() ).getFirst();
-        final var acspData = fetchAcspDataDaos( acspMembersDao.getAcspNumber() ).getFirst();
+        final var acspProfile = fetchAcspProfiles( acspMembersDao.getAcspNumber() ).getFirst();
 
         return new AcspMembership()
                 .id( acspMembersDao.getId() )
@@ -857,8 +858,8 @@ public class TestDataManager {
                 .userEmail( userData.getEmail() )
                 .userDisplayName( Objects.isNull( userData.getDisplayName() ) ? "Not Provided" : userData.getDisplayName() )
                 .acspNumber( acspMembersDao.getAcspNumber() )
-                .acspName( acspData.getAcspName() )
-                .acspStatus( AcspStatusEnum.fromValue( acspData.getAcspStatus() ) )
+                .acspName( acspProfile.getName() )
+                .acspStatus( AcspStatusEnum.fromValue( acspProfile.getStatus().toString() ) )
                 .userRole( UserRoleEnum.fromValue( acspMembersDao.getUserRole() ) )
                 .membershipStatus( MembershipStatusEnum.fromValue( acspMembersDao.getStatus() ) )
                 .addedAt( localDateTimeToOffsetDateTime( acspMembersDao.getAddedAt() ) )
@@ -878,7 +879,5 @@ public class TestDataManager {
         }
         return acspMembershipDtos;
     }
-
-
 
 }
