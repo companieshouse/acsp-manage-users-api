@@ -27,27 +27,27 @@ import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 
-@ExtendWith(MockitoExtension.class)
-@Tag("unit-test")
- class AccountsUserEndpointTest {
+@ExtendWith( MockitoExtension.class )
+@Tag( "unit-test" )
+class AccountsUserEndpointTest {
 
     @Mock
-    ApiClientUtil apiClientService;
+    private ApiClientUtil apiClientService;
 
     @Mock
-    InternalApiClient internalApiClient;
+    private InternalApiClient internalApiClient;
 
     @Mock
-    PrivateAccountsUserResourceHandler privateAccountsUserResourceHandler;
+    private PrivateAccountsUserResourceHandler privateAccountsUserResourceHandler;
 
     @Mock
-    PrivateAccountsUserFindUserBasedOnEmailGet privateAccountsUserFindUserBasedOnEmailGet;
+    private PrivateAccountsUserFindUserBasedOnEmailGet privateAccountsUserFindUserBasedOnEmailGet;
 
     @Mock
-    PrivateAccountsUserUserGet privateAccountsUserUserGet;
+    private PrivateAccountsUserUserGet privateAccountsUserUserGet;
 
     @InjectMocks
-    AccountsUserEndpoint accountsUserEndpoint;
+    private AccountsUserEndpoint accountsUserEndpoint;
 
     @Test
     void searchUserDetailsWithNullInputThrowsNullPointerException() {

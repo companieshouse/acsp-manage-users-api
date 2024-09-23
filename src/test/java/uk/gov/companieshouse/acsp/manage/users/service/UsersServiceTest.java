@@ -1,7 +1,6 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpResponseException.Builder;
@@ -29,17 +28,17 @@ import uk.gov.companieshouse.api.handler.accountsuser.request.PrivateAccountsUse
 import uk.gov.companieshouse.api.handler.exception.URIValidationException;
 import uk.gov.companieshouse.api.model.ApiResponse;
 
-@ExtendWith(MockitoExtension.class)
-@Tag("unit-test")
+@ExtendWith( MockitoExtension.class )
+@Tag( "unit-test" )
 class UsersServiceTest {
 
     @Mock
     private AccountsUserEndpoint accountsUserEndpoint;
 
     @Mock
-    PrivateAccountsUserUserGet privateAccountsUserUserGet;
+    private PrivateAccountsUserUserGet privateAccountsUserUserGet;
 
-    private final TestDataManager testDataManager = TestDataManager.getInstance();
+    private static final TestDataManager testDataManager = TestDataManager.getInstance();
 
     @InjectMocks
     private UsersService usersService;
@@ -191,43 +190,27 @@ class UsersServiceTest {
         Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> usersService.searchUserDetails( emails ) );
     }
 
-  @Test
-  void doesUserExist_UserExists_ReturnsTrue() throws Exception {
-    String userId = "existingUser";
-    User user = new User().userId(userId);
-    ApiResponse<User> response = new ApiResponse<>(200, Map.of(), user);
+    @Test
+    void doesUserExist_UserExists_ReturnsTrue() throws Exception {
+        final var userDto = testDataManager.fetchUserDtos( "TSU001" ).getFirst();
+        Mockito.doReturn( privateAccountsUserUserGet ).when( accountsUserEndpoint ).createGetUserDetailsRequest( "TSU001" );
+        Mockito.doReturn( new ApiResponse<>( 200, Map.of(), userDto ) ).when( privateAccountsUserUserGet ).execute();
+        Assertions.assertTrue( usersService.doesUserExist( "TSU001" ) );
+    }
 
-    when(accountsUserEndpoint.createGetUserDetailsRequest(userId))
-        .thenReturn(privateAccountsUserUserGet);
-    when(privateAccountsUserUserGet.execute()).thenReturn(response);
+    @Test
+    void doesUserExist_UserDoesNotExist_ReturnsFalse() throws Exception {
+        Mockito.doReturn( privateAccountsUserUserGet ).when( accountsUserEndpoint ).createGetUserDetailsRequest( "TSU001" );
+        Mockito.doThrow( new ApiErrorResponseException( new Builder(404, "Not found", new HttpHeaders() ) ) ).when( privateAccountsUserUserGet ).execute();
+        Assertions.assertFalse( usersService.doesUserExist( "TSU001" ) );
+    }
 
-    Assertions.assertTrue(usersService.doesUserExist(userId));
-  }
-
-  @Test
-  void doesUserExist_UserDoesNotExist_ReturnsFalse() throws Exception {
-    String userId = "nonExistentUser";
-
-    when(accountsUserEndpoint.createGetUserDetailsRequest(userId))
-        .thenReturn(privateAccountsUserUserGet);
-    when(privateAccountsUserUserGet.execute())
-        .thenThrow(new ApiErrorResponseException(new Builder(404, "Not found", new HttpHeaders())));
-
-    Assertions.assertFalse(usersService.doesUserExist(userId));
-  }
-
-  @Test
-  void doesUserExist_OtherException_Rethrows() throws Exception {
-    String userId = "exceptionUser";
-
-    when(accountsUserEndpoint.createGetUserDetailsRequest(userId))
-        .thenReturn(privateAccountsUserUserGet);
-    when(privateAccountsUserUserGet.execute())
-        .thenThrow(new InternalServerErrorRuntimeException("Unexpected error"));
-
-    Assertions.assertThrows(
-        InternalServerErrorRuntimeException.class, () -> usersService.doesUserExist(userId));
-  }
+    @Test
+    void doesUserExist_OtherException_Rethrows() throws Exception {
+        Mockito.doReturn( privateAccountsUserUserGet ).when( accountsUserEndpoint ).createGetUserDetailsRequest( "TSU001" );
+        Mockito.doThrow( new InternalServerErrorRuntimeException("Unexpected error") ).when( privateAccountsUserUserGet ).execute();
+        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> usersService.doesUserExist( "TSU001" ) );
+    }
 
     @Test
     void fetchUserDetailsWithNullThrowsNullPointerException(){

@@ -1,6 +1,5 @@
 package uk.gov.companieshouse.acsp.manage.users.mapper;
 
-import static org.mockito.ArgumentMatchers.eq;
 import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.localDateTimeToNormalisedString;
 import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.reduceTimestampResolution;
 
@@ -21,8 +20,8 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.AcspStat
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 
-@ExtendWith(MockitoExtension.class)
-@Tag("unit-test")
+@ExtendWith( MockitoExtension.class )
+@Tag( "unit-test" )
 class AcspMembershipMapperTest {
 
     @Mock
