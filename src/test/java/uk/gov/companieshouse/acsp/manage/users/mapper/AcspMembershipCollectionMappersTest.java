@@ -26,8 +26,8 @@ import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 
-@ExtendWith(MockitoExtension.class)
-@Tag("unit-test")
+@ExtendWith( MockitoExtension.class )
+@Tag( "unit-test" )
 class AcspMembershipCollectionMappersTest {
 
     @Mock
@@ -40,8 +40,6 @@ class AcspMembershipCollectionMappersTest {
     private AcspMembershipCollectionMappers acspMembershipCollectionMappers = new AcspMembershipCollectionMappersImpl();
 
     private final TestDataManager testDataManager = TestDataManager.getInstance();
-
-    private static final String DEFAULT_DISPLAY_NAME = "Not Provided";
 
     private static final String DEFAULT_KIND = "acsp-membership";
 

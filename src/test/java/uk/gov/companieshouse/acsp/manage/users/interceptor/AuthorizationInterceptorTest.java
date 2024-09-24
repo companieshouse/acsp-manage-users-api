@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -21,81 +20,80 @@ import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeExcepti
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 
-@ExtendWith(MockitoExtension.class)
-@Tag("unit-test")
+@ExtendWith( MockitoExtension.class )
+@Tag( "unit-test" )
 class AuthorizationInterceptorTest {
 
-    AuthorizationInterceptor interceptor;
-
     @Mock
-    UsersService usersService;
+    private UsersService usersService;
 
     @InjectMocks
-    AuthorizationInterceptor authorizationInterceptor;
+    private AuthorizationInterceptor authorizationInterceptor;
+
+    private AuthorizationInterceptor interceptor;
 
     @BeforeEach
     void setup(){
-         interceptor = new AuthorizationInterceptor(usersService);
+         interceptor = new AuthorizationInterceptor( usersService );
     }
 
     @Test
     void preHandleWithoutHeadersReturns401() {
+        final var request = new MockHttpServletRequest();
 
-        HttpServletRequest request = new MockHttpServletRequest();
-
-        HttpServletResponse response = new MockHttpServletResponse();
-        assertFalse(interceptor.preHandle(request, response, null));
-        assertEquals(401, response.getStatus());
+        final var response = new MockHttpServletResponse();
+        assertFalse( interceptor.preHandle(request, response, null ) );
+        assertEquals( 401, response.getStatus() );
     }
 
     @Test
     void preHandleWithoutEricIdentityReturns401() {
-        MockHttpServletRequest request = new MockHttpServletRequest();
+        final var request = new MockHttpServletRequest();
         request.addHeader("Eric-Identity-Type", "oauth2");
 
-        HttpServletResponse response = new MockHttpServletResponse();
-        assertFalse(interceptor.preHandle(request, response, null));
-        assertEquals(401, response.getStatus());
+        final var response = new MockHttpServletResponse();
+        assertFalse( interceptor.preHandle(request, response, null ) );
+        assertEquals( 401, response.getStatus() );
     }
 
     @Test
     void preHandleWithoutEricIdentityTypeReturns401() {
-        MockHttpServletRequest request = new MockHttpServletRequest();
+        final var request = new MockHttpServletRequest();
         request.addHeader("Eric-Identity", "abcd123456");
 
-        HttpServletResponse response = new MockHttpServletResponse();
-        assertFalse(interceptor.preHandle(request, response, null));
-        assertEquals(401, response.getStatus());
+        final var response = new MockHttpServletResponse();
+        assertFalse(interceptor.preHandle( request, response, null ) );
+        assertEquals( 401, response.getStatus() );
     }
 
     @Test
     void preHandleWithIncorrectEricIdentityTypeReturns401() {
-        MockHttpServletRequest request = new MockHttpServletRequest();
+        final var request = new MockHttpServletRequest();
         request.addHeader("Eric-Identity", "abcd123456");
         request.addHeader("Eric-Identity-Type", "key");
 
-        HttpServletResponse response = new MockHttpServletResponse();
-        assertFalse(interceptor.preHandle(request, response, null));
-        assertEquals(401, response.getStatus());
+        final var response = new MockHttpServletResponse();
+        assertFalse( interceptor.preHandle(request, response, null ) );
+        assertEquals( 401, response.getStatus() );
     }
 
     @Test
     void preHandleWithMalformedOrNonexistentEricIdentityReturn403() {
-        MockHttpServletRequest request = new MockHttpServletRequest();
+        final var request = new MockHttpServletRequest();
         request.addHeader("Eric-Identity", "$$$");
         request.addHeader( "ERIC-Identity-Type", "oauth2" );
 
-        HttpServletResponse response = new MockHttpServletResponse();
+        final var response = new MockHttpServletResponse();
 
         Mockito.doThrow( new NotFoundRuntimeException( "accounts-association-api", "Not found" ) ).when( usersService ).fetchUserDetails( anyString() );
 
-        assertFalse(interceptor.preHandle(request, response, null));
-        assertEquals(403, response.getStatus());
+        assertFalse( interceptor.preHandle(request, response, null ) );
+        assertEquals( 403, response.getStatus() );
     }
 
     @Test
     void preHandleShouldReturnTrueWhenAuthHeaderAndAuthHeaderTypeOauthAreProvided() {
-        MockHttpServletRequest request = new MockHttpServletRequest();
+        final var request = new MockHttpServletRequest();
         request.addHeader("Eric-identity", "111");
         request.addHeader("Eric-identity-type", "oauth2");
 
@@ -107,7 +105,7 @@ class AuthorizationInterceptorTest {
         Mockito.doReturn( bruce ).when( usersService ).fetchUserDetails( "111" );
 
         HttpServletResponse response = new MockHttpServletResponse();
-        assertTrue(interceptor.preHandle(request, response, null));
+        assertTrue( interceptor.preHandle(request, response, null ) );
     }
 
 }

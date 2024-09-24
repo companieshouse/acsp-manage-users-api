@@ -18,10 +18,10 @@ class RequestContextUtilTest {
 
     @Test
     void isOAuth2RequestReturnsTrueIfEricIdentityTypeIsOAuth2(){
-        MockHttpServletRequest request = new MockHttpServletRequest();
+        final var request = new MockHttpServletRequest();
         request.addHeader( ERIC_IDENTITY_TYPE, "oauth2" );
 
-        ServletRequestAttributes requestAttributes = new ServletRequestAttributes( request );
+        final var requestAttributes = new ServletRequestAttributes( request );
         RequestContextHolder.setRequestAttributes( requestAttributes );
 
         Assertions.assertTrue( isOAuth2Request() );
@@ -29,10 +29,10 @@ class RequestContextUtilTest {
 
     @Test
     void isOAuth2RequestReturnsFalseIfEricIdentityTypeIsNotOAuth2(){
-        MockHttpServletRequest request = new MockHttpServletRequest();
+        final var request = new MockHttpServletRequest();
         request.addHeader( ERIC_IDENTITY_TYPE, "key" );
 
-        ServletRequestAttributes requestAttributes = new ServletRequestAttributes( request );
+        final var requestAttributes = new ServletRequestAttributes( request );
         RequestContextHolder.setRequestAttributes( requestAttributes );
 
         Assertions.assertFalse( isOAuth2Request() );

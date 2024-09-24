@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -33,16 +32,16 @@ class AuthorizationAndInternalUserInterceptorsTest {
 
     @Test
     void preHandleWithoutEricHeadersReturnsUnauthorised() {
-        MockHttpServletRequest request = new MockHttpServletRequest();
+        final var request = new MockHttpServletRequest();
 
-        HttpServletResponse response = new MockHttpServletResponse();
-        assertFalse( authorizationAndInternalUserInterceptors.preHandle(request, response, null) );
+        final var response = new MockHttpServletResponse();
+        assertFalse( authorizationAndInternalUserInterceptors.preHandle( request, response, null ) );
         assertEquals(401, response.getStatus() );
     }
 
     @Test
     void preHandleWithOAuth2RequestUsesAuthorizationInterceptor() {
-        MockHttpServletRequest request = new MockHttpServletRequest();
+        final var request = new MockHttpServletRequest();
         request.addHeader("Eric-identity", "111");
         request.addHeader("Eric-identity-type", "oauth2");
 
@@ -53,30 +52,30 @@ class AuthorizationAndInternalUserInterceptorsTest {
 
         Mockito.doReturn( bruce ).when( usersService ).fetchUserDetails( "111" );
 
-        HttpServletResponse response = new MockHttpServletResponse();
-        assertTrue( authorizationAndInternalUserInterceptors.preHandle(request, response, null) );
+        final var response = new MockHttpServletResponse();
+        assertTrue( authorizationAndInternalUserInterceptors.preHandle( request, response, null ) );
     }
 
     @Test
     void preHandleWithApiKeyRequestUsesInternalUserInterceptor() {
-        MockHttpServletRequest request = new MockHttpServletRequest();
+        final var request = new MockHttpServletRequest();
         request.addHeader("Eric-identity", "111");
         request.addHeader("Eric-identity-type", "key");
         request.addHeader("ERIC-Authorised-Key-Roles","*");
 
-        HttpServletResponse response = new MockHttpServletResponse();
-        assertTrue( authorizationAndInternalUserInterceptors.preHandle(request, response, null) );
+        final var response = new MockHttpServletResponse();
+        assertTrue( authorizationAndInternalUserInterceptors.preHandle( request, response, null ) );
     }
 
     @Test
     void preHandleWithMalformedEricIdentityTypeReturnsUnauthorised(){
-        MockHttpServletRequest request = new MockHttpServletRequest();
+        final var request = new MockHttpServletRequest();
         request.addHeader("Eric-identity", "111");
         request.addHeader("Eric-identity-type", "fingerprint");
         request.addHeader("ERIC-Authorised-Key-Roles","*");
 
-        HttpServletResponse response = new MockHttpServletResponse();
-        assertFalse( authorizationAndInternalUserInterceptors.preHandle(request, response, null) );
+        final var response = new MockHttpServletResponse();
+        assertFalse( authorizationAndInternalUserInterceptors.preHandle( request, response, null ) );
         assertEquals(401, response.getStatus() );
     }
 

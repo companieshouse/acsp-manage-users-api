@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import org.bson.Document;
 import org.mockito.ArgumentMatcher;
+import org.springframework.data.mongodb.core.query.Update;
 import uk.gov.companieshouse.acsp.manage.users.common.Preprocessors.Preprocessor;
 
 public class ComparisonUtils {
@@ -62,6 +64,21 @@ public class ComparisonUtils {
             final var actualMap = toMap( actualObject );
             applyPreprocessorsToMap( actualMap, preprocessors );
             return mapsMatchOnAll( referenceMap, actualMap, matchingFields ) && mapsDoNotMatchOnAll( referenceMap, actualMap, nonmatchingFields );
+        };
+    }
+
+    public static ArgumentMatcher<Update> updateMatches( final Map<String, Object> expectedKeyValuePairs ) {
+        return update -> {
+            final var document = update.getUpdateObject().get( "$set", Document.class );
+            return expectedKeyValuePairs.entrySet()
+                    .stream()
+                    .map( entry -> {
+                        final var value = document.get(entry.getKey());
+                        final var expectedValue = entry.getValue();
+                        return value.equals(expectedValue);
+                    } )
+                    .reduce((firstIsCorrect, secondIsCorrect) -> firstIsCorrect && secondIsCorrect)
+                    .get();
         };
     }
 
