@@ -16,6 +16,7 @@ public class AcspDataRetrievalPermissionInterceptor implements HandlerIntercepto
 
     private static final Logger LOGGER = LoggerFactory.getLogger( StaticPropertyUtil.APPLICATION_NAMESPACE );
 
+    @Override
     public boolean preHandle( final HttpServletRequest request, final HttpServletResponse response, final Object handler ) {
         if ( !isOAuth2Request() ){
             return true;
