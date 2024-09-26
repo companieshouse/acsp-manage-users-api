@@ -601,7 +601,7 @@ class AcspMembershipsControllerIntegrationTest {
                             .header("Eric-identity", "TSU001")
                             .header("ERIC-Identity-Type", "oauth2")
                             .header("ERIC-Authorised-Key-Roles", "*")
-                            .header( "Eric-Authorised-Token-Permissions", "acsp_id=TSA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" )
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "TS001" ) )
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}") )
                     .andExpect( status().isCreated() );
@@ -623,7 +623,7 @@ class AcspMembershipsControllerIntegrationTest {
                             .header("Eric-identity", "WITU001")
                             .header("ERIC-Identity-Type", "oauth2")
                             .header("ERIC-Authorised-Key-Roles", "*")
-                            .header( "Eric-Authorised-Token-Permissions", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" )
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT001" ) )
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}") )
                     .andExpect( status().isCreated() );
@@ -643,7 +643,7 @@ class AcspMembershipsControllerIntegrationTest {
                             .header("Eric-identity", "WITU001")
                             .header("ERIC-Identity-Type", "key")
                             .header("ERIC-Authorised-Key-Roles", "*")
-                            .header( "Eric-Authorised-Token-Permissions", "acsp_id=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete acsp_members=read" )
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT001" ) )
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}") )
                     .andExpect( status().isCreated() );
