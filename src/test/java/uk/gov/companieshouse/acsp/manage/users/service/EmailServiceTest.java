@@ -43,7 +43,7 @@ class EmailServiceTest {
     void sendYouHaveBeenAddedToAcspEmailThrowsMessageOnToKafkaQueue(){
         final var expectedEmailData = new YouHaveBeenAddedToAcspEmailData( "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher" );
         emailService.sendYouHaveBeenAddedToAcspEmail( "theId123", "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher" );
-        Mockito.verify( emailProducer ).sendEmail( eq( expectedEmailData ), eq( YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE.getValue() ) );
+        Mockito.verify( emailProducer ).sendEmail( expectedEmailData, YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE.getValue() );
     }
 
 }
