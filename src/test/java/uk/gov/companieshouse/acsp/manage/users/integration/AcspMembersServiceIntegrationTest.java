@@ -25,6 +25,8 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserSt
 
 import java.util.List;
 import uk.gov.companieshouse.api.acspprofile.AcspProfile;
+import uk.gov.companieshouse.email_producer.EmailProducer;
+import uk.gov.companieshouse.email_producer.factory.KafkaProducerFactory;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -54,6 +56,12 @@ class AcspMembersServiceIntegrationTest {
 
     @MockBean
     private AcspProfileService acspProfileService;
+
+    @MockBean
+    private EmailProducer emailProducer;
+
+    @MockBean
+    private KafkaProducerFactory kafkaProducerFactory;
 
     private static final TestDataManager testDataManager = TestDataManager.getInstance();
 

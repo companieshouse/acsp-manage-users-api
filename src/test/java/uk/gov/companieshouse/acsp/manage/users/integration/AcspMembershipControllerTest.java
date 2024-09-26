@@ -28,6 +28,8 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRole
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserStatusEnum;
 
 import java.util.stream.Stream;
+import uk.gov.companieshouse.email_producer.EmailProducer;
+import uk.gov.companieshouse.email_producer.factory.KafkaProducerFactory;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -58,6 +60,12 @@ class AcspMembershipControllerTest {
     private AcspMembersRepository acspMembersRepository;
 
     private final TestDataManager testDataManager = TestDataManager.getInstance();
+
+    @MockBean
+    private EmailProducer emailProducer;
+
+    @MockBean
+    private KafkaProducerFactory kafkaProducerFactory;
 
     private static final String DEFAULT_DISPLAY_NAME = "Not Provided";
 

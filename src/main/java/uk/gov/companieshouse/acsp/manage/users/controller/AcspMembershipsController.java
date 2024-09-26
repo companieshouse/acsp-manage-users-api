@@ -14,6 +14,7 @@ import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeExcepti
 import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
+import uk.gov.companieshouse.acsp.manage.users.service.EmailService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.PaginationValidatorUtil;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
@@ -43,11 +44,13 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
   private final UsersService usersService;
   private final AcspProfileService acspProfileService;
   private final AcspMembersService acspMembersService;
+  private final EmailService emailService;
 
-  public AcspMembershipsController( final UsersService usersService, final AcspProfileService acspProfileService, final AcspMembersService acspMembersService ) {
+  public AcspMembershipsController( final UsersService usersService, final AcspProfileService acspProfileService, final AcspMembersService acspMembersService, final EmailService emailService ) {
     this.usersService = usersService;
     this.acspProfileService = acspProfileService;
     this.acspMembersService = acspMembersService;
+    this.emailService = emailService;
   }
 
   private void throwBadRequestWhenActionIsNotPermittedByOAuth2User( final String requestingUserId, final String acspNumber, final UserRoleEnum role ) {
@@ -97,12 +100,18 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
       throw new BadRequestRuntimeException( ERROR_CODE_1002.getCode() );
     }
 
-    final var requestingUserId = Optional.ofNullable( UserContext.getLoggedUser() ).map( User::getUserId ).orElse( null );
+    final var requestingUser = UserContext.getLoggedUser();
+    final var requestingUserId = Optional.ofNullable( requestingUser ).map( User::getUserId ).orElse( null );
     if ( isOAuth2Request() ){
       throwBadRequestWhenActionIsNotPermittedByOAuth2User( requestingUserId, acspNumber, targetUserRole );
     }
 
     final var membership = acspMembersService.addAcspMembership( targetUser, acspProfile, acspNumber, targetUserRole, requestingUserId );
+
+    if ( isOAuth2Request() ){
+      final var requestingUserDisplayName = Optional.ofNullable( requestingUser.getDisplayName() ).orElse( requestingUser.getEmail() );
+      emailService.sendYouHaveBeenAddedToAcspEmail( xRequestId, targetUser.getEmail(), requestingUserDisplayName, acspProfile.getName() );
+    }
 
     LOG.infoContext( xRequestId, String.format( "Successfully created %s membership for user %s at Acsp %s", targetUserRole.getValue(), targetUserId, acspNumber ), null );
 

@@ -1,5 +1,7 @@
 package uk.gov.companieshouse.acsp.manage.users.integration;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -17,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
+import uk.gov.companieshouse.acsp.manage.users.model.email.YouHaveBeenAddedToAcspEmailData;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
@@ -30,13 +33,18 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import uk.gov.companieshouse.email_producer.EmailProducer;
+import uk.gov.companieshouse.email_producer.factory.KafkaProducerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.times;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE;
 import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
 
 @AutoConfigureMockMvc
@@ -62,6 +70,14 @@ class AcspMembershipsControllerIntegrationTest {
 
     private final TestDataManager testDataManager = TestDataManager.getInstance();
 
+    @MockBean
+    private EmailProducer emailProducer;
+
+    @MockBean
+    private KafkaProducerFactory kafkaProducerFactory;
+
+    private CountDownLatch latch;
+
     private void mockFetchUserDetailsFor(String... userIds) {
         Arrays.stream( userIds ).forEach( userId -> Mockito.doReturn( testDataManager.fetchUserDtos( userId ).getFirst() ).when( usersService ).fetchUserDetails(userId) );
     }
@@ -69,6 +85,14 @@ class AcspMembershipsControllerIntegrationTest {
     private void mockFetchAcspProfilesFor(String... acspNumbers) {
         Arrays.stream( acspNumbers ).forEach( acspNumber -> Mockito.doReturn( testDataManager.fetchAcspProfiles( acspNumber ).getFirst() ).when(
                 acspProfileService).fetchAcspProfile( acspNumber ) );
+    }
+
+    private void setEmailProducerCountDownLatch( int countdown ){
+        latch = new CountDownLatch( countdown );
+        doAnswer( invocation -> {
+            latch.countDown();
+            return null;
+        } ).when( emailProducer ).sendEmail( any(), any() );
     }
 
     @Nested
@@ -537,6 +561,67 @@ class AcspMembershipsControllerIntegrationTest {
             Assertions.assertEquals( "COMU001", acspMembership.getUserId() );
             Assertions.assertEquals( "TSU001", acspMembership.getAddedBy() );
         }
+
+        @Test
+        void addMemberForAcspSendsYouHaveBeenAddedNotificationsWithoutDisplayName() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos("TS001" ) );
+            mockFetchUserDetailsFor( "TSU001", "COMU001" );
+            mockFetchAcspProfilesFor("TSA001" );
+
+            setEmailProducerCountDownLatch( 1 );
+
+            mockMvc.perform( post("/acsps/TSA001/memberships")
+                            .header("X-Request-Id", "theId123")
+                            .header("Eric-identity", "TSU001")
+                            .header("ERIC-Identity-Type", "oauth2")
+                            .header("ERIC-Authorised-Key-Roles", "*")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}") )
+                    .andExpect( status().isCreated() );
+
+            latch.await( 10, TimeUnit.SECONDS );
+            Mockito.verify( emailProducer ).sendEmail( new YouHaveBeenAddedToAcspEmailData( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story" ), YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE.getValue() );
+        }
+
+        @Test
+        void addMemberForAcspSendsYouHaveBeenAddedNotificationsWithDisplayName() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos("WIT001" ) );
+            mockFetchUserDetailsFor( "WITU001", "COMU001" );
+            mockFetchAcspProfilesFor("WITA001" );
+
+            setEmailProducerCountDownLatch( 1 );
+
+            mockMvc.perform( post("/acsps/WITA001/memberships")
+                            .header("X-Request-Id", "theId123")
+                            .header("Eric-identity", "WITU001")
+                            .header("ERIC-Identity-Type", "oauth2")
+                            .header("ERIC-Authorised-Key-Roles", "*")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}") )
+                    .andExpect( status().isCreated() );
+
+            latch.await( 10, TimeUnit.SECONDS );
+            Mockito.verify( emailProducer ).sendEmail( new YouHaveBeenAddedToAcspEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" ), YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE.getValue() );
+        }
+
+        @Test
+        void addMemberForAcspDoesNotSendYouHaveBeenAddedNotificationsWhenCalledInternally() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos("WIT001" ) );
+            mockFetchUserDetailsFor( "WITU001", "COMU001" );
+            mockFetchAcspProfilesFor("WITA001" );
+
+            mockMvc.perform( post("/acsps/WITA001/memberships")
+                            .header("X-Request-Id", "theId123")
+                            .header("Eric-identity", "WITU001")
+                            .header("ERIC-Identity-Type", "key")
+                            .header("ERIC-Authorised-Key-Roles", "*")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}") )
+                    .andExpect( status().isCreated() );
+
+            Mockito.verify( emailProducer, times( 0 ) ).sendEmail( new YouHaveBeenAddedToAcspEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" ), YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE.getValue() );
+        }
+
     }
 
     @AfterEach

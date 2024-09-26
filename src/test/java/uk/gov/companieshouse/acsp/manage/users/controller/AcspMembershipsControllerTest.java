@@ -1,9 +1,20 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.companieshouse.acsp.manage.users.model.ErrorCode.ERROR_CODE_1001;
+import static uk.gov.companieshouse.acsp.manage.users.model.ErrorCode.ERROR_CODE_1002;
+
+import java.util.Collections;
 import java.util.List;
 
 import java.util.Optional;
@@ -21,6 +32,7 @@ import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
+import uk.gov.companieshouse.acsp.manage.users.service.EmailService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.accounts.user.model.UsersList;
@@ -45,6 +57,9 @@ class AcspMembershipsControllerTest {
 
     @MockBean
     private AcspMembersService acspMembersService;
+
+    @MockBean
+    private EmailService emailService;
 
     private static final TestDataManager testDataManager = TestDataManager.getInstance();
 
@@ -346,6 +361,80 @@ class AcspMembershipsControllerTest {
             Mockito.verify( acspMembersService ).addAcspMembership( targetUserData, targetAcspProfile, "TSA001", UserRoleEnum.STANDARD,"TSU001" );
         }
 
+    }
+
+
+    @Test
+    void addMemberForAcspSendsYouHaveBeenAddedNotificationsWithoutDisplayName() throws Exception {
+      final var users = testDataManager.fetchUserDtos( "TSU001", "COMU001" );
+      final var acsp = testDataManager.fetchAcspProfiles( "TSA001" ).getFirst();
+      final var requestingUsersMembership = testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst();
+
+      Mockito.doReturn( users.getFirst() ).when( usersService ).fetchUserDetails( "TSU001" );
+      Mockito.doReturn( users.getLast() ).when( usersService ).fetchUserDetails( "COMU001" );
+      Mockito.doReturn( acsp ).when( acspProfileService ).fetchAcspProfile( "TSA001" );
+      Mockito.doReturn( List.of() ).when( acspMembersService ).fetchAcspMembershipDaos( "COMU001", false );
+      Mockito.doReturn( Optional.of( requestingUsersMembership ) ).when( acspMembersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
+
+      mockMvc.perform( post("/acsps/TSA001/memberships")
+                      .header("X-Request-Id", "theId123")
+                      .header("Eric-identity", "TSU001")
+                      .header("ERIC-Identity-Type", "oauth2")
+                      .header("ERIC-Authorised-Key-Roles", "*")
+                      .contentType(MediaType.APPLICATION_JSON)
+                      .content("{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}") )
+              .andExpect( status().isCreated() );
+
+      Mockito.verify( emailService ).sendYouHaveBeenAddedToAcspEmail( "theId123", "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story" );
+    }
+
+    @Test
+    void addMemberForAcspSendsYouHaveBeenAddedNotificationsWithDisplayName() throws Exception {
+      final var users = testDataManager.fetchUserDtos( "WITU001", "COMU001" );
+      final var acsp = testDataManager.fetchAcspProfiles( "WITA001" ).getFirst();
+      final var requestingUsersMembership = testDataManager.fetchAcspMembersDaos( "WIT001" ).getFirst();
+
+      Mockito.doReturn( users.getFirst() ).when( usersService ).fetchUserDetails( "WITU001" );
+      Mockito.doReturn( users.getLast() ).when( usersService ).fetchUserDetails( "COMU001" );
+      Mockito.doReturn( acsp ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
+      Mockito.doReturn( List.of() ).when( acspMembersService ).fetchAcspMembershipDaos( "COMU001", false );
+      Mockito.doReturn( Optional.of( requestingUsersMembership ) ).when( acspMembersService ).fetchActiveAcspMembership( "WITU001", "WITA001" );
+
+      mockMvc.perform( post("/acsps/WITA001/memberships")
+                      .header("X-Request-Id", "theId123")
+                      .header("Eric-identity", "WITU001")
+                      .header("ERIC-Identity-Type", "oauth2")
+                      .header("ERIC-Authorised-Key-Roles", "*")
+                      .contentType(MediaType.APPLICATION_JSON)
+                      .content("{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}") )
+              .andExpect( status().isCreated() );
+
+      Mockito.verify( emailService ).sendYouHaveBeenAddedToAcspEmail( "theId123", "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" );
+
+    }
+
+    @Test
+    void addMemberForAcspDoesNotSendYouHaveBeenAddedNotificationsWhenCalledInternally() throws Exception {
+      final var users = testDataManager.fetchUserDtos( "WITU001", "COMU001" );
+      final var acsp = testDataManager.fetchAcspProfiles( "WITA001" ).getFirst();
+      final var requestingUsersMembership = testDataManager.fetchAcspMembersDaos( "WIT001" ).getFirst();
+
+      Mockito.doReturn( users.getFirst() ).when( usersService ).fetchUserDetails( "WITU001" );
+      Mockito.doReturn( users.getLast() ).when( usersService ).fetchUserDetails( "COMU001" );
+      Mockito.doReturn( acsp ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
+      Mockito.doReturn( List.of() ).when( acspMembersService ).fetchAcspMembershipDaos( "COMU001", false );
+      Mockito.doReturn( Optional.of( requestingUsersMembership ) ).when( acspMembersService ).fetchActiveAcspMembership( "WITU001", "WITA001" );
+
+      mockMvc.perform( post("/acsps/WITA001/memberships")
+                      .header("X-Request-Id", "theId123")
+                      .header("Eric-identity", "WITU001")
+                      .header("ERIC-Identity-Type", "key")
+                      .header("ERIC-Authorised-Key-Roles", "*")
+                      .contentType(MediaType.APPLICATION_JSON)
+                      .content("{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}") )
+              .andExpect( status().isCreated() );
+
+      Mockito.verify( emailService, times( 0 ) ).sendYouHaveBeenAddedToAcspEmail( "theId123", "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" );
     }
 
 }
