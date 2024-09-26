@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.acsp.manage.users.model.email;
 
+import java.util.function.Supplier;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -55,8 +56,10 @@ class YouHaveBeenAddedToAcspEmailDataTest {
 
     @Test
     void equalsReturnsTrueWhenEmailDataAreEquivalentOtherwiseFalse(){
-        Assertions.assertTrue( new YouHaveBeenAddedToAcspEmailData( "buzz.lightyear@toystory.com", "Woody", "Netflix" ).equals( new YouHaveBeenAddedToAcspEmailData( "buzz.lightyear@toystory.com", "Woody", "Netflix" ) ) );
-        Assertions.assertFalse( new YouHaveBeenAddedToAcspEmailData( "potato.head@toystory.com", "Woody", "Netflix" ).equals( new YouHaveBeenAddedToAcspEmailData( "buzz.lightyear@toystory.com", "Woody", "Netflix" ) ) );
+        final Supplier<YouHaveBeenAddedToAcspEmailData> buzzEmailSupplier = () -> new YouHaveBeenAddedToAcspEmailData( "buzz.lightyear@toystory.com", "Woody", "Netflix" );
+        final var potatoHeadEmail = new YouHaveBeenAddedToAcspEmailData( "potato.head@toystory.com", "Woody", "Netflix" );
+        Assertions.assertEquals( buzzEmailSupplier.get(), buzzEmailSupplier.get() );
+        Assertions.assertNotEquals( potatoHeadEmail, buzzEmailSupplier.get() );
     }
 
     @Test

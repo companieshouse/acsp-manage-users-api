@@ -39,7 +39,6 @@ import uk.gov.companieshouse.email_producer.factory.KafkaProducerFactory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -581,7 +580,7 @@ class AcspMembershipsControllerIntegrationTest {
                     .andExpect( status().isCreated() );
 
             latch.await( 10, TimeUnit.SECONDS );
-            Mockito.verify( emailProducer ).sendEmail( eq( new YouHaveBeenAddedToAcspEmailData( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story" ) ), eq( YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE.getValue() ) );
+            Mockito.verify( emailProducer ).sendEmail( new YouHaveBeenAddedToAcspEmailData( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story" ), YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE.getValue() );
         }
 
         @Test
@@ -602,7 +601,7 @@ class AcspMembershipsControllerIntegrationTest {
                     .andExpect( status().isCreated() );
 
             latch.await( 10, TimeUnit.SECONDS );
-            Mockito.verify( emailProducer ).sendEmail( eq( new YouHaveBeenAddedToAcspEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" ) ), eq( YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE.getValue() ) );
+            Mockito.verify( emailProducer ).sendEmail( new YouHaveBeenAddedToAcspEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" ), YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE.getValue() );
         }
 
         @Test
@@ -620,7 +619,7 @@ class AcspMembershipsControllerIntegrationTest {
                             .content("{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}") )
                     .andExpect( status().isCreated() );
 
-            Mockito.verify( emailProducer, times( 0 ) ).sendEmail( eq( new YouHaveBeenAddedToAcspEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" ) ), eq( YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE.getValue() ) );
+            Mockito.verify( emailProducer, times( 0 ) ).sendEmail( new YouHaveBeenAddedToAcspEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" ), YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE.getValue() );
         }
 
     }
