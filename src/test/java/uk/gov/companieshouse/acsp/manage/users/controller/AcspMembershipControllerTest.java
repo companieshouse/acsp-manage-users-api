@@ -217,15 +217,16 @@ class AcspMembershipControllerTest {
     }
 
     @Test
-    void updateAcspMembershipForAcspAndIdWithUserRoleSetToOwnerInRequestBodyReturnsBadRequest() throws Exception {
-        final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT004", "WIT002" );
+    void updateAcspMembershipForAcspAndIdWithAdminCallerAndUserRoleSetToOwnerInRequestBodyReturnsBadRequest() throws Exception {
+        final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT002", "WIT003" );
 
-        Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-        Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( "WIT002" );
+        Mockito.doReturn( testDataManager.fetchUserDtos( "WITU002" ).getFirst() ).when( usersService ).fetchUserDetails( "WITU002" );
+        Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( "WIT003" );
+        Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( "WITU002", "WITA001" );
 
-        mockMvc.perform( patch( "/acsps/memberships/WIT002" )
+        mockMvc.perform( patch( "/acsps/memberships/WIT003" )
                         .header("X-Request-Id", "theId123")
-                        .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" )
+                        .header("Eric-identity", "WITU002" )
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
                         .contentType( MediaType.APPLICATION_JSON )
