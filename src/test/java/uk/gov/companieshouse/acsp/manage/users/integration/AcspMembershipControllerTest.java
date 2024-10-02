@@ -325,6 +325,9 @@ class AcspMembershipControllerTest {
 
     private static Stream<Arguments> membershipUpdateRoleSuccessScenarios(){
         return Stream.of(
+            Arguments.of( "WIT004", "WIT001", "owner" ),
+            Arguments.of( "WIT004", "WIT002", "owner" ),
+            Arguments.of( "WIT004", "WIT003", "owner" ),
             Arguments.of( "WIT004", "WIT001", "admin" ),
             Arguments.of( "WIT004", "WIT001", "standard" ),
             Arguments.of( "WIT004", "WIT002", "admin" ),
@@ -367,9 +370,6 @@ class AcspMembershipControllerTest {
 
     private static Stream<Arguments> membershipUpdateRoleFailureScenarios(){
         return Stream.of(
-            Arguments.of( "WIT004", "WIT001", "owner" ),
-            Arguments.of( "WIT004", "WIT002", "owner" ),
-            Arguments.of( "WIT004", "WIT003", "owner" ),
             Arguments.of( "NEI004", "NEI001", "owner" ),
             Arguments.of( "NEI004", "NEI002", "owner" ),
             Arguments.of( "NEI004", "NEI003", "owner" ),

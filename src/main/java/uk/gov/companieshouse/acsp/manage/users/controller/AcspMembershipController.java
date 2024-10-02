@@ -45,11 +45,6 @@ public class AcspMembershipController implements AcspMembershipInterface {
     }
 
     private void throwBadRequestWhenActionIsNotPermittedByOAuth2User( final User requestingUser, final AcspMembersDao membershipIdAssociation, final UserRoleEnum userRole ){
-        if ( UserRoleEnum.OWNER.equals( userRole ) ){
-            LOG.error( String.format( "User is not permitted to change Acsp Membership %s's role to owner", membershipIdAssociation.getId() ) );
-            throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
-        }
-
         final var requestUserAssociation =
                 acspMembershipService.fetchActiveAcspMembership( requestingUser.getUserId(), membershipIdAssociation.getAcspNumber() )
                         .orElseThrow( () -> {
@@ -62,7 +57,7 @@ public class AcspMembershipController implements AcspMembershipInterface {
             throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
         }
 
-        if ( UserRoleEnum.ADMIN.getValue().equals( requestUserAssociation.getUserRole() ) && UserRoleEnum.OWNER.getValue().equals( membershipIdAssociation.getUserRole() ) ){
+        if ( UserRoleEnum.ADMIN.getValue().equals( requestUserAssociation.getUserRole() ) && ( UserRoleEnum.OWNER.getValue().equals( membershipIdAssociation.getUserRole() ) || UserRoleEnum.OWNER.equals( userRole ) ) ){
             LOG.error( "User is not permitted to perform this action because their role is 'admin' and the target user's role is 'owner'" );
             throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
         }
