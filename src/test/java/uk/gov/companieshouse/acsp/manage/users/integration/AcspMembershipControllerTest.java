@@ -73,38 +73,46 @@ class AcspMembershipControllerTest {
 
     @Test
     void getAcspMembershipForAcspAndIdWithoutXRequestIdReturnsBadRequest() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
         mockMvc.perform( get( "/acsps/memberships/TS001" )
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
-                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) ) )
                 .andExpect( status().isBadRequest() );
     }
 
     @Test
     void getAcspMembershipForAcspAndIdWithMalformedMembershipIdReturnsBadRequest() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
         mockMvc.perform( get( "/acsps/memberships/$$$" )
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
-                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) ) )
                 .andExpect( status().isBadRequest() );
     }
 
     @Test
     void getAcspMembershipForAcspAndIdWithNonexistentMembershipIdReturnsNotFound() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
         mockMvc.perform( get( "/acsps/memberships/TS001" )
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
-                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) ) )
                 .andExpect( status().isNotFound() );
     }
 
     @Test
     void getAcspMembershipForAcspAndIdRetrievesAcspMembership() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
         final var dao = testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst();
         acspMembersRepository.insert( dao );
 
@@ -118,7 +126,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
-                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) ) )
                 .andExpect( status().isOk() );
 
         final var acspMembership = parseResponseTo( response, AcspMembership.class );
@@ -142,7 +150,7 @@ class AcspMembershipControllerTest {
 
     @Test
     void getAcspMembershipForAcspAndIdWithApiKeySucceeds() throws Exception {
-        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001" ) );
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004", "TS001" ) );
 
         Mockito.doReturn( testDataManager.fetchUserDtos( "TSU001" ).getFirst() ).when( usersService ).fetchUserDetails( "TSU001" );
         Mockito.doReturn( testDataManager.fetchAcspProfiles( "TSA001" ).getFirst() ).when(
@@ -153,17 +161,19 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "key")
                         .header("ERIC-Authorised-Key-Roles", "*")
-                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) ) )
                 .andExpect( status().isOk() );
     }
 
     @Test
     void updateAcspMembershipForAcspAndIdWithNullXRequestIdThrowsBadRequest() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
         mockMvc.perform( patch( "/acsps/memberships/WIT001" )
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
-                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isBadRequest() );
@@ -171,12 +181,14 @@ class AcspMembershipControllerTest {
 
     @Test
     void updateAcspMembershipForAcspAndIdWithMalformedMembershipIdThrowsBadRequest() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
         mockMvc.perform( patch( "/acsps/memberships/£££" )
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
-                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isBadRequest() );
@@ -193,7 +205,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
-                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isNotFound() );
@@ -201,12 +213,14 @@ class AcspMembershipControllerTest {
 
     @Test
     void updateAcspMembershipForAcspAndIdWithoutRequestBodyReturnsBadRequest() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
         mockMvc.perform( patch( "/acsps/memberships/WIT001" )
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
-                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) )
                         .contentType( MediaType.APPLICATION_JSON ) )
                 .andExpect( status().isBadRequest() );
     }
@@ -223,6 +237,8 @@ class AcspMembershipControllerTest {
     @ParameterizedTest
     @MethodSource( "updateAcspMembershipForAcspAndIdWithMalformedBodyTestData" )
     void updateAcspMembershipForAcspAndIdWithEmptyRequestBodyReturnsBadRequest( final String requestBody ) throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT001" )
@@ -230,7 +246,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
-                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( requestBody )  )
                 .andExpect( status().isBadRequest() );
@@ -249,7 +265,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
-                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isBadRequest() );
@@ -257,7 +273,7 @@ class AcspMembershipControllerTest {
     }
 
     @Test
-    void updateAcspMembershipForAcspAndIdWithInactiveCallerReturnsNotFound() throws Exception {
+    void updateAcspMembershipForAcspAndIdWithInactiveCallerReturnsForbidden() throws Exception {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM001", "COM004" ) );
 
         Mockito.doReturn( testDataManager.fetchUserDtos( "COMU001" ).getFirst() ).when( usersService ).fetchUserDetails( "COMU001" );
@@ -267,10 +283,10 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "COMU001" )
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
-                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM001" ) )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
-                .andExpect( status().isNotFound() );
+                .andExpect( status().isForbidden() );
     }
 
     private static Stream<Arguments> membershipRemovalSuccessScenarios() {

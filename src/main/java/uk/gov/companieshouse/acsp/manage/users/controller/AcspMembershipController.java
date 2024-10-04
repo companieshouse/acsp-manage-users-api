@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.fetchRequestingUsersRole;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isOAuth2Request;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsActiveMemberOfAcsp;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsPermittedToRemoveUsersWith;
@@ -53,13 +54,6 @@ public class AcspMembershipController implements AcspMembershipInterface {
         final var targetAcspNumber = membershipIdAssociation.getAcspNumber();
         final var targetUsersRole = UserRoleEnum.fromValue( membershipIdAssociation.getUserRole() );
 
-        final var requestUserAssociation =
-        acspMembershipService.fetchActiveAcspMembership( requestingUserId, membershipIdAssociation.getAcspNumber() )
-                .orElseThrow( () -> {
-                    LOG.error( String.format( "Could not find %s's Acsp Membership at Acsp %s", requestingUserId, membershipIdAssociation.getAcspNumber() ) );
-                    return new NotFoundRuntimeException( StaticPropertyUtil.APPLICATION_NAMESPACE, PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
-                } );
-
         if ( !requestingUserIsActiveMemberOfAcsp( targetAcspNumber ) ){
             LOG.error( String.format( "Could not find %s's Acsp Membership at Acsp %s", requestingUserId, targetAcspNumber ) );
             throw new NotFoundRuntimeException( StaticPropertyUtil.APPLICATION_NAMESPACE, PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
@@ -72,7 +66,7 @@ public class AcspMembershipController implements AcspMembershipInterface {
 
         if ( Objects.nonNull( userRole ) ){
             final var requestingUserIsNotPermittedToUpdateTargetUser = !requestingUserIsPermittedToUpdateUsersWith( targetUsersRole );
-            final var requestingUserIsAdmin = UserRoleEnum.ADMIN.getValue().equals( requestUserAssociation.getUserRole() );
+            final var requestingUserIsAdmin = UserRoleEnum.ADMIN.equals( fetchRequestingUsersRole() );
             final var attemptingToChangeTargetUsersRoleToOwner = UserRoleEnum.OWNER.equals( userRole );
             if ( requestingUserIsNotPermittedToUpdateTargetUser || ( requestingUserIsAdmin && attemptingToChangeTargetUsersRoleToOwner ) ){
                 LOG.error( String.format( "User is not permitted to change role of user %s to %s", targetUserId, userRole.getValue() ) );

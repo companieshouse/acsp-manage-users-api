@@ -100,27 +100,33 @@ class AcspMembershipsControllerIntegrationTest {
 
         @Test
         void getMembersForAcspWithoutXRequestIdReturnsBadRequest() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
             mockMvc.perform( get("/acsps/COMA001/memberships")
                         .header("Eric-identity", "COMU002")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
-                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) ) )
                 .andExpect(status().isBadRequest());
         }
 
         @Test
         void getMembersForAcspWithMalformedAcspNumberReturnsBadRequest() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
             mockMvc.perform(get("/acsps/££££££/memberships")
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", "COMU002")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
-                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) ) )
                 .andExpect(status().isBadRequest());
         }
 
         @Test
         void getMembersForAcspWithNonExistentAcspNumberReturnsNotFound() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
             Mockito.doThrow(new NotFoundRuntimeException("acsp-manage-users-api", "Was not found")).when(
                     acspProfileService).fetchAcspProfile("919191");
 
@@ -129,7 +135,7 @@ class AcspMembershipsControllerIntegrationTest {
                         .header("Eric-identity", "COMU002")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
-                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) ))
                     .andExpect(status().isNotFound());
         }
 
@@ -147,7 +153,7 @@ class AcspMembershipsControllerIntegrationTest {
                             .header("Eric-identity", "COMU002")
                             .header("ERIC-Identity-Type", "oauth2")
                             .header("ERIC-Authorised-Key-Roles", "*")
-                            .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) ) )
                     .andExpect(status().isOk());
 
             final var acspMembers = parseResponseTo( response, AcspMembershipsList.class );
@@ -177,7 +183,7 @@ class AcspMembershipsControllerIntegrationTest {
                             .header("Eric-identity", "COMU002")
                             .header("ERIC-Identity-Type", "oauth2")
                             .header("ERIC-Authorised-Key-Roles", "*")
-                            .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) ) )
                     .andExpect(status().isOk());
 
             final var acspMembers = parseResponseTo( response, AcspMembershipsList.class);
@@ -218,7 +224,7 @@ class AcspMembershipsControllerIntegrationTest {
                                     .header("Eric-identity", "COMU002")
                                     .header("ERIC-Identity-Type", "oauth2")
                                     .header("ERIC-Authorised-Key-Roles", "*")
-                                    .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" ))
+                                    .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) ) )
                             .andExpect(status().isOk());
 
             final var acspMembershipsList = parseResponseTo( response, AcspMembershipsList.class );
@@ -236,11 +242,13 @@ class AcspMembershipsControllerIntegrationTest {
     class FindMembershipsForUserAndAcsp {
         @Test
         void findMembershipsForUserAndAcspWithoutXRequestIdReturnsBadRequest() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
             mockMvc.perform(post("/acsps/COMA001/memberships/lookup")
                             .header("Eric-identity", "COMU002")
                             .header("ERIC-Identity-Type", "oauth2")
                             .header("ERIC-Authorised-Key-Roles", "*")
-                            .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) )
                             .contentType(MediaType.APPLICATION_JSON)
                             .content( "{\"user_email\":\"shaun.lock@comedy.com\"}" ) )
                     .andExpect(status().isBadRequest());
@@ -248,12 +256,14 @@ class AcspMembershipsControllerIntegrationTest {
 
         @Test
         void findMembershipsForUserAndAcspWithMalformedAcspNumberReturnsBadRequest() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
             mockMvc.perform(post("/acsps/££££££/memberships/lookup")
                             .header("X-Request-Id", "theId123")
                             .header("Eric-identity", "COMU002")
                             .header("ERIC-Identity-Type", "oauth2")
                             .header("ERIC-Authorised-Key-Roles", "*")
-                            .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) )
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"user_email\":\"shaun.lock@comedy.com\"}"))
                     .andExpect(status().isBadRequest());
@@ -261,6 +271,8 @@ class AcspMembershipsControllerIntegrationTest {
 
         @Test
         void findMembershipsForUserAndAcspWithNonExistentAcspNumberReturnsNotFound() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
           Mockito.doThrow(new NotFoundRuntimeException("acsp-manage-users-api", "Was not found")).when(
                   acspProfileService).fetchAcspProfile("NONEXISTENT");
 
@@ -269,8 +281,7 @@ class AcspMembershipsControllerIntegrationTest {
                           .header("Eric-identity", "COMU002")
                           .header("ERIC-Identity-Type", "oauth2")
                           .header("ERIC-Authorised-Key-Roles", "*")
-                          .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
-
+                          .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) )
                           .contentType(MediaType.APPLICATION_JSON)
                           .content("{\"user_email\":\"shaun.lock@comedy.com\"}"))
                   .andExpect(status().isNotFound());
@@ -278,12 +289,14 @@ class AcspMembershipsControllerIntegrationTest {
 
         @Test
         void findMembershipsForUserAndAcspWithNullUserEmailReturnsBadRequest() throws Exception {
-          mockMvc.perform(post("/acsps/COMA001/memberships/lookup")
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
+            mockMvc.perform(post("/acsps/COMA001/memberships/lookup")
                           .header("X-Request-Id", "theId123")
                           .header("Eric-identity", "COMU002")
                           .header("ERIC-Identity-Type", "oauth2")
                           .header("ERIC-Authorised-Key-Roles", "*")
-                          .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                          .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) )
                           .contentType(MediaType.APPLICATION_JSON)
                           .content("{}"))
                   .andExpect(status().isBadRequest());
@@ -291,13 +304,15 @@ class AcspMembershipsControllerIntegrationTest {
 
         @Test
         void findMembershipsForUserAndAcspWithNonExistentUserReturnsNotFound() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
             Mockito.doReturn(new UsersList()).when(usersService).searchUserDetails(List.of("shaun.lock@comedy.com"));
             mockMvc.perform(post("/acsps/COMA001/memberships/lookup")
                             .header("X-Request-Id", "theId123")
                             .header("Eric-identity", "COMU002")
                             .header("ERIC-Identity-Type", "oauth2")
                             .header("ERIC-Authorised-Key-Roles", "*")
-                            .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) )
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"user_email\":\"shaun.lock@comedy.com\"}"))
                     .andExpect(status().isNotFound());
@@ -322,7 +337,7 @@ class AcspMembershipsControllerIntegrationTest {
                             .header("Eric-identity", "COMU002")
                             .header("ERIC-Identity-Type", "oauth2")
                             .header("ERIC-Authorised-Key-Roles", "*")
-                            .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) )
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"user_email\":\"shaun.lock@comedy.com\"}"))
                     .andExpect(status().isOk());
@@ -355,7 +370,7 @@ class AcspMembershipsControllerIntegrationTest {
                             .header("Eric-identity", "COMU002")
                             .header("ERIC-Identity-Type", "oauth2")
                             .header("ERIC-Authorised-Key-Roles", "*")
-                            .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) )
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"user_email\":\"shaun.lock@comedy.com\"}"))
                     .andExpect(status().isOk());
@@ -382,10 +397,10 @@ class AcspMembershipsControllerIntegrationTest {
             final var response =
             mockMvc.perform(post("/acsps/COMA001/memberships/lookup?include_removed=true")
                             .header("X-Request-Id", "theId123")
-                            .header("Eric-identity", "COMU001")
+                            .header("Eric-identity", "COMU002")
                             .header("ERIC-Identity-Type", "oauth2")
                             .header("ERIC-Authorised-Key-Roles", "*")
-                            .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) )
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"user_email\":\"jimmy.carr@comedy.com\"}"))
                     .andExpect(status().isOk());
@@ -412,10 +427,10 @@ class AcspMembershipsControllerIntegrationTest {
             final var response =
             mockMvc.perform(post("/acsps/COMA001/memberships/lookup?include_removed=false")
                             .header("X-Request-Id", "theId123")
-                            .header("Eric-identity", "COMU001")
+                            .header("Eric-identity", "COMU002")
                             .header("ERIC-Identity-Type", "oauth2")
                             .header("ERIC-Authorised-Key-Roles", "*")
-                            .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) )
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"user_email\":\"jimmy.carr@comedy.com\"}"))
                     .andExpect(status().isOk());
@@ -431,11 +446,13 @@ class AcspMembershipsControllerIntegrationTest {
 
         @Test
         void addMemberForAcspWithoutXRequestIdReturnsBadRequest() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
             mockMvc.perform(post("/acsps/TSA001/memberships")
                         .header("Eric-identity", "COMU002")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
-                        .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) )
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}"))
                 .andExpect(status().isBadRequest());
@@ -443,12 +460,14 @@ class AcspMembershipsControllerIntegrationTest {
 
         @Test
         void addMemberForAcspWithMalformedUserIdReturnsBadRequest() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
             mockMvc.perform( post( "/acsps/TSA001/memberships" )
                             .header( "X-Request-Id", "theId123" )
                             .header( "Eric-identity", "COMU002" )
                             .header( "ERIC-Identity-Type", "oauth2" )
                             .header( "ERIC-Authorised-Key-Roles", "*" )
-                            .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) )
                             .contentType( MediaType.APPLICATION_JSON )
                             .content( "{\"user_id\":\"abc-111-&\",\"user_role\":\"standard\"}" ) )
                     .andExpect( status().isBadRequest() );
@@ -456,12 +475,14 @@ class AcspMembershipsControllerIntegrationTest {
 
         @Test
         void addMemberForAcspWithMalformedAcspNumberReturnsBadRequest() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
             mockMvc.perform( post( "/acsps/TSA001-&/memberships" )
                             .header( "X-Request-Id", "theId123" )
                             .header( "Eric-identity", "COMU002" )
                             .header( "ERIC-Identity-Type", "oauth2" )
                             .header( "ERIC-Authorised-Key-Roles", "*" )
-                            .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) )
                             .contentType( MediaType.APPLICATION_JSON )
                             .content( "{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}" ) )
                     .andExpect( status().isBadRequest() );
@@ -469,12 +490,14 @@ class AcspMembershipsControllerIntegrationTest {
 
         @Test
         void addMemberForAcspWithoutUserIdInBodyReturnsBadRequest() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
             mockMvc.perform( post( "/acsps/TSA001/memberships" )
                             .header( "X-Request-Id", "theId123" )
                             .header( "Eric-identity", "COMU002" )
                             .header( "ERIC-Identity-Type", "oauth2" )
                             .header( "ERIC-Authorised-Key-Roles", "*" )
-                            .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) )
                             .contentType( MediaType.APPLICATION_JSON )
                             .content( "{\"user_role\":\"standard\"}" ) )
                     .andExpect( status().isBadRequest() );
@@ -482,12 +505,14 @@ class AcspMembershipsControllerIntegrationTest {
 
         @Test
         void addMemberForAcspWithoutUserRoleReturnsBadRequest() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
             mockMvc.perform( post( "/acsps/TSA001/memberships" )
                             .header( "X-Request-Id", "theId123" )
                             .header( "Eric-identity", "COMU002" )
                             .header( "ERIC-Identity-Type", "oauth2" )
                             .header( "ERIC-Authorised-Key-Roles", "*" )
-                            .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) )
                             .contentType( MediaType.APPLICATION_JSON )
                             .content( "{\"user_id\":\"COMU001\"}" ) )
                     .andExpect( status().isBadRequest() );
@@ -495,12 +520,14 @@ class AcspMembershipsControllerIntegrationTest {
 
         @Test
         void addMemberForAcspWithNonexistentUserRoleReturnsBadRequest() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
             mockMvc.perform( post( "/acsps/TSA001/memberships" )
                             .header( "X-Request-Id", "theId123" )
                             .header( "Eric-identity", "COMU002" )
                             .header( "ERIC-Identity-Type", "oauth2" )
                             .header( "ERIC-Authorised-Key-Roles", "*" )
-                            .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) )
                             .contentType( MediaType.APPLICATION_JSON )
                             .content( "{\"user_id\":\"COMU001\",\"user_role\":\"superuser\"}" ) )
                     .andExpect( status().isBadRequest() );
@@ -508,6 +535,8 @@ class AcspMembershipsControllerIntegrationTest {
 
         @Test
         void addMemberForAcspWithNonexistentAcspNumberReturnsBadRequest() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
             Mockito.doThrow( new NotFoundRuntimeException( "", "" ) ).when(acspProfileService).fetchAcspProfile( "TSA001" );
 
             mockMvc.perform( post( "/acsps/TSA001/memberships" )
@@ -515,7 +544,7 @@ class AcspMembershipsControllerIntegrationTest {
                             .header( "Eric-identity", "COMU002" )
                             .header( "ERIC-Identity-Type", "oauth2" )
                             .header( "ERIC-Authorised-Key-Roles", "*" )
-                            .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) )
                             .contentType( MediaType.APPLICATION_JSON )
                             .content( "{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}" ) )
                     .andExpect( status().isBadRequest() );
@@ -523,6 +552,8 @@ class AcspMembershipsControllerIntegrationTest {
 
         @Test
         void addMemberForAcspWithNonexistentUserIdReturnsBadRequest() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
             Mockito.doThrow( new NotFoundRuntimeException( "", "" ) ).when( usersService ).fetchUserDetails( "COMU001" );
 
             mockMvc.perform( post( "/acsps/TSA001/memberships" )
@@ -530,7 +561,7 @@ class AcspMembershipsControllerIntegrationTest {
                             .header( "Eric-identity", "COMU002" )
                             .header( "ERIC-Identity-Type", "oauth2" )
                             .header( "ERIC-Authorised-Key-Roles", "*" )
-                            .header( "Eric-Authorised-Token-Permissions", "acsp_members=read" )
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) )
                             .contentType( MediaType.APPLICATION_JSON )
                             .content( "{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}" ) )
                     .andExpect( status().isBadRequest() );
@@ -538,7 +569,7 @@ class AcspMembershipsControllerIntegrationTest {
 
         static Stream<Arguments> addMemberForAcspWithUserIdWithIncorrectPermissionsTestData(){
             return Stream.of(
-                    Arguments.of( "COMU002", "{\"user_id\":\"COMU002\",\"user_role\":\"standard\"}", "acsp_members=read" ),
+                    Arguments.of( "COMU002", "{\"user_id\":\"COMU002\",\"user_role\":\"standard\"}", testDataManager.fetchTokenPermissions( "COM002" ) ),
                     Arguments.of( "COMU007", "{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}", testDataManager.fetchTokenPermissions( "COM007" ) ),
                     Arguments.of( "COMU005", "{\"user_id\":\"COMU001\",\"user_role\":\"owner\"}", testDataManager.fetchTokenPermissions( "COM005" ) )
             );

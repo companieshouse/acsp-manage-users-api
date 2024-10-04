@@ -1,5 +1,7 @@
 package uk.gov.companieshouse.acsp.manage.users.utils;
 
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.fetchRequestingUsersActiveAcspNumber;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.fetchRequestingUsersRole;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isOAuth2Request;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsActiveMemberOfAcsp;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsPermittedToCreateMembershipWith;
@@ -8,10 +10,14 @@ import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.r
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsPermittedToUpdateUsersWith;
 import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_IDENTITY_TYPE;
 
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -164,6 +170,55 @@ class RequestContextUtilTest {
         RequestContextHolder.setRequestAttributes( requestAttributes );
 
         Assertions.assertFalse( requestingUserIsPermittedToRemoveUsersWith( UserRoleEnum.OWNER ) );
+    }
+
+    static Stream<Arguments> fetchRequestingUsersActiveAcspNumberTestData(){
+        return Stream.of(
+                Arguments.of( "", null ),
+                Arguments.of( "acsp_id=TSA001", "TSA001" ),
+                Arguments.of( "xacsp_id=TSA001", null ),
+                Arguments.of( "acspx_id=TSA001", null ),
+                Arguments.of( "acsp_idx=TSA001", null ),
+                Arguments.of( "acsp_id=$$$", null ),
+                Arguments.of( "acsp_members_owner=create", null ),
+                Arguments.of( "acsp_id=TSA001 acsp_members_owner=create", "TSA001" ),
+                Arguments.of( "acsp_members_owner=create acsp_id=TSA001", "TSA001" ),
+                Arguments.of( "acsp_members_owner=create acsp_id=TSA001 acsp_members_admin=create", "TSA001" )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource( "fetchRequestingUsersActiveAcspNumberTestData" )
+    void fetchRequestingUsersActiveAcspNumberRetrievesAcspNumberFromSession( final String ericAuthorisedTokenPermissions, final String expectedAcspNumber ){
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader( "Eric-Authorised-Token-Permissions", ericAuthorisedTokenPermissions );
+
+        ServletRequestAttributes requestAttributes = new ServletRequestAttributes( request );
+        RequestContextHolder.setRequestAttributes( requestAttributes );
+
+        Assertions.assertEquals( expectedAcspNumber, fetchRequestingUsersActiveAcspNumber() );
+    }
+
+    static Stream<Arguments> fetchRequestingUsersRoleTestData(){
+        return Stream.of(
+                Arguments.of( UserRoleEnum.OWNER, "acsp_id=TSA001 acsp_members=read acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" ),
+                Arguments.of( UserRoleEnum.ADMIN, "acsp_id=TSA001 acsp_members=read acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" ),
+                Arguments.of( UserRoleEnum.STANDARD, "acsp_id=TSA001 acsp_members=read" ),
+                Arguments.of( null, "" )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource( "fetchRequestingUsersRoleTestData" )
+    void fetchRequestingUsersRoleRetrievesRoleFromSession( final UserRoleEnum expectedRole, final String ericAuthorisedTokenPermissions ) throws InvalidTokenPermissionException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader( "Eric-Authorised-Token-Permissions", ericAuthorisedTokenPermissions );
+        new TokenPermissionsInterceptor().preHandle( request, null, null );
+
+        ServletRequestAttributes requestAttributes = new ServletRequestAttributes( request );
+        RequestContextHolder.setRequestAttributes( requestAttributes );
+
+        Assertions.assertEquals( expectedRole, fetchRequestingUsersRole() );
     }
 
 }

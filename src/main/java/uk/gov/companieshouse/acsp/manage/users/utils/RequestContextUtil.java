@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.acsp.manage.users.utils;
 
+import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_TOKEN_PERMISSIONS;
 import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_IDENTITY_TYPE;
 import static uk.gov.companieshouse.api.util.security.Permission.Key.ACSP_ID;
 import static uk.gov.companieshouse.api.util.security.Permission.Key.ACSP_MEMBERS;
@@ -11,6 +12,8 @@ import static uk.gov.companieshouse.api.util.security.Permission.Value.DELETE;
 import static uk.gov.companieshouse.api.util.security.Permission.Value.READ;
 import static uk.gov.companieshouse.api.util.security.Permission.Value.UPDATE;
 
+import java.util.Optional;
+import java.util.regex.Pattern;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -22,6 +25,7 @@ public class RequestContextUtil {
 
     private static final String OAUTH2_REQUEST_TYPE = "oauth2";
     private static final String TOKEN_PERMISSIONS = "token_permissions";
+    private static final Pattern ACSP_ID_PATTERN = Pattern.compile( "(?<=^|\\s)acsp_id=([0-9A-Za-z-_]{0,32})(?=\\s|$)" );
 
     private RequestContextUtil() {
         throw new IllegalStateException( "Utility class" );
@@ -74,6 +78,23 @@ public class RequestContextUtil {
 
     public static boolean requestingUserIsPermittedToRemoveUsersWith( final UserRoleEnum role ){
         return requestingUserIsPermittedToPerformActionOnUserWithRole( DELETE, role );
+    }
+
+    public static String fetchRequestingUsersActiveAcspNumber(){
+        final var requestAttributes = RequestContextHolder.getRequestAttributes();
+        final var servletRequestAttributes = ( (ServletRequestAttributes) requestAttributes );
+        final var httpServletRequest = Objects.requireNonNull( servletRequestAttributes ).getRequest();
+        final var ericAuthorisedTokenPermissions = Optional.ofNullable( httpServletRequest.getHeader( ERIC_AUTHORISED_TOKEN_PERMISSIONS ) ).orElse( "" );
+
+        final var matcher = ACSP_ID_PATTERN.matcher( ericAuthorisedTokenPermissions );
+        return matcher.find() ? matcher.group( 1 ) : null;
+    }
+
+    public static UserRoleEnum fetchRequestingUsersRole(){
+        if ( requestingUserIsPermittedToCreateMembershipWith( UserRoleEnum.OWNER ) ) return UserRoleEnum.OWNER;
+        if ( requestingUserIsPermittedToCreateMembershipWith( UserRoleEnum.ADMIN ) ) return UserRoleEnum.ADMIN;
+        if ( requestingUserIsPermittedToRetrieveAcspData() ) return UserRoleEnum.STANDARD;
+        return null;
     }
 
 }
