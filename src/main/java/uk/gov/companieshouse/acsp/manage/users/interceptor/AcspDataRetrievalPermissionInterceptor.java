@@ -18,11 +18,7 @@ public class AcspDataRetrievalPermissionInterceptor implements HandlerIntercepto
 
     @Override
     public boolean preHandle( final HttpServletRequest request, final HttpServletResponse response, final Object handler ) {
-        if ( !isOAuth2Request() ){
-            return true;
-        }
-
-        if ( requestingUserIsPermittedToRetrieveAcspData() ){
+        if ( !isOAuth2Request() || requestingUserIsPermittedToRetrieveAcspData() ){
             return true;
         }
 
