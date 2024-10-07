@@ -91,7 +91,7 @@ class RequestContextUtilTest {
     @Test
     void requestingUserIsActiveMemberOfAcspWithPermissionReturnsTrue() throws InvalidTokenPermissionException {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.addHeader( "Eric-Authorised-Token-Permissions", "acsp_id=WITA001" );
+        request.addHeader( "Eric-Authorised-Token-Permissions", "acsp_number=WITA001" );
         new TokenPermissionsInterceptor().preHandle( request, null, null );
 
         ServletRequestAttributes requestAttributes = new ServletRequestAttributes( request );
@@ -175,15 +175,15 @@ class RequestContextUtilTest {
     static Stream<Arguments> fetchRequestingUsersActiveAcspNumberTestData(){
         return Stream.of(
                 Arguments.of( "", null ),
-                Arguments.of( "acsp_id=TSA001", "TSA001" ),
-                Arguments.of( "xacsp_id=TSA001", null ),
-                Arguments.of( "acspx_id=TSA001", null ),
-                Arguments.of( "acsp_idx=TSA001", null ),
-                Arguments.of( "acsp_id=$$$", null ),
+                Arguments.of( "acsp_number=TSA001", "TSA001" ),
+                Arguments.of( "xacsp_number=TSA001", null ),
+                Arguments.of( "acspx_number=TSA001", null ),
+                Arguments.of( "acsp_numberx=TSA001", null ),
+                Arguments.of( "acsp_number=$$$", null ),
                 Arguments.of( "acsp_members_owner=create", null ),
-                Arguments.of( "acsp_id=TSA001 acsp_members_owner=create", "TSA001" ),
-                Arguments.of( "acsp_members_owner=create acsp_id=TSA001", "TSA001" ),
-                Arguments.of( "acsp_members_owner=create acsp_id=TSA001 acsp_members_admin=create", "TSA001" )
+                Arguments.of( "acsp_number=TSA001 acsp_members_owner=create", "TSA001" ),
+                Arguments.of( "acsp_members_owner=create acsp_number=TSA001", "TSA001" ),
+                Arguments.of( "acsp_members_owner=create acsp_number=TSA001 acsp_members_admin=create", "TSA001" )
         );
     }
 
@@ -201,9 +201,9 @@ class RequestContextUtilTest {
 
     static Stream<Arguments> fetchRequestingUsersRoleTestData(){
         return Stream.of(
-                Arguments.of( UserRoleEnum.OWNER, "acsp_id=TSA001 acsp_members=read acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" ),
-                Arguments.of( UserRoleEnum.ADMIN, "acsp_id=TSA001 acsp_members=read acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" ),
-                Arguments.of( UserRoleEnum.STANDARD, "acsp_id=TSA001 acsp_members=read" ),
+                Arguments.of( UserRoleEnum.OWNER, "acsp_number=TSA001 acsp_members=read acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" ),
+                Arguments.of( UserRoleEnum.ADMIN, "acsp_number=TSA001 acsp_members=read acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" ),
+                Arguments.of( UserRoleEnum.STANDARD, "acsp_number=TSA001 acsp_members=read" ),
                 Arguments.of( null, "" )
         );
     }

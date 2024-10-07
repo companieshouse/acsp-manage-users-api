@@ -2,7 +2,7 @@ package uk.gov.companieshouse.acsp.manage.users.utils;
 
 import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_TOKEN_PERMISSIONS;
 import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_IDENTITY_TYPE;
-import static uk.gov.companieshouse.api.util.security.Permission.Key.ACSP_ID;
+import static uk.gov.companieshouse.api.util.security.Permission.Key.ACSP_NUMBER;
 import static uk.gov.companieshouse.api.util.security.Permission.Key.ACSP_MEMBERS;
 import static uk.gov.companieshouse.api.util.security.Permission.Key.ACSP_MEMBERS_ADMINS;
 import static uk.gov.companieshouse.api.util.security.Permission.Key.ACSP_MEMBERS_OWNERS;
@@ -25,7 +25,7 @@ public class RequestContextUtil {
 
     private static final String OAUTH2_REQUEST_TYPE = "oauth2";
     private static final String TOKEN_PERMISSIONS = "token_permissions";
-    private static final Pattern ACSP_ID_PATTERN = Pattern.compile( "(?<=^|\\s)acsp_id=([0-9A-Za-z-_]{0,32})(?=\\s|$)" );
+    private static final Pattern ACSP_NUMBER_PATTERN = Pattern.compile( "(?<=^|\\s)acsp_number=([0-9A-Za-z-_]{0,32})(?=\\s|$)" );
 
     private RequestContextUtil() {
         throw new IllegalStateException( "Utility class" );
@@ -56,7 +56,7 @@ public class RequestContextUtil {
 
     public static boolean requestingUserIsActiveMemberOfAcsp( final String acspNumber ){
         final var tokenPermissions = getTokenPermissions();
-        return tokenPermissions.hasPermission( ACSP_ID, acspNumber );
+        return tokenPermissions.hasPermission( ACSP_NUMBER, acspNumber );
     }
 
     private static boolean requestingUserIsPermittedToPerformActionOnUserWithRole( final String action, final UserRoleEnum role ){
@@ -86,7 +86,7 @@ public class RequestContextUtil {
         final var httpServletRequest = Objects.requireNonNull( servletRequestAttributes ).getRequest();
         final var ericAuthorisedTokenPermissions = Optional.ofNullable( httpServletRequest.getHeader( ERIC_AUTHORISED_TOKEN_PERMISSIONS ) ).orElse( "" );
 
-        final var matcher = ACSP_ID_PATTERN.matcher( ericAuthorisedTokenPermissions );
+        final var matcher = ACSP_NUMBER_PATTERN.matcher( ericAuthorisedTokenPermissions );
         return matcher.find() ? matcher.group( 1 ) : null;
     }
 

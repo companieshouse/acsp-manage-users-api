@@ -62,7 +62,7 @@ class SessionValidityInterceptorTest {
         final var request = new MockHttpServletRequest();
         request.addHeader("Eric-identity-type", "oauth2");
         request.addHeader("ERIC-Authorised-Key-Roles","*");
-        request.addHeader( "Eric-Authorised-Token-Permissions", "acsp_id=WITA001 acsp_members=read acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" );
+        request.addHeader( "Eric-Authorised-Token-Permissions", "acsp_number=WITA001 acsp_members=read acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" );
 
         ServletRequestAttributes requestAttributes = new ServletRequestAttributes( request );
         RequestContextHolder.setRequestAttributes( requestAttributes );
@@ -83,7 +83,7 @@ class SessionValidityInterceptorTest {
         request.addHeader("Eric-identity", "$$$");
         request.addHeader("Eric-identity-type", "oauth2");
         request.addHeader("ERIC-Authorised-Key-Roles","*");
-        request.addHeader( "Eric-Authorised-Token-Permissions", "acsp_id=WITA001 acsp_members=read acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" );
+        request.addHeader( "Eric-Authorised-Token-Permissions", "acsp_number=WITA001 acsp_members=read acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" );
 
         ServletRequestAttributes requestAttributes = new ServletRequestAttributes( request );
         RequestContextHolder.setRequestAttributes( requestAttributes );
@@ -124,7 +124,7 @@ class SessionValidityInterceptorTest {
         request.addHeader("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ");
         request.addHeader("Eric-identity-type", "oauth2");
         request.addHeader("ERIC-Authorised-Key-Roles","*");
-        request.addHeader( "Eric-Authorised-Token-Permissions", "xacsp_id=WITA001 acsp_members=read acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" );
+        request.addHeader( "Eric-Authorised-Token-Permissions", "xacsp_number=WITA001 acsp_members=read acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" );
 
         ServletRequestAttributes requestAttributes = new ServletRequestAttributes( request );
         RequestContextHolder.setRequestAttributes( requestAttributes );
@@ -167,7 +167,7 @@ class SessionValidityInterceptorTest {
         request.addHeader("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ");
         request.addHeader("Eric-identity-type", "oauth2");
         request.addHeader("ERIC-Authorised-Key-Roles","*");
-        request.addHeader( "Eric-Authorised-Token-Permissions", "acsp_id=WITA001" + sessionRole );
+        request.addHeader( "Eric-Authorised-Token-Permissions", "acsp_number=WITA001" + sessionRole );
 
         ServletRequestAttributes requestAttributes = new ServletRequestAttributes( request );
         RequestContextHolder.setRequestAttributes( requestAttributes );
@@ -190,7 +190,7 @@ class SessionValidityInterceptorTest {
         request.addHeader("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ");
         request.addHeader("Eric-identity-type", "oauth2");
         request.addHeader("ERIC-Authorised-Key-Roles","*");
-        request.addHeader( "Eric-Authorised-Token-Permissions", "acsp_id=WITA001 acsp_members=read acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" );
+        request.addHeader( "Eric-Authorised-Token-Permissions", "acsp_number=WITA001 acsp_members=read acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" );
 
         ServletRequestAttributes requestAttributes = new ServletRequestAttributes( request );
         RequestContextHolder.setRequestAttributes( requestAttributes );

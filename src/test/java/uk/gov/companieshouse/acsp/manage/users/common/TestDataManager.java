@@ -895,7 +895,7 @@ public class TestDataManager {
         };
 
         return new StringBuilder()
-                .append( String.format( "acsp_id=%s", membershipDao.getAcspNumber() ) )
+                .append( String.format( "acsp_number=%s", membershipDao.getAcspNumber() ) )
                 .append( " " )
                 .append( String.format( "acsp_members=%s", "read" ) )
                 .append( " " )
