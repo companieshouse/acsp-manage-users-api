@@ -59,7 +59,7 @@ class AcspMembershipControllerTest {
     @Autowired
     private AcspMembersRepository acspMembersRepository;
 
-    private final TestDataManager testDataManager = TestDataManager.getInstance();
+    private static final TestDataManager testDataManager = TestDataManager.getInstance();
 
     @MockBean
     private EmailProducer emailProducer;
@@ -73,35 +73,46 @@ class AcspMembershipControllerTest {
 
     @Test
     void getAcspMembershipForAcspAndIdWithoutXRequestIdReturnsBadRequest() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
         mockMvc.perform( get( "/acsps/memberships/TS001" )
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
-                        .header("ERIC-Authorised-Key-Roles", "*") )
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) ) )
                 .andExpect( status().isBadRequest() );
     }
 
     @Test
     void getAcspMembershipForAcspAndIdWithMalformedMembershipIdReturnsBadRequest() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
         mockMvc.perform( get( "/acsps/memberships/$$$" )
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
-                        .header("ERIC-Authorised-Key-Roles", "*") )
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) ) )
                 .andExpect( status().isBadRequest() );
     }
 
     @Test
     void getAcspMembershipForAcspAndIdWithNonexistentMembershipIdReturnsNotFound() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
         mockMvc.perform( get( "/acsps/memberships/TS001" )
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
-                        .header("ERIC-Authorised-Key-Roles", "*") )
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) ) )
                 .andExpect( status().isNotFound() );
     }
 
     @Test
     void getAcspMembershipForAcspAndIdRetrievesAcspMembership() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
         final var dao = testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst();
         acspMembersRepository.insert( dao );
 
@@ -114,7 +125,8 @@ class AcspMembershipControllerTest {
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
-                        .header("ERIC-Authorised-Key-Roles", "*") )
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) ) )
                 .andExpect( status().isOk() );
 
         final var acspMembership = parseResponseTo( response, AcspMembership.class );
@@ -138,7 +150,7 @@ class AcspMembershipControllerTest {
 
     @Test
     void getAcspMembershipForAcspAndIdWithApiKeySucceeds() throws Exception {
-        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001" ) );
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004", "TS001" ) );
 
         Mockito.doReturn( testDataManager.fetchUserDtos( "TSU001" ).getFirst() ).when( usersService ).fetchUserDetails( "TSU001" );
         Mockito.doReturn( testDataManager.fetchAcspProfiles( "TSA001" ).getFirst() ).when(
@@ -148,16 +160,20 @@ class AcspMembershipControllerTest {
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "key")
-                        .header("ERIC-Authorised-Key-Roles", "*") )
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) ) )
                 .andExpect( status().isOk() );
     }
 
     @Test
     void updateAcspMembershipForAcspAndIdWithNullXRequestIdThrowsBadRequest() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
         mockMvc.perform( patch( "/acsps/memberships/WIT001" )
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isBadRequest() );
@@ -165,11 +181,14 @@ class AcspMembershipControllerTest {
 
     @Test
     void updateAcspMembershipForAcspAndIdWithMalformedMembershipIdThrowsBadRequest() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
         mockMvc.perform( patch( "/acsps/memberships/£££" )
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isBadRequest() );
@@ -186,6 +205,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isNotFound() );
@@ -193,14 +213,18 @@ class AcspMembershipControllerTest {
 
     @Test
     void updateAcspMembershipForAcspAndIdWithoutRequestBodyReturnsBadRequest() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
         mockMvc.perform( patch( "/acsps/memberships/WIT001" )
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) )
                         .contentType( MediaType.APPLICATION_JSON ) )
                 .andExpect( status().isBadRequest() );
     }
+
 
     static Stream<Arguments> updateAcspMembershipForAcspAndIdWithMalformedBodyTestData(){
         return Stream.of(
@@ -213,6 +237,8 @@ class AcspMembershipControllerTest {
     @ParameterizedTest
     @MethodSource( "updateAcspMembershipForAcspAndIdWithMalformedBodyTestData" )
     void updateAcspMembershipForAcspAndIdWithEmptyRequestBodyReturnsBadRequest( final String requestBody ) throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT001" )
@@ -220,10 +246,13 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( requestBody )  )
                 .andExpect( status().isBadRequest() );
     }
+
+
 
     @Test
     void updateAcspMembershipForAcspAndIdReturnsBadRequestWhenAttemptingToRemoveLastOwner() throws Exception {
@@ -236,6 +265,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isBadRequest() );
@@ -243,7 +273,7 @@ class AcspMembershipControllerTest {
     }
 
     @Test
-    void updateAcspMembershipForAcspAndIdWithInactiveCallerReturnsNotFound() throws Exception {
+    void updateAcspMembershipForAcspAndIdWithInactiveCallerReturnsForbidden() throws Exception {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM001", "COM004" ) );
 
         Mockito.doReturn( testDataManager.fetchUserDtos( "COMU001" ).getFirst() ).when( usersService ).fetchUserDetails( "COMU001" );
@@ -253,24 +283,25 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "COMU001" )
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM001" ) )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
-                .andExpect( status().isNotFound() );
+                .andExpect( status().isForbidden() );
     }
 
     private static Stream<Arguments> membershipRemovalSuccessScenarios() {
         return Stream.of(
-                Arguments.of( "WIT004", "WIT001" ),
-                Arguments.of( "WIT004", "WIT002" ),
-                Arguments.of( "WIT004", "WIT003" ),
-                Arguments.of( "NEI004", "NEI002" ),
-                Arguments.of( "NEI004", "NEI003" )
+                Arguments.of( "WIT004", "WIT001", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+                Arguments.of( "WIT004", "WIT002", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+                Arguments.of( "WIT004", "WIT003", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+                Arguments.of( "NEI004", "NEI002", testDataManager.fetchTokenPermissions( "NEI004" ) ),
+                Arguments.of( "NEI004", "NEI003", testDataManager.fetchTokenPermissions( "NEI004" ) )
         );
     }
 
     @ParameterizedTest
     @MethodSource( "membershipRemovalSuccessScenarios" )
-    void updateAcspMembershipForAcspAndIdWithPrivilegedCallerSuccessfullyRemovesMembership( final String requestingUserMembershipId, final String targetUserMembershipId ) throws Exception {
+    void updateAcspMembershipForAcspAndIdWithPrivilegedCallerSuccessfullyRemovesMembership( final String requestingUserMembershipId, final String targetUserMembershipId, final String tokenPermissions ) throws Exception {
         final var acspMembersDaos = testDataManager.fetchAcspMembersDaos( requestingUserMembershipId, targetUserMembershipId );
         final var originalDao = acspMembersDaos.getLast();
         final var requestUserId = acspMembersDaos.getFirst().getUserId();
@@ -283,6 +314,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", requestUserId )
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", tokenPermissions )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isOk() );
@@ -297,16 +329,16 @@ class AcspMembershipControllerTest {
 
     private static Stream<Arguments> membershipRemovalFailureScenarios(){
         return Stream.of(
-                Arguments.of( "NEI004", "NEI001" ),
-                Arguments.of( "XME004", "XME001" ),
-                Arguments.of( "XME004", "XME002" ),
-                Arguments.of( "XME004", "XME003" )
+                Arguments.of( "NEI004", "NEI001", testDataManager.fetchTokenPermissions( "NEI004" ) ),
+                Arguments.of( "XME004", "XME001", testDataManager.fetchTokenPermissions( "XME004" ) ),
+                Arguments.of( "XME004", "XME002", testDataManager.fetchTokenPermissions( "XME004" ) ),
+                Arguments.of( "XME004", "XME003", testDataManager.fetchTokenPermissions( "XME004" ) )
         );
     }
 
     @ParameterizedTest
     @MethodSource( "membershipRemovalFailureScenarios" )
-    void updateAcspMembershipForAcspAndIdWithUnprivilegedCallerReturnsBadRequestWhenAttemptingToRemoveMembership( final String requestingUserMembershipId, final String targetUserMembershipId ) throws Exception {
+    void updateAcspMembershipForAcspAndIdWithUnprivilegedCallerReturnsBadRequestWhenAttemptingToRemoveMembership( final String requestingUserMembershipId, final String targetUserMembershipId, final String tokenPermissions ) throws Exception {
         final var acspMembersDaos = testDataManager.fetchAcspMembersDaos( requestingUserMembershipId, targetUserMembershipId );
         final var requestUserId = acspMembersDaos.getFirst().getUserId();
 
@@ -318,6 +350,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", requestUserId )
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", tokenPermissions )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isBadRequest() );
@@ -325,25 +358,25 @@ class AcspMembershipControllerTest {
 
     private static Stream<Arguments> membershipUpdateRoleSuccessScenarios(){
         return Stream.of(
-            Arguments.of( "WIT004", "WIT001", "owner" ),
-            Arguments.of( "WIT004", "WIT002", "owner" ),
-            Arguments.of( "WIT004", "WIT003", "owner" ),
-            Arguments.of( "WIT004", "WIT001", "admin" ),
-            Arguments.of( "WIT004", "WIT001", "standard" ),
-            Arguments.of( "WIT004", "WIT002", "admin" ),
-            Arguments.of( "WIT004", "WIT002", "standard" ),
-            Arguments.of( "WIT004", "WIT003", "admin" ),
-            Arguments.of( "WIT004", "WIT003", "standard" ),
-            Arguments.of( "NEI004", "NEI002", "admin" ),
-            Arguments.of( "NEI004", "NEI002", "standard" ),
-            Arguments.of( "NEI004", "NEI003", "admin" ),
-            Arguments.of( "NEI004", "NEI003", "standard" )
+            Arguments.of( "WIT004", "WIT001", "owner", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+            Arguments.of( "WIT004", "WIT002", "owner", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+            Arguments.of( "WIT004", "WIT003", "owner", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+            Arguments.of( "WIT004", "WIT001", "admin", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+            Arguments.of( "WIT004", "WIT001", "standard", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+            Arguments.of( "WIT004", "WIT002", "admin", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+            Arguments.of( "WIT004", "WIT002", "standard", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+            Arguments.of( "WIT004", "WIT003", "admin", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+            Arguments.of( "WIT004", "WIT003", "standard", testDataManager.fetchTokenPermissions( "WIT004" ) ),
+            Arguments.of( "NEI004", "NEI002", "admin", testDataManager.fetchTokenPermissions( "NEI004" ) ),
+            Arguments.of( "NEI004", "NEI002", "standard", testDataManager.fetchTokenPermissions( "NEI004" ) ),
+            Arguments.of( "NEI004", "NEI003", "admin", testDataManager.fetchTokenPermissions( "NEI004" ) ),
+            Arguments.of( "NEI004", "NEI003", "standard", testDataManager.fetchTokenPermissions( "NEI004" ) )
         );
     }
 
     @ParameterizedTest
     @MethodSource( "membershipUpdateRoleSuccessScenarios" )
-    void updateAcspMembershipForAcspAndIdWithPrivilegedCallerSuccessfullyUpdatesMembership( final String requestingUserMembershipId, final String targetUserMembershipId, final String userRole ) throws Exception {
+    void updateAcspMembershipForAcspAndIdWithPrivilegedCallerSuccessfullyUpdatesMembership( final String requestingUserMembershipId, final String targetUserMembershipId, final String userRole, final String tokenPermissions ) throws Exception {
         final var acspMembersDaos = testDataManager.fetchAcspMembersDaos( requestingUserMembershipId, targetUserMembershipId );
         final var originalDao = acspMembersDaos.getLast();
         final var requestUserId = acspMembersDaos.getFirst().getUserId();
@@ -356,6 +389,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", requestUserId )
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", tokenPermissions )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( String.format( "{\"user_role\":\"%s\"}", userRole ) ) )
                 .andExpect( status().isOk() );
@@ -370,26 +404,26 @@ class AcspMembershipControllerTest {
 
     private static Stream<Arguments> membershipUpdateRoleFailureScenarios(){
         return Stream.of(
-            Arguments.of( "NEI004", "NEI001", "owner" ),
-            Arguments.of( "NEI004", "NEI002", "owner" ),
-            Arguments.of( "NEI004", "NEI003", "owner" ),
-            Arguments.of( "NEI004", "NEI001", "admin" ),
-            Arguments.of( "NEI004", "NEI001", "standard" ),
-            Arguments.of( "XME004", "XME001", "owner" ),
-            Arguments.of( "XME004", "XME001", "admin" ),
-            Arguments.of( "XME004", "XME001", "standard" ),
-            Arguments.of( "XME004", "XME002", "owner" ),
-            Arguments.of( "XME004", "XME002", "admin" ),
-            Arguments.of( "XME004", "XME002", "standard" ),
-            Arguments.of( "XME004", "XME003", "owner" ),
-            Arguments.of( "XME004", "XME003", "admin" ),
-            Arguments.of( "XME004", "XME003", "standard" )
+            Arguments.of( "NEI004", "NEI001", "owner", testDataManager.fetchTokenPermissions( "NEI004" ) ),
+            Arguments.of( "NEI004", "NEI002", "owner", testDataManager.fetchTokenPermissions( "NEI004" ) ),
+            Arguments.of( "NEI004", "NEI003", "owner", testDataManager.fetchTokenPermissions( "NEI004" ) ),
+            Arguments.of( "NEI004", "NEI001", "admin", testDataManager.fetchTokenPermissions( "NEI004" ) ),
+            Arguments.of( "NEI004", "NEI001", "standard", testDataManager.fetchTokenPermissions( "NEI004" ) ),
+            Arguments.of( "XME004", "XME001", "owner", testDataManager.fetchTokenPermissions( "XME004" ) ),
+            Arguments.of( "XME004", "XME001", "admin", testDataManager.fetchTokenPermissions( "XME004" ) ),
+            Arguments.of( "XME004", "XME001", "standard", testDataManager.fetchTokenPermissions( "XME004" ) ),
+            Arguments.of( "XME004", "XME002", "owner", testDataManager.fetchTokenPermissions( "XME004" ) ),
+            Arguments.of( "XME004", "XME002", "admin", testDataManager.fetchTokenPermissions( "XME004" ) ),
+            Arguments.of( "XME004", "XME002", "standard", testDataManager.fetchTokenPermissions( "XME004" ) ),
+            Arguments.of( "XME004", "XME003", "owner", testDataManager.fetchTokenPermissions( "XME004" ) ),
+            Arguments.of( "XME004", "XME003", "admin", testDataManager.fetchTokenPermissions( "XME004" ) ),
+            Arguments.of( "XME004", "XME003", "standard", testDataManager.fetchTokenPermissions( "XME004" ) )
         );
     }
 
     @ParameterizedTest
     @MethodSource( "membershipUpdateRoleFailureScenarios" )
-    void updateAcspMembershipForAcspAndIdWithUnprivilegedCallerReturnsBadRequestWhenAttemptingToUpdateRole( final String requestingUserMembershipId, final String targetUserMembershipId, final String userRole ) throws Exception {
+    void updateAcspMembershipForAcspAndIdWithUnprivilegedCallerReturnsBadRequestWhenAttemptingToUpdateRole( final String requestingUserMembershipId, final String targetUserMembershipId, final String userRole, final String tokenPermissions ) throws Exception {
         final var acspMembersDaos = testDataManager.fetchAcspMembersDaos( requestingUserMembershipId, targetUserMembershipId );
         final var requestUserId = acspMembersDaos.getFirst().getUserId();
 
@@ -401,6 +435,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", requestUserId )
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", tokenPermissions )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( String.format( "{\"user_role\":\"%s\"}", userRole ) ) )
                 .andExpect( status().isBadRequest() );
@@ -419,6 +454,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" )
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_role\":\"standard\",\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isOk() );
@@ -443,6 +479,7 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "COMU001" )
                         .header("ERIC-Identity-Type", "key")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_role\":\"standard\",\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isOk() );

@@ -880,4 +880,28 @@ public class TestDataManager {
         return acspMembershipDtos;
     }
 
+    public String fetchTokenPermissions( final String membershipId ){
+        final var membershipDao = acspMembersDaoSuppliers.get( membershipId ).get();
+
+        if ( "removed".equals( membershipDao.getStatus() ) ){
+            return "";
+        }
+
+        final var permittedActions =
+        switch ( membershipDao.getUserRole() ){
+            case "owner" -> "acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete";
+            case "admin" -> "acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete";
+            default -> "";
+        };
+
+        return new StringBuilder()
+                .append( String.format( "acsp_id=%s", membershipDao.getAcspNumber() ) )
+                .append( " " )
+                .append( String.format( "acsp_members=%s", "read" ) )
+                .append( " " )
+                .append( permittedActions )
+                .toString()
+                .trim();
+    }
+
 }

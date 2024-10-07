@@ -24,7 +24,6 @@ import uk.gov.companieshouse.email_producer.EmailProducer;
 import uk.gov.companieshouse.email_producer.factory.KafkaProducerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
@@ -69,45 +68,47 @@ class UserAcspMembershipControllerIntegrationTest {
 
     @Test
     void getAcspMembershipsForUserIdWithoutXRequestIdReturnsBadRequest() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
         mockMvc.perform(get("/user/acsps/memberships")
                     .header("Eric-identity", "COMU002")
                     .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*"))
-            .andExpect(status().isBadRequest());
+                    .header("ERIC-Authorised-Key-Roles", "*")
+                    .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) ) )
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     void getAcspMembershipsForUserIdWithWrongIncludeRemovedParameterInBodyReturnsBadRequest() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
         mockMvc.perform(get("/user/acsps/memberships?include_removed=null")
                     .header("X-Request-Id", "theId123")
                     .header("Eric-identity", "COMU002")
                     .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*"))
-            .andExpect(status().isBadRequest());
+                    .header("ERIC-Authorised-Key-Roles", "*")
+                    .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) ) )
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void getAcspMembershipsForUserIdWhoHasNoAcspMemebershipsReturnsEmptyAcspMembershipsList() throws Exception {
+    void getAcspMembershipsForUserIdWhoHasNoAcspMembershipsReturnsForbidden() throws Exception {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001", "TS002", "COM001", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016" ) );
 
         mockFetchUserDetailsFor("COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008", "COMU009", "COMU010", "COMU011", "COMU012", "COMU013", "COMU014", "COMU015", "COMU016");
         mockFetchAcspProfilesFor("COMA001");
 
-        final var response =
         mockMvc.perform(get("/user/acsps/memberships")
                 .header("X-Request-Id", "theId123")
-                .header("Eric-identity", "COMU002")
+                .header("Eric-identity", "COMU001")
                 .header("ERIC-Identity-Type", "oauth2")
-                .header("ERIC-Authorised-Key-Roles", "*"))
-        .andExpect(status().isOk());
-
-        final var acspMembershipsList = parseResponseTo( response, AcspMembershipsList.class );
-
-        assertTrue(acspMembershipsList.getItems().isEmpty());
+                .header("ERIC-Authorised-Key-Roles", "*")
+                .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM001" ) ) )
+                .andExpect(status().isForbidden());
     }
 
     @Test
-    void getAcspMembershipsForUserIdWhoHasAcspMemebershipsReturnsNonEmptyAcspMembershipsList() throws Exception {
+    void getAcspMembershipsForUserIdWhoHasAcspMembershipsReturnsNonEmptyAcspMembershipsList() throws Exception {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001", "TS002", "COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016" ) );
 
         mockFetchUserDetailsFor( "COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008", "COMU009", "COMU010", "COMU011", "COMU012", "COMU013", "COMU014", "COMU015", "COMU016" );
@@ -118,7 +119,8 @@ class UserAcspMembershipControllerIntegrationTest {
                     .header("X-Request-Id", "theId123")
                     .header("Eric-identity", "COMU002")
                     .header("ERIC-Identity-Type", "oauth2")
-                    .header("ERIC-Authorised-Key-Roles", "*"))
+                    .header("ERIC-Authorised-Key-Roles", "*")
+                    .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) ) )
             .andExpect(status().isOk());
 
         final var acspMemberships = parseResponseTo( response, AcspMembershipsList.class ).getItems();
