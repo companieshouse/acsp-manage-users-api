@@ -17,8 +17,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
+import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
+import uk.gov.companieshouse.acsp.manage.users.service.EmailService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.InternalApiClient;
@@ -51,6 +53,9 @@ class AcspMembershipControllerTest {
 
     @MockBean
     private AcspMembersService acspMembersService;
+
+    @MockBean
+    private EmailService emailService;
 
     private static final TestDataManager testDataManager = TestDataManager.getInstance();
 
@@ -315,6 +320,105 @@ class AcspMembershipControllerTest {
                 .andExpect( status().isBadRequest() );
     }
 
+
+
+
+
+
+
+
+    @Test
+    void updateAcspMembershipForAcspAndIdWithOAuth2RequestAndUserRoleAndWithoutDisplayNameSendsNotification() throws Exception {
+        final var acspMembersDaos = testDataManager.fetchAcspMembersDaos( "WIT004", "WIT002" );
+
+        Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+        Mockito.doReturn( Optional.of( acspMembersDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( "WIT002" );
+        Mockito.doReturn( 2 ).when( acspMembersService ).fetchNumberOfActiveOwners( "WITA001" );
+        Mockito.doReturn( Optional.of( acspMembersDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
+        Mockito.doReturn( testDataManager.fetchUserDtos( "WITU002" ).getFirst() ).when( usersService ).fetchUserDetails( "WITU002" );
+        Mockito.doReturn( testDataManager.fetchAcspProfiles( "WITA001" ).getFirst() ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
+
+        mockMvc.perform( patch( "/acsps/memberships/WIT002" )
+                        .header("X-Request-Id", "theId123")
+                        .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" )
+                        .header("ERIC-Identity-Type", "oauth2")
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) )
+                        .contentType( MediaType.APPLICATION_JSON )
+                        .content( "{\"user_role\":\"owner\"}" ) )
+                .andExpect( status().isOk() );
+
+        Mockito.verify( acspMembersService ).updateMembership( "WIT002", null, UserRoleEnum.OWNER, "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+        Mockito.verify( emailService ).sendYourRoleAtAcspHasChangedEmail( "theId123", "yennefer@witcher.com", "demo@ch.gov.uk", "Witcher", UserRoleEnum.OWNER );
+    }
+
+    @Test
+    void updateAcspMembershipForAcspAndIdWithOAuth2RequestAndUserRoleAndWithDisplayNameSendsNotification() throws Exception {
+        final var acspMembersDaos = testDataManager.fetchAcspMembersDaos( "WIT001", "WIT002" );
+
+        Mockito.doReturn( testDataManager.fetchUserDtos( "WITU001" ).getFirst() ).when( usersService ).fetchUserDetails( "WITU001" );
+        Mockito.doReturn( Optional.of( acspMembersDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( "WIT002" );
+        Mockito.doReturn( 2 ).when( acspMembersService ).fetchNumberOfActiveOwners( "WITA001" );
+        Mockito.doReturn( Optional.of( acspMembersDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( "WITU001", "WITA001" );
+        Mockito.doReturn( testDataManager.fetchUserDtos( "WITU002" ).getFirst() ).when( usersService ).fetchUserDetails( "WITU002" );
+        Mockito.doReturn( testDataManager.fetchAcspProfiles( "WITA001" ).getFirst() ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
+
+        mockMvc.perform( patch( "/acsps/memberships/WIT002" )
+                        .header("X-Request-Id", "theId123")
+                        .header("Eric-identity", "WITU001" )
+                        .header("ERIC-Identity-Type", "oauth2")
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT001" ) )
+                        .contentType( MediaType.APPLICATION_JSON )
+                        .content( "{\"user_role\":\"standard\"}" ) )
+                .andExpect( status().isOk() );
+
+        Mockito.verify( acspMembersService ).updateMembership( "WIT002", null, UserRoleEnum.STANDARD, "WITU001" );
+        Mockito.verify( emailService ).sendYourRoleAtAcspHasChangedEmail( "theId123", "yennefer@witcher.com", "Geralt of Rivia", "Witcher", UserRoleEnum.STANDARD );
+    }
+
+    @Test
+    void updateAcspMembershipForAcspAndIdWithOAuth2RequestAndUserRoleWhereUserCannotBeFoundReturnsNotFound() throws Exception {
+        final var acspMembersDaos = testDataManager.fetchAcspMembersDaos( "WIT001", "WIT002" );
+
+        Mockito.doReturn( testDataManager.fetchUserDtos( "WITU001" ).getFirst() ).when( usersService ).fetchUserDetails( "WITU001" );
+        Mockito.doReturn( Optional.of( acspMembersDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( "WIT002" );
+        Mockito.doReturn( 2 ).when( acspMembersService ).fetchNumberOfActiveOwners( "WITA001" );
+        Mockito.doReturn( Optional.of( acspMembersDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( "WITU001", "WITA001" );
+        Mockito.doThrow( new NotFoundRuntimeException( "acsp-manage-users-api", "Not found" ) ).when( usersService ).fetchUserDetails( "WITU002" );
+
+        mockMvc.perform( patch( "/acsps/memberships/WIT002" )
+                        .header("X-Request-Id", "theId123")
+                        .header("Eric-identity", "WITU001" )
+                        .header("ERIC-Identity-Type", "oauth2")
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT001" ) )
+                        .contentType( MediaType.APPLICATION_JSON )
+                        .content( "{\"user_role\":\"standard\"}" ) )
+                .andExpect( status().isNotFound() );
+    }
+
+    @Test
+    void updateAcspMembershipForAcspAndIdWithOAuth2RequestAndUserRoleWhereAcspCannotBeFoundReturnsNotFound() throws Exception {
+        final var acspMembersDaos = testDataManager.fetchAcspMembersDaos( "WIT001", "WIT002" );
+
+        Mockito.doReturn( testDataManager.fetchUserDtos( "WITU001" ).getFirst() ).when( usersService ).fetchUserDetails( "WITU001" );
+        Mockito.doReturn( Optional.of( acspMembersDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( "WIT002" );
+        Mockito.doReturn( 2 ).when( acspMembersService ).fetchNumberOfActiveOwners( "WITA001" );
+        Mockito.doReturn( Optional.of( acspMembersDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( "WITU001", "WITA001" );
+        Mockito.doThrow( new NotFoundRuntimeException( "acsp-manage-users-api", "Not found" ) ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
+
+        mockMvc.perform( patch( "/acsps/memberships/WIT002" )
+                        .header("X-Request-Id", "theId123")
+                        .header("Eric-identity", "WITU001" )
+                        .header("ERIC-Identity-Type", "oauth2")
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT001" ) )
+                        .contentType( MediaType.APPLICATION_JSON )
+                        .content( "{\"user_role\":\"standard\"}" ) )
+                .andExpect( status().isNotFound() );
+    }
+
     @Test
     void updateAcspMembershipForAcspAndIdCanUpdateUserRoleAndUserStatusAtTheSameTime() throws Exception {
         final var acspMembersDaos = testDataManager.fetchAcspMembersDaos( "WIT004", "WIT002" );
@@ -323,6 +427,8 @@ class AcspMembershipControllerTest {
         Mockito.doReturn( Optional.of( acspMembersDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( "WIT002" );
         Mockito.doReturn( 2 ).when( acspMembersService ).fetchNumberOfActiveOwners( "WITA001" );
         Mockito.doReturn( Optional.of( acspMembersDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
+        Mockito.doReturn( testDataManager.fetchUserDtos( "WITU002" ).getFirst() ).when( usersService ).fetchUserDetails( "WITU002" );
+        Mockito.doReturn( testDataManager.fetchAcspProfiles( "WITA001" ).getFirst() ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT002" )
                         .header("X-Request-Id", "theId123")
@@ -335,6 +441,7 @@ class AcspMembershipControllerTest {
                 .andExpect( status().isOk() );
 
         Mockito.verify( acspMembersService ).updateMembership( "WIT002", UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+        Mockito.verify( emailService ).sendYourRoleAtAcspHasChangedEmail( "theId123", "yennefer@witcher.com", "demo@ch.gov.uk", "Witcher", UserRoleEnum.STANDARD );
     }
 
     @Test
