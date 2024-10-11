@@ -10,9 +10,9 @@ public abstract class YourRoleAtAcspHasChangedEmailData extends BaseEmailData<Yo
 
     private String acspName;
 
-    public YourRoleAtAcspHasChangedEmailData(){}
+    protected YourRoleAtAcspHasChangedEmailData(){}
 
-    public YourRoleAtAcspHasChangedEmailData( final String to, final String editedBy, final String acspName ) {
+    protected YourRoleAtAcspHasChangedEmailData( final String to, final String editedBy, final String acspName ) {
         setTo( to );
         this.editedBy = editedBy;
         this.acspName = acspName;
