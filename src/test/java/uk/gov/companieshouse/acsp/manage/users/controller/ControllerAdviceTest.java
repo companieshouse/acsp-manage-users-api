@@ -17,6 +17,8 @@ import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeExcep
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
+import uk.gov.companieshouse.acsp.manage.users.service.EmailService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 
@@ -36,6 +38,12 @@ class ControllerAdviceTest {
 
     @MockBean
     private UsersService usersService;
+
+    @MockBean
+    private EmailService emailService;
+
+    @MockBean
+    private AcspProfileService acspProfileService;
 
     @MockBean
     private StaticPropertyUtil staticPropertyUtil;

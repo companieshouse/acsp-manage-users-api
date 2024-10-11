@@ -16,6 +16,9 @@ import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeExcepti
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
+import uk.gov.companieshouse.acsp.manage.users.service.EmailService;
+import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.api.AcspMembershipInterface;
@@ -30,13 +33,19 @@ import uk.gov.companieshouse.logging.LoggerFactory;
 public class AcspMembershipController implements AcspMembershipInterface {
 
     private final AcspMembersService acspMembershipService;
+    private final EmailService emailService;
+    private final UsersService usersService;
+    private final AcspProfileService acspProfileService;
 
     private static final Logger LOG = LoggerFactory.getLogger( StaticPropertyUtil.APPLICATION_NAMESPACE );
 
     private static final String PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN = "Please check the request and try again";
 
-    public AcspMembershipController( final AcspMembersService acspMembershipService ) {
+    public AcspMembershipController( final AcspMembersService acspMembershipService, final EmailService emailService, final UsersService usersService, final AcspProfileService acspProfileService ) {
         this.acspMembershipService = acspMembershipService;
+        this.emailService = emailService;
+        this.usersService = usersService;
+        this.acspProfileService = acspProfileService;
     }
 
     @Override
@@ -114,6 +123,13 @@ public class AcspMembershipController implements AcspMembershipInterface {
         acspMembershipService.updateMembership( membershipId, userStatus, userRole, requestingUserId );
 
         LOG.infoContext( xRequestId, String.format( "Successfully updated Acsp Membership %s", membershipId ), null );
+
+        if ( isOAuth2Request() && Objects.nonNull( userRole ) ){
+            final var requestingUserDisplayName = Optional.ofNullable( requestingUser.getDisplayName() ).orElse( requestingUser.getEmail() );
+            final var targetUser = usersService.fetchUserDetails( membershipIdAssociation.getUserId() );
+            final var targetAcsp = acspProfileService.fetchAcspProfile( membershipIdAssociation.getAcspNumber() );
+            emailService.sendYourRoleAtAcspHasChangedEmail( xRequestId, targetUser.getEmail(), requestingUserDisplayName, targetAcsp.getName(), userRole );
+        }
 
         return new ResponseEntity<>( HttpStatus.OK );
     }

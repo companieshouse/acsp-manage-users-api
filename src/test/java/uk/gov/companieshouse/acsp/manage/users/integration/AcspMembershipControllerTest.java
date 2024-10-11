@@ -1,5 +1,8 @@
 package uk.gov.companieshouse.acsp.manage.users.integration;
 
+import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
@@ -19,6 +22,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
+import uk.gov.companieshouse.acsp.manage.users.model.email.YouHaveBeenAddedToAcspEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChangedToAdminEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChangedToOwnerEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChangedToStandardEmailData;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
@@ -31,12 +38,18 @@ import java.util.stream.Stream;
 import uk.gov.companieshouse.email_producer.EmailProducer;
 import uk.gov.companieshouse.email_producer.factory.KafkaProducerFactory;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.localDateTimeToNormalisedString;
 import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.reduceTimestampResolution;
 import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
+import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_ADMIN_MESSAGE_TYPE;
+import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_OWNER_MESSAGE_TYPE;
+import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_STANDARD_MESSAGE_TYPE;
+import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE;
 
 @AutoConfigureMockMvc
 @SpringBootTest
@@ -67,9 +80,19 @@ class AcspMembershipControllerTest {
     @MockBean
     private KafkaProducerFactory kafkaProducerFactory;
 
+    private CountDownLatch latch;
+
     private static final String DEFAULT_DISPLAY_NAME = "Not Provided";
 
     private static final String DEFAULT_KIND = "acsp-membership";
+
+    private void setEmailProducerCountDownLatch( int countdown ){
+        latch = new CountDownLatch( countdown );
+        doAnswer( invocation -> {
+            latch.countDown();
+            return null;
+        } ).when( emailProducer ).sendEmail( any(), any() );
+    }
 
     @Test
     void getAcspMembershipForAcspAndIdWithoutXRequestIdReturnsBadRequest() throws Exception {
@@ -380,9 +403,16 @@ class AcspMembershipControllerTest {
         final var acspMembersDaos = testDataManager.fetchAcspMembersDaos( requestingUserMembershipId, targetUserMembershipId );
         final var originalDao = acspMembersDaos.getLast();
         final var requestUserId = acspMembersDaos.getFirst().getUserId();
+        final var requestingUser = testDataManager.fetchUserDtos( requestUserId ).getFirst();
+        final var targetUser = testDataManager.fetchUserDtos( originalDao.getUserId() ).getFirst();
+        final var acsp = testDataManager.fetchAcspProfiles( originalDao.getAcspNumber() ).getFirst();
 
         acspMembersRepository.insert( acspMembersDaos );
         Mockito.doReturn( testDataManager.fetchUserDtos( requestUserId ).getFirst() ).when( usersService ).fetchUserDetails( requestUserId );
+        Mockito.doReturn( targetUser ).when( usersService ).fetchUserDetails( targetUser.getUserId() );
+        Mockito.doReturn( acsp ).when( acspProfileService ).fetchAcspProfile( acsp.getNumber() );
+
+        setEmailProducerCountDownLatch( 1 );
 
         mockMvc.perform( patch( String.format( "/acsps/memberships/%s", targetUserMembershipId ) )
                         .header("X-Request-Id", "theId123")
@@ -400,6 +430,17 @@ class AcspMembershipControllerTest {
         Assertions.assertEquals( originalDao.getStatus(), updatedDao.getStatus() );
         Assertions.assertEquals( originalDao.getRemovedAt(), updatedDao.getRemovedAt() );
         Assertions.assertEquals( originalDao.getRemovedBy(), updatedDao.getRemovedBy() );
+
+        latch.await( 10, TimeUnit.SECONDS );
+
+        final var requestingUserDisplayName = Optional.ofNullable( requestingUser.getDisplayName() ).orElse( requestingUser.getEmail() );
+        if ( UserRoleEnum.OWNER.getValue().equals( userRole ) ){
+            Mockito.verify( emailProducer ).sendEmail( new YourRoleAtAcspHasChangedToOwnerEmailData( targetUser.getEmail(), requestingUserDisplayName, acsp.getName() ), YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_OWNER_MESSAGE_TYPE.getValue() );
+        } else if ( UserRoleEnum.ADMIN.getValue().equals( userRole ) ){
+            Mockito.verify( emailProducer ).sendEmail( new YourRoleAtAcspHasChangedToAdminEmailData( targetUser.getEmail(), requestingUserDisplayName, acsp.getName() ), YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_ADMIN_MESSAGE_TYPE.getValue() );
+        } else {
+            Mockito.verify( emailProducer ).sendEmail( new YourRoleAtAcspHasChangedToStandardEmailData( targetUser.getEmail(), requestingUserDisplayName, acsp.getName() ), YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_STANDARD_MESSAGE_TYPE.getValue() );
+        }
     }
 
     private static Stream<Arguments> membershipUpdateRoleFailureScenarios(){
@@ -448,6 +489,8 @@ class AcspMembershipControllerTest {
 
         acspMembersRepository.insert( acspMembersDaos );
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+        Mockito.doReturn( testDataManager.fetchUserDtos( "WITU002" ).getFirst() ).when( usersService ).fetchUserDetails( "WITU002" );
+        Mockito.doReturn( testDataManager.fetchAcspProfiles( "WITA001" ).getFirst() ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT002" )
                         .header("X-Request-Id", "theId123")
