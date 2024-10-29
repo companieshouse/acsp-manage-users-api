@@ -1,19 +1,17 @@
 package uk.gov.companieshouse.acsp.manage.users.model.email;
 
-import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE;
-
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
-public class YouHaveBeenAddedToAcspEmailData extends BaseEmailData<YouHaveBeenAddedToAcspEmailData> {
+public abstract class ConfirmYouAreAMemberEmailData extends BaseEmailData<ConfirmYouAreAMemberEmailData> {
 
     private String addedBy;
 
     private String acspName;
 
-    public YouHaveBeenAddedToAcspEmailData(){}
+    public ConfirmYouAreAMemberEmailData(){}
 
-    public YouHaveBeenAddedToAcspEmailData( final String to, final String addedBy, final String acspName ) {
+    public ConfirmYouAreAMemberEmailData( final String to, final String addedBy, final String acspName ){
         setTo( to );
         this.addedBy = addedBy;
         this.acspName = acspName;
@@ -24,7 +22,7 @@ public class YouHaveBeenAddedToAcspEmailData extends BaseEmailData<YouHaveBeenAd
         this.addedBy = addedBy;
     }
 
-    public YouHaveBeenAddedToAcspEmailData addedBy( final String addedBy ){
+    public ConfirmYouAreAMemberEmailData addedBy( final String addedBy ){
         setAddedBy( addedBy );
         return this;
     }
@@ -37,7 +35,7 @@ public class YouHaveBeenAddedToAcspEmailData extends BaseEmailData<YouHaveBeenAd
         this.acspName = acspName;
     }
 
-    public YouHaveBeenAddedToAcspEmailData acspName( final String acspName ){
+    public ConfirmYouAreAMemberEmailData acspName( final String acspName ){
         setAcspName( acspName );
         return this;
     }
@@ -47,13 +45,13 @@ public class YouHaveBeenAddedToAcspEmailData extends BaseEmailData<YouHaveBeenAd
     }
 
     @Override
-    protected YouHaveBeenAddedToAcspEmailData self(){
+    protected ConfirmYouAreAMemberEmailData self(){
         return this;
     }
 
     @Override
     public void setSubject(){
-        setSubject( "You have been added as a member of a Companies House authorised agent" );
+        setSubject( "You have been added to a Companies House authorised agent" );
     }
 
     @Override
@@ -62,7 +60,7 @@ public class YouHaveBeenAddedToAcspEmailData extends BaseEmailData<YouHaveBeenAd
             return true;
         }
 
-        if ( !( o instanceof YouHaveBeenAddedToAcspEmailData that ) ) {
+        if ( !( o instanceof ConfirmYouAreAMemberEmailData that ) ) {
             return false;
         }
 
@@ -76,7 +74,7 @@ public class YouHaveBeenAddedToAcspEmailData extends BaseEmailData<YouHaveBeenAd
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(17, 37)
+        return new HashCodeBuilder( 17, 37 )
                 .append( getAddedBy() )
                 .append( getAcspName() )
                 .append( getTo() )
@@ -86,17 +84,12 @@ public class YouHaveBeenAddedToAcspEmailData extends BaseEmailData<YouHaveBeenAd
 
     @Override
     public String toString() {
-        return "YouHaveBeenAddedToAcspEmailData{" +
+        return "ConfirmYouAreAMemberEmailData{" +
                 "addedBy='" + addedBy + '\'' +
                 ", acspName='" + acspName + '\'' +
                 ", to='" + getTo() + '\'' +
                 ", subject='" + getSubject() + '\'' +
                 '}';
-    }
-
-    @Override
-    public String toNotificationSentLoggingMessage(){
-        return String.format( "%s notification sent. %s was added to %s by %s.", YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE.getValue(), getTo(), getAcspName(), getAddedBy() );
     }
 
 }

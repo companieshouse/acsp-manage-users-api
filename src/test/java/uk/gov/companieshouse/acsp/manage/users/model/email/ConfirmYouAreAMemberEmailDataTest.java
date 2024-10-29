@@ -9,11 +9,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith( MockitoExtension.class )
 @Tag( "unit-test" )
-class YouHaveBeenAddedToAcspEmailDataTest {
+class ConfirmYouAreAMemberEmailDataTest {
 
     @Test
     void canConstructEmailDataWithBuilderPatternApproach() {
-        final var emailData = new YouHaveBeenAddedToAcspEmailData()
+        final var emailData = new ConfirmYouAreAnOwnerMemberEmailData()
                 .to( "buzz.lightyear@toystory.com" )
                 .subject( "Space Ranger Promotion" )
                 .addedBy( "Woody" )
@@ -27,7 +27,7 @@ class YouHaveBeenAddedToAcspEmailDataTest {
 
     @Test
     void canConstructEmailDataWithTraditionalApproach() {
-        final var emailData = new YouHaveBeenAddedToAcspEmailData();
+        final var emailData = new ConfirmYouAreAnOwnerMemberEmailData();
         emailData.setTo( "buzz.lightyear@toystory.com" );
         emailData.setSubject( "Space Ranger Promotion" );
         emailData.setAddedBy( "Woody" );
@@ -41,31 +41,31 @@ class YouHaveBeenAddedToAcspEmailDataTest {
 
     @Test
     void canConstructEmailDataWithConstructor() {
-        final var emailData = new YouHaveBeenAddedToAcspEmailData( "buzz.lightyear@toystory.com", "Woody", "Netflix" );
+        final var emailData = new ConfirmYouAreAnOwnerMemberEmailData( "buzz.lightyear@toystory.com", "Woody", "Netflix" );
         Assertions.assertEquals( "buzz.lightyear@toystory.com", emailData.getTo() );
-        Assertions.assertEquals( "You have been added as a member of a Companies House authorised agent", emailData.getSubject() );
+        Assertions.assertEquals( "You have been added to a Companies House authorised agent", emailData.getSubject() );
         Assertions.assertEquals( "Woody", emailData.getAddedBy() );
         Assertions.assertEquals( "Netflix", emailData.getAcspName() );
     }
 
     @Test
     void subjectSetsDerivedSubject(){
-        final var emailData = new YouHaveBeenAddedToAcspEmailData().subject();
-        Assertions.assertEquals( "You have been added as a member of a Companies House authorised agent", emailData.getSubject() );
+        final var emailData = new ConfirmYouAreAnOwnerMemberEmailData()
+                .to( "buzz.lightyear@toystory.com" )
+                .subject( "Space Ranger Promotion" )
+                .addedBy( "Woody" )
+                .acspName( "Netflix" )
+                .subject();
+
+        Assertions.assertEquals( "You have been added to a Companies House authorised agent", emailData.getSubject() );
     }
 
     @Test
     void equalsReturnsTrueWhenEmailDataAreEquivalentOtherwiseFalse(){
-        final Supplier<YouHaveBeenAddedToAcspEmailData> buzzEmailSupplier = () -> new YouHaveBeenAddedToAcspEmailData( "buzz.lightyear@toystory.com", "Woody", "Netflix" );
-        final var potatoHeadEmail = new YouHaveBeenAddedToAcspEmailData( "potato.head@toystory.com", "Woody", "Netflix" );
+        final Supplier<ConfirmYouAreAnOwnerMemberEmailData> buzzEmailSupplier = () -> new ConfirmYouAreAnOwnerMemberEmailData( "buzz.lightyear@toystory.com", "Woody", "Netflix" );
+        final var potatoHeadEmail = new ConfirmYouAreAnOwnerMemberEmailData( "potato.head@toystory.com", "Woody", "Netflix" );
         Assertions.assertEquals( buzzEmailSupplier.get(), buzzEmailSupplier.get() );
         Assertions.assertNotEquals( potatoHeadEmail, buzzEmailSupplier.get() );
-    }
-
-    @Test
-    void toNotificationSentLoggingMessageComputesCorrectMessage(){
-        final var message = new YouHaveBeenAddedToAcspEmailData( "buzz.lightyear@toystory.com", "Woody", "Netflix" ).toNotificationSentLoggingMessage();
-        Assertions.assertEquals( "you_have_been_added_to_acsp notification sent. buzz.lightyear@toystory.com was added to Netflix by Woody.", message );
     }
 
 }

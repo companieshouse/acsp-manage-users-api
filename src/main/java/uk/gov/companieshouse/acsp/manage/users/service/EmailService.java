@@ -1,16 +1,20 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
+import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE;
+import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE;
+import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE;
 import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_ADMIN_MESSAGE_TYPE;
 import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_OWNER_MESSAGE_TYPE;
 import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_STANDARD_MESSAGE_TYPE;
-import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE;
 
 import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.acsp.manage.users.model.MessageType;
-import uk.gov.companieshouse.acsp.manage.users.model.email.YouHaveBeenAddedToAcspEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAStandardMemberEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAnAdminMemberEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAnOwnerMemberEmailData;
 import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChangedToAdminEmailData;
 import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChangedToOwnerEmailData;
 import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChangedToStandardEmailData;
@@ -33,13 +37,31 @@ public class EmailService {
     }
 
     @Async
-    public void sendYouHaveBeenAddedToAcspEmail( final String xRequestId, final String recipientEmail, final String addedBy, final String acspName ){
-        if ( Objects.isNull( recipientEmail ) || Objects.isNull( addedBy ) || Objects.isNull( acspName ) ){
-            LOG.error( String.format( "Attempted to send %s email, with null recipientEmail, null addedBy, or null acspName.", YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE.getValue() ) );
-            throw new IllegalArgumentException( "recipientEmail, addedBy, and acspName must not be null." );
+    public void sendConfirmYouAreAMemberEmail( final String xRequestId, final String recipientEmail, final String addedBy, final String acspName, final UserRoleEnum role ){
+        if ( Objects.isNull( recipientEmail ) || Objects.isNull( addedBy ) || Objects.isNull( acspName ) || Objects.isNull( role ) ){
+            LOG.error( "Attempted to send confirm-you-are-a-member email, with null recipientEmail, null addedBy, null acspName, or null role." );
+            throw new IllegalArgumentException( "recipientEmail, addedBy, acspName, and role must not be null." );
         }
-        final var emailData = new YouHaveBeenAddedToAcspEmailData( recipientEmail, addedBy, acspName );
-        emailProducer.sendEmail( emailData, YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE.getValue() );
+
+        final MessageType messageType;
+        final var emailData =
+        switch ( role ) {
+            case UserRoleEnum.OWNER -> {
+                messageType = CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE;
+                yield new ConfirmYouAreAnOwnerMemberEmailData( recipientEmail, addedBy, acspName );
+            }
+            case UserRoleEnum.ADMIN -> {
+                messageType = CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE;
+                yield new ConfirmYouAreAnAdminMemberEmailData( recipientEmail, addedBy, acspName );
+            }
+            case UserRoleEnum.STANDARD -> {
+                messageType = CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE;
+                yield new ConfirmYouAreAStandardMemberEmailData( recipientEmail, addedBy, acspName );
+            }
+            default -> throw new IllegalArgumentException( "Role is invalid" );
+        };
+
+        emailProducer.sendEmail( emailData, messageType.getValue() );
         LOG.infoContext( xRequestId, emailData.toNotificationSentLoggingMessage(), null );
     }
 
