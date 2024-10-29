@@ -55,7 +55,7 @@ public abstract class YourRoleAtAcspHasChangedEmailData extends BaseEmailData<Yo
         if ( Objects.isNull( acspName ) ){
             throw new NullPointerException( "acspName cannot be null" );
         }
-        setSubject( String.format( "Your role has changed for %s", acspName ) );
+        setSubject( String.format( "Your role for %s has changed", acspName ) );
     }
 
     @Override

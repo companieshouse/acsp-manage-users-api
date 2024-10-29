@@ -43,7 +43,7 @@ class YourRoleAtAcspHasChangedEmailDataTest {
     void canConstructEmailDataWithConstructor() {
         final var emailData = new YourRoleAtAcspHasChangedToOwnerEmailData( "buzz.lightyear@toystory.com", "Woody", "Netflix" );
         Assertions.assertEquals( "buzz.lightyear@toystory.com", emailData.getTo() );
-        Assertions.assertEquals( "Your role has changed for Netflix", emailData.getSubject() );
+        Assertions.assertEquals( "Your role for Netflix has changed", emailData.getSubject() );
         Assertions.assertEquals( "Woody", emailData.getEditedBy() );
         Assertions.assertEquals( "Netflix", emailData.getAcspName() );
     }
@@ -57,7 +57,7 @@ class YourRoleAtAcspHasChangedEmailDataTest {
                 .acspName( "Netflix" )
                 .subject();
 
-        Assertions.assertEquals( "Your role has changed for Netflix", emailData.getSubject() );
+        Assertions.assertEquals( "Your role for Netflix has changed", emailData.getSubject() );
     }
 
     @Test
