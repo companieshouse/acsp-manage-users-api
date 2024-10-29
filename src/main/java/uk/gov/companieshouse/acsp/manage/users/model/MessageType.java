@@ -2,7 +2,11 @@ package uk.gov.companieshouse.acsp.manage.users.model;
 
 public enum MessageType {
 
-    YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE( "you_have_been_added_to_acsp" ),
+    CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE( "confirm_you_are_a_standard_member" ),
+
+    CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE( "confirm_you_are_an_admin_member" ),
+
+    CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE( "confirm_you_are_an_owner_member" ),
 
     YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_STANDARD_MESSAGE_TYPE( "your_role_at_acsp_has_changed_to_standard" ),
 

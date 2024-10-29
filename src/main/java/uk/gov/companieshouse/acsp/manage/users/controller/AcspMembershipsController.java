@@ -92,7 +92,7 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
 
     if ( isOAuth2Request() ){
       final var requestingUserDisplayName = Optional.ofNullable( requestingUser.getDisplayName() ).orElse( requestingUser.getEmail() );
-      emailService.sendYouHaveBeenAddedToAcspEmail( xRequestId, targetUser.getEmail(), requestingUserDisplayName, acspProfile.getName() );
+      emailService.sendConfirmYouAreAMemberEmail( xRequestId, targetUser.getEmail(), requestingUserDisplayName, acspProfile.getName(), targetUserRole );
     }
 
     LOG.infoContext( xRequestId, String.format( "Successfully created %s membership for user %s at Acsp %s", targetUserRole.getValue(), targetUserId, acspNumber ), null );

@@ -19,7 +19,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
-import uk.gov.companieshouse.acsp.manage.users.model.email.YouHaveBeenAddedToAcspEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAStandardMemberEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAnAdminMemberEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAnOwnerMemberEmailData;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
@@ -44,8 +46,10 @@ import static org.mockito.Mockito.times;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE;
 import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
+import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE;
+import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE;
+import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE;
 
 @AutoConfigureMockMvc
 @SpringBootTest
@@ -619,8 +623,17 @@ class AcspMembershipsControllerIntegrationTest {
             Assertions.assertEquals( "TSU001", acspMembership.getAddedBy() );
         }
 
-        @Test
-        void addMemberForAcspSendsYouHaveBeenAddedNotificationsWithoutDisplayName() throws Exception {
+        static Stream<Arguments> rolesStream(){
+            return Stream.of(
+                    Arguments.of( UserRoleEnum.OWNER ),
+                    Arguments.of( UserRoleEnum.ADMIN ),
+                    Arguments.of( UserRoleEnum.STANDARD )
+            );
+        }
+
+        @ParameterizedTest
+        @MethodSource( "rolesStream" )
+        void addMemberForAcspSendsConfirmYouAreAMemberNotificationsWithoutDisplayName( final UserRoleEnum role ) throws Exception {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos("TS001" ) );
             mockFetchUserDetailsFor( "TSU001", "COMU001" );
             mockFetchAcspProfilesFor("TSA001" );
@@ -634,15 +647,23 @@ class AcspMembershipsControllerIntegrationTest {
                             .header("ERIC-Authorised-Key-Roles", "*")
                             .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "TS001" ) )
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}") )
+                            .content( String.format( "{\"user_id\":\"COMU001\",\"user_role\":\"%s\"}", role.getValue() ) ) )
                     .andExpect( status().isCreated() );
 
             latch.await( 10, TimeUnit.SECONDS );
-            Mockito.verify( emailProducer ).sendEmail( new YouHaveBeenAddedToAcspEmailData( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story" ), YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE.getValue() );
+
+            if ( UserRoleEnum.OWNER.equals( role ) ) {
+                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAnOwnerMemberEmailData( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story" ), CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE.getValue() );
+            } else if ( UserRoleEnum.ADMIN.equals( role ) ) {
+                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAnAdminMemberEmailData( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story" ), CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue() );
+            } else if ( UserRoleEnum.STANDARD.equals( role ) ) {
+                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAStandardMemberEmailData( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story" ), CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE.getValue() );
+            }
         }
 
-        @Test
-        void addMemberForAcspSendsYouHaveBeenAddedNotificationsWithDisplayName() throws Exception {
+        @ParameterizedTest
+        @MethodSource( "rolesStream" )
+        void addMemberForAcspSendsConfirmYouAreAMemberNotificationsWithDisplayName( final UserRoleEnum role ) throws Exception {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos("WIT001" ) );
             mockFetchUserDetailsFor( "WITU001", "COMU001" );
             mockFetchAcspProfilesFor("WITA001" );
@@ -656,15 +677,24 @@ class AcspMembershipsControllerIntegrationTest {
                             .header("ERIC-Authorised-Key-Roles", "*")
                             .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT001" ) )
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}") )
+                            .content( String.format( "{\"user_id\":\"COMU001\",\"user_role\":\"%s\"}", role.getValue() ) ) )
                     .andExpect( status().isCreated() );
 
             latch.await( 10, TimeUnit.SECONDS );
-            Mockito.verify( emailProducer ).sendEmail( new YouHaveBeenAddedToAcspEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" ), YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE.getValue() );
+
+            if ( UserRoleEnum.OWNER.equals( role ) ) {
+                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAnOwnerMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" ), CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE.getValue() );
+            } else if ( UserRoleEnum.ADMIN.equals( role ) ) {
+                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAnAdminMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" ), CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue() );
+            } else if ( UserRoleEnum.STANDARD.equals( role ) ) {
+                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAStandardMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" ), CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE.getValue() );
+            }
+
         }
 
-        @Test
-        void addMemberForAcspDoesNotSendYouHaveBeenAddedNotificationsWhenCalledInternally() throws Exception {
+        @ParameterizedTest
+        @MethodSource( "rolesStream" )
+        void addMemberForAcspDoesNotSendConfirmYouAreAMemberNotificationsWhenCalledInternally( final UserRoleEnum role ) throws Exception {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos("WIT001" ) );
             mockFetchUserDetailsFor( "WITU001", "COMU001" );
             mockFetchAcspProfilesFor("WITA001" );
@@ -676,10 +706,17 @@ class AcspMembershipsControllerIntegrationTest {
                             .header("ERIC-Authorised-Key-Roles", "*")
                             .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT001" ) )
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}") )
+                            .content( String.format( "{\"user_id\":\"COMU001\",\"user_role\":\"%s\"}", role.getValue() ) ) )
                     .andExpect( status().isCreated() );
 
-            Mockito.verify( emailProducer, times( 0 ) ).sendEmail( new YouHaveBeenAddedToAcspEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" ), YOU_HAVE_BEEN_ADDED_TO_ACSP_MESSAGE_TYPE.getValue() );
+            if ( UserRoleEnum.OWNER.equals( role ) ) {
+                Mockito.verify( emailProducer, times( 0 ) ).sendEmail( new ConfirmYouAreAnOwnerMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" ), CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE.getValue() );
+            } else if ( UserRoleEnum.ADMIN.equals( role ) ) {
+                Mockito.verify( emailProducer, times( 0 ) ).sendEmail( new ConfirmYouAreAnAdminMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" ), CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue() );
+            } else if ( UserRoleEnum.STANDARD.equals( role ) ) {
+                Mockito.verify( emailProducer, times( 0 ) ).sendEmail( new ConfirmYouAreAStandardMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" ), CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE.getValue() );
+            }
+
         }
 
     }
