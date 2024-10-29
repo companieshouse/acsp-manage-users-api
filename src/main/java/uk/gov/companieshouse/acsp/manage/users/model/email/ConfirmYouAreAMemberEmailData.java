@@ -9,9 +9,9 @@ public abstract class ConfirmYouAreAMemberEmailData extends BaseEmailData<Confir
 
     private String acspName;
 
-    public ConfirmYouAreAMemberEmailData(){}
+    protected ConfirmYouAreAMemberEmailData(){}
 
-    public ConfirmYouAreAMemberEmailData( final String to, final String addedBy, final String acspName ){
+    protected ConfirmYouAreAMemberEmailData( final String to, final String addedBy, final String acspName ){
         setTo( to );
         this.addedBy = addedBy;
         this.acspName = acspName;
