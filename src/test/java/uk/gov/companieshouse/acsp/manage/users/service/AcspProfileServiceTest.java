@@ -16,7 +16,7 @@ import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.rest.AcspProfileEndpoint;
-import uk.gov.companieshouse.api.acspprofile.AcspProfile.StatusEnum;
+import uk.gov.companieshouse.api.acspprofile.Status;
 import uk.gov.companieshouse.api.error.ApiErrorResponseException;
 import uk.gov.companieshouse.api.handler.acspprofile.request.PrivateAcspProfileAcspInfoGet;
 import uk.gov.companieshouse.api.handler.exception.URIValidationException;
@@ -93,7 +93,7 @@ class AcspProfileServiceTest {
         final var response = acspProfileService.createFetchAcspProfileRequest( "TSA001" ).get();
         Assertions.assertEquals( "TSA001", response.getNumber() );
         Assertions.assertEquals( "Toy Story", response.getName() );
-        Assertions.assertEquals( StatusEnum.ACTIVE, response.getStatus() );
+        Assertions.assertEquals( Status.ACTIVE, response.getStatus() );
     }
 
     @Test
@@ -150,7 +150,7 @@ class AcspProfileServiceTest {
         final var response = acspProfileService.fetchAcspProfile( "TSA001" );
         Assertions.assertEquals( "TSA001", response.getNumber() );
         Assertions.assertEquals( "Toy Story", response.getName() );
-        Assertions.assertEquals( StatusEnum.ACTIVE, response.getStatus() );
+        Assertions.assertEquals( Status.ACTIVE, response.getStatus() );
     }
 
     @Test

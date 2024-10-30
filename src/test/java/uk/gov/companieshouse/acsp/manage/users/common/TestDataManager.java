@@ -19,7 +19,7 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.AcspStat
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.acspprofile.AcspProfile;
-import uk.gov.companieshouse.api.acspprofile.AcspProfile.StatusEnum;
+import uk.gov.companieshouse.api.acspprofile.Status;
 
 public class TestDataManager {
 
@@ -769,7 +769,7 @@ public class TestDataManager {
             final var acspProfile = new AcspProfile();
             acspProfile.setNumber("TSA001");
             acspProfile.setName( "Toy Story" );
-            acspProfile.setStatus( StatusEnum.ACTIVE );
+            acspProfile.setStatus( Status.ACTIVE );
             return acspProfile;
         };
         acspProfileSuppliers.put( "TSA001", ToyStoryAcspProfile );
@@ -778,7 +778,7 @@ public class TestDataManager {
             final var acspProfile = new AcspProfile();
             acspProfile.setNumber("NFA001");
             acspProfile.setName( "Netflix" );
-            acspProfile.setStatus( StatusEnum.ACTIVE );
+            acspProfile.setStatus( Status.ACTIVE );
             return acspProfile;
         };
         acspProfileSuppliers.put( "NFA001", NetflixAcspProfile );
@@ -787,7 +787,7 @@ public class TestDataManager {
             final var acspProfile = new AcspProfile();
             acspProfile.setNumber( "COMA001" );
             acspProfile.setName( "Comedy" );
-            acspProfile.setStatus( StatusEnum.ACTIVE );
+            acspProfile.setStatus( Status.ACTIVE );
             return acspProfile;
         };
         acspProfileSuppliers.put( "COMA001", comedyAcspProfile );
@@ -796,7 +796,7 @@ public class TestDataManager {
             final var acspProfile = new AcspProfile();
             acspProfile.setNumber("WITA001");
             acspProfile.setName( "Witcher" );
-            acspProfile.setStatus( StatusEnum.ACTIVE );
+            acspProfile.setStatus( Status.ACTIVE );
             return acspProfile;
         };
         acspProfileSuppliers.put( "WITA001", witcherAcspProfile );
@@ -805,7 +805,7 @@ public class TestDataManager {
             final var acspProfile = new AcspProfile();
             acspProfile.setNumber("NEIA001");
             acspProfile.setName( "Neighbours" );
-            acspProfile.setStatus( StatusEnum.ACTIVE );
+            acspProfile.setStatus( Status.ACTIVE );
             return acspProfile;
         };
         acspProfileSuppliers.put( "NEIA001", neighboursAcspProfile );
@@ -814,7 +814,7 @@ public class TestDataManager {
             final var acspProfile = new AcspProfile();
             acspProfile.setNumber("XMEA001");
             acspProfile.setName( "XMen" );
-            acspProfile.setStatus( StatusEnum.ACTIVE );
+            acspProfile.setStatus( Status.ACTIVE );
             return acspProfile;
         };
         acspProfileSuppliers.put( "XMEA001", xmenAcspProfile );
