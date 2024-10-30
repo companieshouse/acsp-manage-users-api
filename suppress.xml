@@ -29,4 +29,10 @@
    ]]></notes>
     <cve>CVE-2024-47561</cve>
   </suppress>
+  <suppress until="2025-06-01Z">
+    <notes><![CDATA[
+   file name: spring-core:jar
+   ]]></notes>
+    <cve>CVE-2024-38820</cve>
+  </suppress>
 </suppressions>
