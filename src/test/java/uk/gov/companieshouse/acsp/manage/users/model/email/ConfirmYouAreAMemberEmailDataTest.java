@@ -6,10 +6,14 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Value;
 
 @ExtendWith( MockitoExtension.class )
 @Tag( "unit-test" )
 class ConfirmYouAreAMemberEmailDataTest {
+
+    @Value( "${signin.url}" )
+    private String signinUrl;
 
     @Test
     void canConstructEmailDataWithBuilderPatternApproach() {
@@ -17,12 +21,14 @@ class ConfirmYouAreAMemberEmailDataTest {
                 .to( "buzz.lightyear@toystory.com" )
                 .subject( "Space Ranger Promotion" )
                 .addedBy( "Woody" )
-                .acspName( "Netflix" );
+                .acspName( "Netflix" )
+                .signinUrl( signinUrl );
 
         Assertions.assertEquals( "buzz.lightyear@toystory.com", emailData.getTo() );
         Assertions.assertEquals( "Space Ranger Promotion", emailData.getSubject() );
         Assertions.assertEquals( "Woody", emailData.getAddedBy() );
         Assertions.assertEquals( "Netflix", emailData.getAcspName() );
+        Assertions.assertEquals( signinUrl, emailData.getSigninUrl() );
     }
 
     @Test
@@ -32,20 +38,23 @@ class ConfirmYouAreAMemberEmailDataTest {
         emailData.setSubject( "Space Ranger Promotion" );
         emailData.setAddedBy( "Woody" );
         emailData.setAcspName( "Netflix" );
+        emailData.setSigninUrl( signinUrl );
 
         Assertions.assertEquals( "buzz.lightyear@toystory.com", emailData.getTo() );
         Assertions.assertEquals( "Space Ranger Promotion", emailData.getSubject() );
         Assertions.assertEquals( "Woody", emailData.getAddedBy() );
         Assertions.assertEquals( "Netflix", emailData.getAcspName() );
+        Assertions.assertEquals( signinUrl, emailData.getSigninUrl() );
     }
 
     @Test
     void canConstructEmailDataWithConstructor() {
-        final var emailData = new ConfirmYouAreAnOwnerMemberEmailData( "buzz.lightyear@toystory.com", "Woody", "Netflix" );
+        final var emailData = new ConfirmYouAreAnOwnerMemberEmailData( "buzz.lightyear@toystory.com", "Woody", "Netflix", signinUrl );
         Assertions.assertEquals( "buzz.lightyear@toystory.com", emailData.getTo() );
         Assertions.assertEquals( "You have been added to a Companies House authorised agent", emailData.getSubject() );
         Assertions.assertEquals( "Woody", emailData.getAddedBy() );
         Assertions.assertEquals( "Netflix", emailData.getAcspName() );
+        Assertions.assertEquals( signinUrl, emailData.getSigninUrl() );
     }
 
     @Test
@@ -55,6 +64,7 @@ class ConfirmYouAreAMemberEmailDataTest {
                 .subject( "Space Ranger Promotion" )
                 .addedBy( "Woody" )
                 .acspName( "Netflix" )
+                .signinUrl( signinUrl )
                 .subject();
 
         Assertions.assertEquals( "You have been added to a Companies House authorised agent", emailData.getSubject() );
@@ -62,8 +72,8 @@ class ConfirmYouAreAMemberEmailDataTest {
 
     @Test
     void equalsReturnsTrueWhenEmailDataAreEquivalentOtherwiseFalse(){
-        final Supplier<ConfirmYouAreAnOwnerMemberEmailData> buzzEmailSupplier = () -> new ConfirmYouAreAnOwnerMemberEmailData( "buzz.lightyear@toystory.com", "Woody", "Netflix" );
-        final var potatoHeadEmail = new ConfirmYouAreAnOwnerMemberEmailData( "potato.head@toystory.com", "Woody", "Netflix" );
+        final Supplier<ConfirmYouAreAnOwnerMemberEmailData> buzzEmailSupplier = () -> new ConfirmYouAreAnOwnerMemberEmailData( "buzz.lightyear@toystory.com", "Woody", "Netflix", signinUrl );
+        final var potatoHeadEmail = new ConfirmYouAreAnOwnerMemberEmailData( "potato.head@toystory.com", "Woody", "Netflix", signinUrl );
         Assertions.assertEquals( buzzEmailSupplier.get(), buzzEmailSupplier.get() );
         Assertions.assertNotEquals( potatoHeadEmail, buzzEmailSupplier.get() );
     }

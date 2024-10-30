@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -79,6 +80,9 @@ class AcspMembershipsControllerIntegrationTest {
 
     @MockBean
     private KafkaProducerFactory kafkaProducerFactory;
+
+    @Value( "${signin.url}" )
+    private String signinUrl;
 
     private CountDownLatch latch;
 
@@ -653,11 +657,11 @@ class AcspMembershipsControllerIntegrationTest {
             latch.await( 10, TimeUnit.SECONDS );
 
             if ( UserRoleEnum.OWNER.equals( role ) ) {
-                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAnOwnerMemberEmailData( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story" ), CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE.getValue() );
+                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAnOwnerMemberEmailData( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", signinUrl ), CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE.getValue() );
             } else if ( UserRoleEnum.ADMIN.equals( role ) ) {
-                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAnAdminMemberEmailData( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story" ), CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue() );
+                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAnAdminMemberEmailData( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", signinUrl ), CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue() );
             } else if ( UserRoleEnum.STANDARD.equals( role ) ) {
-                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAStandardMemberEmailData( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story" ), CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE.getValue() );
+                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAStandardMemberEmailData( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", signinUrl ), CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE.getValue() );
             }
         }
 
@@ -683,11 +687,11 @@ class AcspMembershipsControllerIntegrationTest {
             latch.await( 10, TimeUnit.SECONDS );
 
             if ( UserRoleEnum.OWNER.equals( role ) ) {
-                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAnOwnerMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" ), CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE.getValue() );
+                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAnOwnerMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl ), CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE.getValue() );
             } else if ( UserRoleEnum.ADMIN.equals( role ) ) {
-                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAnAdminMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" ), CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue() );
+                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAnAdminMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl ), CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue() );
             } else if ( UserRoleEnum.STANDARD.equals( role ) ) {
-                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAStandardMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" ), CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE.getValue() );
+                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAStandardMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl ), CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE.getValue() );
             }
 
         }
@@ -710,11 +714,11 @@ class AcspMembershipsControllerIntegrationTest {
                     .andExpect( status().isCreated() );
 
             if ( UserRoleEnum.OWNER.equals( role ) ) {
-                Mockito.verify( emailProducer, times( 0 ) ).sendEmail( new ConfirmYouAreAnOwnerMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" ), CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE.getValue() );
+                Mockito.verify( emailProducer, times( 0 ) ).sendEmail( new ConfirmYouAreAnOwnerMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl ), CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE.getValue() );
             } else if ( UserRoleEnum.ADMIN.equals( role ) ) {
-                Mockito.verify( emailProducer, times( 0 ) ).sendEmail( new ConfirmYouAreAnAdminMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" ), CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue() );
+                Mockito.verify( emailProducer, times( 0 ) ).sendEmail( new ConfirmYouAreAnAdminMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl ), CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue() );
             } else if ( UserRoleEnum.STANDARD.equals( role ) ) {
-                Mockito.verify( emailProducer, times( 0 ) ).sendEmail( new ConfirmYouAreAStandardMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher" ), CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE.getValue() );
+                Mockito.verify( emailProducer, times( 0 ) ).sendEmail( new ConfirmYouAreAStandardMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl ), CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE.getValue() );
             }
 
         }

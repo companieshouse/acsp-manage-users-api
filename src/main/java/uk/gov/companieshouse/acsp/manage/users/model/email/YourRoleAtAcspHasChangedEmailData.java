@@ -10,12 +10,15 @@ public abstract class YourRoleAtAcspHasChangedEmailData extends BaseEmailData<Yo
 
     private String acspName;
 
+    private String signinUrl;
+
     protected YourRoleAtAcspHasChangedEmailData(){}
 
-    protected YourRoleAtAcspHasChangedEmailData( final String to, final String editedBy, final String acspName ) {
+    protected YourRoleAtAcspHasChangedEmailData( final String to, final String editedBy, final String acspName, final String signinUrl ) {
         setTo( to );
         this.editedBy = editedBy;
         this.acspName = acspName;
+        this.signinUrl = signinUrl;
         setSubject();
     }
 
@@ -43,6 +46,19 @@ public abstract class YourRoleAtAcspHasChangedEmailData extends BaseEmailData<Yo
 
     public String getAcspName() {
         return acspName;
+    }
+
+    public void setSigninUrl( final String signinUrl ){
+        this.signinUrl = signinUrl;
+    }
+
+    public YourRoleAtAcspHasChangedEmailData signinUrl( final String signinUrl ){
+        setSigninUrl( signinUrl );
+        return this;
+    }
+
+    public String getSigninUrl(){
+        return signinUrl;
     }
 
     @Override
@@ -73,6 +89,7 @@ public abstract class YourRoleAtAcspHasChangedEmailData extends BaseEmailData<Yo
                 .append( getAcspName(), that.getAcspName() )
                 .append( getTo(), that.getTo() )
                 .append( getSubject(), that.getSubject() )
+                .append( getSigninUrl(), that.getSigninUrl() )
                 .isEquals();
     }
 
@@ -83,6 +100,7 @@ public abstract class YourRoleAtAcspHasChangedEmailData extends BaseEmailData<Yo
                 .append( getAcspName() )
                 .append( getTo() )
                 .append( getSubject() )
+                .append( getSigninUrl() )
                 .toHashCode();
     }
 
@@ -93,6 +111,7 @@ public abstract class YourRoleAtAcspHasChangedEmailData extends BaseEmailData<Yo
                 ", acspName='" + acspName + '\'' +
                 ", to='" + getTo() + '\'' +
                 ", subject='" + getSubject() + '\'' +
+                ", signinUrl='" + getSigninUrl() + '\'' +
                 '}';
     }
 
