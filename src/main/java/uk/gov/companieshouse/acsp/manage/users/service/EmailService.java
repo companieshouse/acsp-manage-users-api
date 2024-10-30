@@ -9,6 +9,7 @@ import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.YOUR_ROL
 
 import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.acsp.manage.users.model.MessageType;
@@ -26,6 +27,9 @@ import uk.gov.companieshouse.logging.LoggerFactory;
 
 @Service
 public class EmailService {
+
+    @Value( "${signin.url}" )
+    private String signinUrl;
 
     private static final Logger LOG = LoggerFactory.getLogger( StaticPropertyUtil.APPLICATION_NAMESPACE );
 
@@ -48,15 +52,15 @@ public class EmailService {
         switch ( role ) {
             case UserRoleEnum.OWNER -> {
                 messageType = CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE;
-                yield new ConfirmYouAreAnOwnerMemberEmailData( recipientEmail, addedBy, acspName );
+                yield new ConfirmYouAreAnOwnerMemberEmailData( recipientEmail, addedBy, acspName, signinUrl );
             }
             case UserRoleEnum.ADMIN -> {
                 messageType = CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE;
-                yield new ConfirmYouAreAnAdminMemberEmailData( recipientEmail, addedBy, acspName );
+                yield new ConfirmYouAreAnAdminMemberEmailData( recipientEmail, addedBy, acspName, signinUrl );
             }
             case UserRoleEnum.STANDARD -> {
                 messageType = CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE;
-                yield new ConfirmYouAreAStandardMemberEmailData( recipientEmail, addedBy, acspName );
+                yield new ConfirmYouAreAStandardMemberEmailData( recipientEmail, addedBy, acspName, signinUrl );
             }
             default -> throw new IllegalArgumentException( "Role is invalid" );
         };
@@ -77,15 +81,15 @@ public class EmailService {
         switch ( newRole ) {
             case UserRoleEnum.OWNER -> {
                 messageType = YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_OWNER_MESSAGE_TYPE;
-                yield new YourRoleAtAcspHasChangedToOwnerEmailData( recipientEmail, editedBy, acspName );
+                yield new YourRoleAtAcspHasChangedToOwnerEmailData( recipientEmail, editedBy, acspName, signinUrl );
             }
             case UserRoleEnum.ADMIN -> {
                 messageType = YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_ADMIN_MESSAGE_TYPE;
-                yield new YourRoleAtAcspHasChangedToAdminEmailData( recipientEmail, editedBy, acspName );
+                yield new YourRoleAtAcspHasChangedToAdminEmailData( recipientEmail, editedBy, acspName, signinUrl );
             }
             case UserRoleEnum.STANDARD -> {
                 messageType = YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_STANDARD_MESSAGE_TYPE;
-                yield new YourRoleAtAcspHasChangedToStandardEmailData( recipientEmail, editedBy, acspName );
+                yield new YourRoleAtAcspHasChangedToStandardEmailData( recipientEmail, editedBy, acspName, signinUrl );
             }
             default -> throw new IllegalArgumentException( "Role is invalid" );
         };

@@ -6,8 +6,8 @@ public class ConfirmYouAreAnAdminMemberEmailData extends ConfirmYouAreAMemberEma
 
     public ConfirmYouAreAnAdminMemberEmailData(){}
 
-    public ConfirmYouAreAnAdminMemberEmailData( final String to, final String addedBy, final String acspName ){
-        super( to, addedBy, acspName );
+    public ConfirmYouAreAnAdminMemberEmailData( final String to, final String addedBy, final String acspName, final String signinUrl ){
+        super( to, addedBy, acspName, signinUrl );
     }
 
     @Override

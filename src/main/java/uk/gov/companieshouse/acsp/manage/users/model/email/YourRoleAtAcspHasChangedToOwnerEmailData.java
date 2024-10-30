@@ -6,8 +6,8 @@ public class YourRoleAtAcspHasChangedToOwnerEmailData extends YourRoleAtAcspHasC
 
     public YourRoleAtAcspHasChangedToOwnerEmailData(){}
 
-    public YourRoleAtAcspHasChangedToOwnerEmailData( final String to, final String editedBy, final String acspName ){
-        super( to, editedBy, acspName );
+    public YourRoleAtAcspHasChangedToOwnerEmailData( final String to, final String editedBy, final String acspName, final String signinUrl ){
+        super( to, editedBy, acspName, signinUrl );
     }
 
     @Override

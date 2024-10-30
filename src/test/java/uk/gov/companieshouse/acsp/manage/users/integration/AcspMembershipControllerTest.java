@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -77,6 +78,9 @@ class AcspMembershipControllerTest {
 
     @MockBean
     private KafkaProducerFactory kafkaProducerFactory;
+
+    @Value( "${signin.url}" )
+    private String signinUrl;
 
     private CountDownLatch latch;
 
@@ -433,11 +437,11 @@ class AcspMembershipControllerTest {
 
         final var requestingUserDisplayName = Optional.ofNullable( requestingUser.getDisplayName() ).orElse( requestingUser.getEmail() );
         if ( UserRoleEnum.OWNER.getValue().equals( userRole ) ){
-            Mockito.verify( emailProducer ).sendEmail( new YourRoleAtAcspHasChangedToOwnerEmailData( targetUser.getEmail(), requestingUserDisplayName, acsp.getName() ), YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_OWNER_MESSAGE_TYPE.getValue() );
+            Mockito.verify( emailProducer ).sendEmail( new YourRoleAtAcspHasChangedToOwnerEmailData( targetUser.getEmail(), requestingUserDisplayName, acsp.getName(), signinUrl ), YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_OWNER_MESSAGE_TYPE.getValue() );
         } else if ( UserRoleEnum.ADMIN.getValue().equals( userRole ) ){
-            Mockito.verify( emailProducer ).sendEmail( new YourRoleAtAcspHasChangedToAdminEmailData( targetUser.getEmail(), requestingUserDisplayName, acsp.getName() ), YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_ADMIN_MESSAGE_TYPE.getValue() );
+            Mockito.verify( emailProducer ).sendEmail( new YourRoleAtAcspHasChangedToAdminEmailData( targetUser.getEmail(), requestingUserDisplayName, acsp.getName(), signinUrl ), YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_ADMIN_MESSAGE_TYPE.getValue() );
         } else {
-            Mockito.verify( emailProducer ).sendEmail( new YourRoleAtAcspHasChangedToStandardEmailData( targetUser.getEmail(), requestingUserDisplayName, acsp.getName() ), YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_STANDARD_MESSAGE_TYPE.getValue() );
+            Mockito.verify( emailProducer ).sendEmail( new YourRoleAtAcspHasChangedToStandardEmailData( targetUser.getEmail(), requestingUserDisplayName, acsp.getName(), signinUrl ), YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_STANDARD_MESSAGE_TYPE.getValue() );
         }
     }
 

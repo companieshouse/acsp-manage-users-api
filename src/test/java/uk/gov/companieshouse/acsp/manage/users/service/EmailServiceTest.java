@@ -17,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Value;
 import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAStandardMemberEmailData;
 import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAnAdminMemberEmailData;
 import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAnOwnerMemberEmailData;
@@ -36,6 +37,9 @@ class EmailServiceTest {
 
     @InjectMocks
     private EmailService emailService;
+
+    @Value( "${signin.url}" )
+    private String signinUrl;
 
     @Test
     void sendConfirmYouAreAMemberEmailWithNullRecipientEmailOrAddedByOrAcspNameOrRoleThrowsIllegalArgumentException(){
@@ -58,21 +62,21 @@ class EmailServiceTest {
 
     @Test
     void sendConfirmYouAreAMemberEmailWithRoleSetToOwnerThrowsMessageOnToKafkaQueue(){
-        final var expectedEmailData = new ConfirmYouAreAnOwnerMemberEmailData( "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher" );
+        final var expectedEmailData = new ConfirmYouAreAnOwnerMemberEmailData( "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher", signinUrl );
         emailService.sendConfirmYouAreAMemberEmail( "theId123", "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher", UserRoleEnum.OWNER );
         Mockito.verify( emailProducer ).sendEmail( expectedEmailData, CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE.getValue() );
     }
 
     @Test
     void sendConfirmYouAreAMemberEmailWithRoleSetToAdminThrowsMessageOnToKafkaQueue(){
-        final var expectedEmailData = new ConfirmYouAreAnAdminMemberEmailData( "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher" );
+        final var expectedEmailData = new ConfirmYouAreAnAdminMemberEmailData( "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher", signinUrl );
         emailService.sendConfirmYouAreAMemberEmail( "theId123", "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher", UserRoleEnum.ADMIN );
         Mockito.verify( emailProducer ).sendEmail( expectedEmailData, CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue() );
     }
 
     @Test
     void sendConfirmYouAreAMemberEmailWithRoleSetToStandardThrowsMessageOnToKafkaQueue(){
-        final var expectedEmailData = new ConfirmYouAreAStandardMemberEmailData( "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher" );
+        final var expectedEmailData = new ConfirmYouAreAStandardMemberEmailData( "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher", signinUrl );
         emailService.sendConfirmYouAreAMemberEmail( "theId123", "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher", UserRoleEnum.STANDARD );
         Mockito.verify( emailProducer ).sendEmail( expectedEmailData, CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE.getValue() );
     }
@@ -98,21 +102,21 @@ class EmailServiceTest {
 
     @Test
     void sendYourRoleAtAcspHasChangedEmailWithNewRoleSetToOwnerThrowsMessageOnToKafkaQueue(){
-        final var expectedEmailData = new YourRoleAtAcspHasChangedToOwnerEmailData( "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher" );
+        final var expectedEmailData = new YourRoleAtAcspHasChangedToOwnerEmailData( "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher", signinUrl );
         emailService.sendYourRoleAtAcspHasChangedEmail( "theId123", "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher", UserRoleEnum.OWNER );
         Mockito.verify( emailProducer ).sendEmail( expectedEmailData, YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_OWNER_MESSAGE_TYPE.getValue() );
     }
 
     @Test
     void sendYourRoleAtAcspHasChangedEmailWithNewRoleSetToAdminThrowsMessageOnToKafkaQueue(){
-        final var expectedEmailData = new YourRoleAtAcspHasChangedToAdminEmailData( "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher" );
+        final var expectedEmailData = new YourRoleAtAcspHasChangedToAdminEmailData( "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher", signinUrl );
         emailService.sendYourRoleAtAcspHasChangedEmail( "theId123", "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher", UserRoleEnum.ADMIN );
         Mockito.verify( emailProducer ).sendEmail( expectedEmailData, YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_ADMIN_MESSAGE_TYPE.getValue() );
     }
 
     @Test
     void sendYourRoleAtAcspHasChangedEmailWithNewRoleSetToStandardThrowsMessageOnToKafkaQueue(){
-        final var expectedEmailData = new YourRoleAtAcspHasChangedToStandardEmailData( "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher" );
+        final var expectedEmailData = new YourRoleAtAcspHasChangedToStandardEmailData( "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher", signinUrl );
         emailService.sendYourRoleAtAcspHasChangedEmail( "theId123", "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher", UserRoleEnum.STANDARD );
         Mockito.verify( emailProducer ).sendEmail( expectedEmailData, YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_STANDARD_MESSAGE_TYPE.getValue() );
     }

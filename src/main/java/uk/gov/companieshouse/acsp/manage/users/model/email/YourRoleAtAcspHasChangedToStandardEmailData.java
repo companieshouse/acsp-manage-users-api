@@ -6,8 +6,8 @@ public class YourRoleAtAcspHasChangedToStandardEmailData extends YourRoleAtAcspH
 
     public YourRoleAtAcspHasChangedToStandardEmailData(){}
 
-    public YourRoleAtAcspHasChangedToStandardEmailData( final String to, final String editedBy, final String acspName ){
-        super( to, editedBy, acspName );
+    public YourRoleAtAcspHasChangedToStandardEmailData( final String to, final String editedBy, final String acspName, final String signinUrl ){
+        super( to, editedBy, acspName, signinUrl );
     }
 
     @Override
