@@ -1,6 +1,7 @@
 package uk.gov.companieshouse.acsp.manage.users.interceptor;
 
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isOAuth2Request;
+import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_IDENTITY_TYPE;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,11 +13,16 @@ import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.interceptor.InternalUserInterceptor;
+import uk.gov.companieshouse.logging.Logger;
+import uk.gov.companieshouse.logging.LoggerFactory;
 
 @Component
 public class AuthorizationAndInternalUserInterceptors extends AuthorizationInterceptor {
 
     private final InternalUserInterceptor internalUserInterceptor;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger( StaticPropertyUtil.APPLICATION_NAMESPACE );
+    private static final String X_REQUEST_ID = "X-Request-Id";
 
     public AuthorizationAndInternalUserInterceptors( final UsersService usersService ) {
         super( usersService );
@@ -25,9 +31,11 @@ public class AuthorizationAndInternalUserInterceptors extends AuthorizationInter
 
     @Override
     public boolean preHandle( HttpServletRequest request, HttpServletResponse response, Object handler ) {
-        final var ericIdentityType = request.getHeader( "Eric-Identity-Type" );
+        final var xRequestId = request.getHeader( X_REQUEST_ID );
+        final var ericIdentityType = request.getHeader( ERIC_IDENTITY_TYPE );
 
         if ( Objects.isNull( ericIdentityType ) ){
+            LOGGER.errorContext( xRequestId, new Exception( "ERIC-Identity-Type not provided" ), null );
             response.setStatus(401);
             return false;
         }
@@ -43,6 +51,7 @@ public class AuthorizationAndInternalUserInterceptors extends AuthorizationInter
             }
         }
 
+        LOGGER.errorContext( xRequestId, new Exception( String.format( "Invalid ericIdentityType provided: %s", ericIdentityType ) ), null );
         response.setStatus(401);
         return false;
     }

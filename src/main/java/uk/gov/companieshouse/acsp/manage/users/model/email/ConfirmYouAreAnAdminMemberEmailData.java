@@ -15,4 +15,9 @@ public class ConfirmYouAreAnAdminMemberEmailData extends ConfirmYouAreAMemberEma
         return String.format( "%s notification sent. %s was added to %s by %s.", CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue(), getTo(), getAcspName(), getAddedBy() );
     }
 
+    @Override
+    public String toNotificationSendingFailureLoggingMessage(){
+        return String.format( "Failed to send %s notification. Details: to=%s, acspName=%s, addedBy=%s.", CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue(), getTo(), getAcspName(), getAddedBy() );
+    }
+
 }

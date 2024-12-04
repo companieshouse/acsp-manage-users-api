@@ -15,4 +15,9 @@ public class YourRoleAtAcspHasChangedToAdminEmailData extends YourRoleAtAcspHasC
         return String.format( "%s notification sent. %s role at %s was changed by %s.", YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_ADMIN_MESSAGE_TYPE.getValue(), getTo(), getAcspName(), getEditedBy() );
     }
 
+    @Override
+    public String toNotificationSendingFailureLoggingMessage(){
+        return String.format( "Failed to send %s notification. Details: to=%s, acspName=%s, editedBy=%s.", YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_ADMIN_MESSAGE_TYPE.getValue(), getTo(), getAcspName(), getEditedBy() );
+    }
+
 }

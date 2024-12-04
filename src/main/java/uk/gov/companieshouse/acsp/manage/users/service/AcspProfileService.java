@@ -1,5 +1,7 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -29,23 +31,25 @@ public class AcspProfileService {
 
     public Supplier<AcspProfile> createFetchAcspProfileRequest( final String acspNumber ){
         final var request = acspProfileEndpoint.createGetAcspInfoRequest( acspNumber );
+        final var xRequestId = getXRequestId();
+
         return () -> {
             try {
-                LOG.debug( String.format( "Attempting to fetch profile for Acsp %s", acspNumber ) );
+                LOG.debugContext( xRequestId, String.format( "Sending request to acsp-profile-data-api: GET /authorised-corporate-service-providers/{acsp_number}. Attempting to retrieve acsp: %s", acspNumber ), null );
                 return request.execute().getData();
             } catch ( ApiErrorResponseException exception ){
                 if( exception.getStatusCode() == 404 ) {
-                    LOG.error( String.format( "Could not find profile for Acsp %s", acspNumber ) );
+                    LOG.errorContext( xRequestId, new Exception( String.format( "Could not find profile for Acsp id: %s", acspNumber ) ), null );
                     throw new NotFoundRuntimeException( "acsp-manage-users-api", "Failed to find Acsp Profile" );
                 } else {
-                    LOG.error( String.format( "Failed to retrieve profile for Acsp %s", acspNumber ) );
+                    LOG.errorContext( xRequestId, new Exception( String.format( "Failed to retrieve profile for Acsp id: %s", acspNumber ) ), null );
                     throw new InternalServerErrorRuntimeException( "Failed to retrieve Acsp Profile" );
                 }
             } catch( URIValidationException exception ){
-                LOG.error( String.format( "Failed to fetch profile for Acsp %s, because uri was incorrectly formatted", acspNumber ) );
+                LOG.errorContext( xRequestId, new Exception( String.format( "Failed to fetch profile for Acsp %s, because uri was incorrectly formatted", acspNumber ) ), null );
                 throw new InternalServerErrorRuntimeException( "Invalid uri for acsp-profile-data-api service" );
             } catch ( Exception exception ){
-                LOG.error( String.format( "Failed to retrieve profile for Acsp %s", acspNumber ) );
+                LOG.errorContext( xRequestId, new Exception( String.format( "Failed to retrieve profile for Acsp %s", acspNumber ) ), null );
                 throw new InternalServerErrorRuntimeException( "Failed to retrieve Acsp Profile" );
             }
         };

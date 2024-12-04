@@ -28,19 +28,16 @@ public class UserAcspMembershipController implements UserAcspMembershipInterface
   @Override
   public ResponseEntity<AcspMembershipsList> getAcspMembershipsForUserId(
       final String xRequestId, final String ericIdentity, final Boolean includeRemoved) {
-    LOG.info(
-        String.format(
-            "Received request for GET `/memberships` with X-Request-Id: %s, ERIC-Identity: %s, includeRemoved: %s",
-            xRequestId, ericIdentity, includeRemoved));
+
+    LOG.infoContext( xRequestId, "Routing request to GET /user/acsps/memberships.", null );
+    LOG.infoContext( xRequestId, String.format( "Received request with user_id=%s, include_removed=%b", ericIdentity, includeRemoved ), null );
+
     final var loggedUser = UserContext.getLoggedUser();
     final var acspMemberships =
         acspMembersService.fetchAcspMemberships(Objects.requireNonNull(loggedUser), includeRemoved);
-    LOG.infoContext(
-        xRequestId,
-        String.format(
-            "Successfully fetched Acsp memberships for the user %s",
-            loggedUser.getUserId()),
-        null);
+
+    LOG.infoContext( xRequestId, String.format( "Successfully retrieved memberships for user %s", ericIdentity ), null );
+
     return new ResponseEntity<>(acspMemberships, HttpStatus.OK);
   }
 }

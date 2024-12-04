@@ -1,6 +1,7 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
 import static uk.gov.companieshouse.GenerateEtagUtil.generateEtag;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -118,7 +119,7 @@ public class AcspMembersService {
 
     final var numRecordsUpdated = acspMembersRepository.updateAcspMembership(membershipId, update);
     if (numRecordsUpdated == 0) {
-      LOG.error(String.format("Failed to update Acsp Membership %s", membershipId));
+      LOG.errorContext( getXRequestId(), new Exception( String.format("Failed to update Acsp Membership with id: %s", membershipId) ), null );
       throw new InternalServerErrorRuntimeException(
           String.format("Failed to update Acsp Membership %s", membershipId));
     }
