@@ -52,7 +52,6 @@ public class AcspMembershipController implements AcspMembershipInterface {
     @Override
     public ResponseEntity<AcspMembership> getAcspMembershipForAcspAndId( final String xRequestId, final String membershipId ) {
 
-        LOG.infoContext( xRequestId, "Routing request to GET /acsps/memberships/{membership_id}.", null );
         LOG.infoContext( xRequestId, String.format( "Received request with membership_id=%s", membershipId ), null );
 
         LOG.debugContext( xRequestId, String.format( "Attempting to fetch membership for id: %s", membershipId), null );
@@ -96,9 +95,7 @@ public class AcspMembershipController implements AcspMembershipInterface {
 
     @Override
     public ResponseEntity<Void> updateAcspMembershipForAcspAndId( final String xRequestId, final String membershipId, final RequestBodyPatch requestBody ) {
-
-        LOG.infoContext( xRequestId, "Routing request to PATCH /acsps/memberships/{membership_id}.", null );
-
+        
         if ( Objects.isNull( requestBody ) || ( Objects.isNull( requestBody.getUserStatus() ) && Objects.isNull( requestBody.getUserRole() ) ) ){
             LOG.errorContext( xRequestId, new Exception( "Request body is empty" ), null );
             throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );

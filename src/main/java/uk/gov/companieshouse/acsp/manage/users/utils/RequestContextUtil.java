@@ -27,20 +27,18 @@ public class RequestContextUtil {
     private static final String TOKEN_PERMISSIONS = "token_permissions";
     private static final Pattern ACSP_NUMBER_PATTERN = Pattern.compile( "(?<=^|\\s)acsp_number=([0-9A-Za-z-_]{0,32})(?=\\s|$)" );
     private static final String X_REQUEST_ID = "X-Request-Id";
+    private static final String UNKNOWN_X_REQUEST_ID = "unknown";
 
     private RequestContextUtil() {
         throw new IllegalStateException( "Utility class" );
     }
 
     public static String getXRequestId() {
-        try {
-            final var requestAttributes = RequestContextHolder.getRequestAttributes();
-            final var servletRequestAttributes = ( (ServletRequestAttributes) requestAttributes );
-            final var httpServletRequest = Objects.requireNonNull( servletRequestAttributes ).getRequest();
-            return httpServletRequest.getHeader( X_REQUEST_ID );
-        } catch ( Exception e ){
-            return null;
-        }
+        return Optional.ofNullable( RequestContextHolder.getRequestAttributes() )
+                .map( requestAttributes -> (ServletRequestAttributes) requestAttributes )
+                .map( ServletRequestAttributes::getRequest )
+                .map( httpServletRequest -> httpServletRequest.getHeader( X_REQUEST_ID ) )
+                .orElse( UNKNOWN_X_REQUEST_ID );
     }
 
     private static String getEricIdentityType() {

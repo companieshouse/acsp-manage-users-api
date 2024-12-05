@@ -29,7 +29,6 @@ public class UserAcspMembershipController implements UserAcspMembershipInterface
   public ResponseEntity<AcspMembershipsList> getAcspMembershipsForUserId(
       final String xRequestId, final String ericIdentity, final Boolean includeRemoved) {
 
-    LOG.infoContext( xRequestId, "Routing request to GET /user/acsps/memberships.", null );
     LOG.infoContext( xRequestId, String.format( "Received request with user_id=%s, include_removed=%b", ericIdentity, includeRemoved ), null );
 
     final var loggedUser = UserContext.getLoggedUser();

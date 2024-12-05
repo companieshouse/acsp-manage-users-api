@@ -56,8 +56,6 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
   @Override
   public ResponseEntity<AcspMembership> addMemberForAcsp( final String xRequestId, final String acspNumber, final RequestBodyPost requestBodyPost ) {
 
-    LOG.infoContext( xRequestId, "Routing request to POST /acsps/{acsp_number}/memberships.", null );
-
     final var targetUserId = requestBodyPost.getUserId();
     final var targetUserRole = AcspMembership.UserRoleEnum.fromValue( requestBodyPost.getUserRole().getValue() );
 
@@ -112,8 +110,6 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
       final Boolean includeRemoved,
       final RequestBodyLookup requestBody) {
 
-    LOG.infoContext( requestId, "Routing request to POST /acsps/{acsp_number}/memberships/lookup.", null );
-
     if (Objects.isNull(requestBody.getUserEmail())) {
       LOG.errorContext( requestId, new Exception( "User email was not provided." ), null );
       throw new BadRequestRuntimeException(PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN);
@@ -154,7 +150,6 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
       final Integer itemsPerPage,
       final String role) {
 
-    LOG.infoContext( requestId, "Routing request to GET /acsps/{acsp_number}/memberships.", null );
     LOG.infoContext( requestId, String.format( "Received request with acsp_number=%s, include_removed=%b, page_index=%d, items_per_page=%d, role=%s", acspNumber, includeRemoved, pageIndex, itemsPerPage, role ), null );
 
     final boolean roleIsValid =
