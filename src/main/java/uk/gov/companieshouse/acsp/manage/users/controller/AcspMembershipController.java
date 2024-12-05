@@ -55,6 +55,7 @@ public class AcspMembershipController implements AcspMembershipInterface {
         LOG.infoContext( xRequestId, "Routing request to GET /acsps/memberships/{membership_id}.", null );
         LOG.infoContext( xRequestId, String.format( "Received request with membership_id=%s", membershipId ), null );
 
+        LOG.debugContext( xRequestId, String.format( "Attempting to fetch membership for id: %s", membershipId), null );
         final var membership = acspMembershipService
                 .fetchMembership( membershipId )
                 .orElseThrow( () -> {
@@ -112,6 +113,7 @@ public class AcspMembershipController implements AcspMembershipInterface {
 
         LOG.infoContext( xRequestId, String.format( "Received request with membership_id=%s, user_status=%s, user_role=%s ", membershipId, userStatus, userRole ), null );
 
+        LOG.debugContext( xRequestId, String.format( "Attempting to fetch membership for id: %s", membershipId ), null );
         final var membershipIdAssociation =
         acspMembershipService.fetchMembershipDao( membershipId )
                 .orElseThrow( () -> {
@@ -130,6 +132,7 @@ public class AcspMembershipController implements AcspMembershipInterface {
             throwBadRequestWhenActionIsNotPermittedByOAuth2User( requestingUserId, membershipIdAssociation, userRole, userStatus );
         }
 
+        LOG.debugContext( xRequestId, String.format( "Attempting to update membership for id: %s", membershipId ), null );
         acspMembershipService.updateMembership( membershipId, userStatus, userRole, requestingUserId );
 
         LOG.infoContext( xRequestId, String.format( "Successfully updated Acsp Membership with id: %s", membershipId ), null );

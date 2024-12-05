@@ -27,6 +27,7 @@ import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 
 import static uk.gov.companieshouse.acsp.manage.users.model.ErrorCode.*;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isOAuth2Request;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsActiveMemberOfAcsp;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsPermittedToCreateMembershipWith;
@@ -66,7 +67,6 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
     try {
       targetUser = usersService.fetchUserDetails( targetUserId );
     } catch ( NotFoundRuntimeException exception ) {
-      LOG.errorContext( xRequestId, new Exception( String.format( "Could not find user with id: %s", targetUserId ) ), null );
       throw new BadRequestRuntimeException( ERROR_CODE_1001.getCode() );
     }
 
@@ -74,10 +74,10 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
     try {
       acspProfile = acspProfileService.fetchAcspProfile( acspNumber );
     } catch ( NotFoundRuntimeException exception ) {
-      LOG.errorContext( xRequestId, new Exception( String.format( "Could not find Acsp with id: %s", acspNumber ) ), null );
       throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
     }
 
+    LOG.debugContext( xRequestId, String.format( "Attempting to fetch memberships for user with id %s", targetUserId ), null );
     final var memberships = acspMembersService.fetchAcspMembershipDaos( targetUserId, false );
     if ( !memberships.isEmpty() ) {
       LOG.errorContext( xRequestId, new Exception( String.format( "%s user already has an active Acsp membership", targetUserId ) ), null );
@@ -91,6 +91,7 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
         throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
     }
 
+    LOG.debugContext( xRequestId, String.format( "Attempting to create membership for user %s and Acsp %s", targetUserId, acspNumber  ), null );
     final var membership = acspMembersService.addAcspMembership( targetUser, acspProfile, acspNumber, targetUserRole, requestingUserId );
 
     if ( isOAuth2Request() ){
@@ -135,6 +136,7 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
 
     acspProfileService.fetchAcspProfile(acspNumber);
 
+    LOG.debugContext( getXRequestId(), String.format( "Attempting to fetch memberships for Acsp %s and user %s", acspNumber, requestBody.getUserEmail() ), null );
     final var acspMembershipsList =
         acspMembersService.fetchAcspMemberships(user, includeRemoved, acspNumber);
 
@@ -174,6 +176,7 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
 
     final var acspProfile = acspProfileService.fetchAcspProfile(acspNumber);
 
+    LOG.debugContext( requestId, "Attempting to fetch memberships", null );
     final var acspMembershipsList =
         acspMembersService.findAllByAcspNumberAndRole(
             acspNumber,

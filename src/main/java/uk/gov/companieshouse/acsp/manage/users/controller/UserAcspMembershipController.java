@@ -33,6 +33,7 @@ public class UserAcspMembershipController implements UserAcspMembershipInterface
     LOG.infoContext( xRequestId, String.format( "Received request with user_id=%s, include_removed=%b", ericIdentity, includeRemoved ), null );
 
     final var loggedUser = UserContext.getLoggedUser();
+    LOG.debugContext( xRequestId, String.format( "Attempting to fetch memberships for user %s", ericIdentity ), null );
     final var acspMemberships =
         acspMembersService.fetchAcspMemberships(Objects.requireNonNull(loggedUser), includeRemoved);
 

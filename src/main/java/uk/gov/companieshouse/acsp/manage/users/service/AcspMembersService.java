@@ -101,6 +101,7 @@ public class AcspMembersService {
   @Transactional
   public void updateMembership( final String membershipId, final UserStatusEnum userStatus, final UserRoleEnum userRole, final String requestingUserId ) {
     if (Objects.isNull(membershipId)) {
+      LOG.errorContext( getXRequestId(), new Exception( "membershipId is null" ), null );
       throw new IllegalArgumentException("membershipId cannot be null");
     }
 
@@ -127,10 +128,6 @@ public class AcspMembersService {
 
   @Transactional(readOnly = true)
   public AcspMembershipsList fetchAcspMemberships( final User user, final boolean includeRemoved, final String acspNumber ) {
-    LOG.debug(
-        String.format(
-            "Fetching Acsp memberships from the repository for user ID: %s, include removed: %b, acsp number: %s",
-            user.getUserId(), includeRemoved, acspNumber));
 
     List<AcspMembersDao> acspMembers;
     if (includeRemoved) {
