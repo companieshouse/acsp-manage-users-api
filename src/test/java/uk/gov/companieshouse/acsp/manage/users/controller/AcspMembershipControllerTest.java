@@ -235,6 +235,7 @@ class AcspMembershipControllerTest {
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
         Mockito.doReturn( Optional.of( acspMemberDaos ) ).when( acspMembersService ).fetchMembershipDao( "WIT004" );
         Mockito.doReturn( 1 ).when( acspMembersService ).fetchNumberOfActiveOwners( "WITA004" );
+        Mockito.doReturn( testDataManager.fetchAcspProfiles( "WITA001" ).getFirst() ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT004" )
                         .header("X-Request-Id", "theId123")

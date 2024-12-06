@@ -285,6 +285,7 @@ class AcspMembershipControllerTest {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
 
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+        Mockito.doReturn( testDataManager.fetchAcspProfiles( "WITA001" ).getFirst() ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT004" )
                         .header("X-Request-Id", "theId123")
@@ -409,6 +410,9 @@ class AcspMembershipControllerTest {
         acspMembersRepository.insert( acspMembersDaos );
         Mockito.doReturn( testDataManager.fetchUserDtos( requestUserId ).getFirst() ).when( usersService ).fetchUserDetails( requestUserId );
 
+        final var targetAcspNumber = acspMembersDaos.getLast().getAcspNumber();
+        Mockito.doReturn( testDataManager.fetchAcspProfiles( targetAcspNumber ).getFirst() ).when( acspProfileService ).fetchAcspProfile( targetAcspNumber );
+
         mockMvc.perform( patch( String.format( "/acsps/memberships/%s", targetUserMembershipId ) )
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", requestUserId )
@@ -511,6 +515,10 @@ class AcspMembershipControllerTest {
 
         acspMembersRepository.insert( acspMembersDaos );
         Mockito.doReturn( testDataManager.fetchUserDtos( requestUserId ).getFirst() ).when( usersService ).fetchUserDetails( requestUserId );
+
+        final var targetAcspNumber = acspMembersDaos.getLast().getAcspNumber();
+        Mockito.doReturn( testDataManager.fetchAcspProfiles( targetAcspNumber ).getFirst() ).when( acspProfileService ).fetchAcspProfile( targetAcspNumber );
+
 
         mockMvc.perform( patch( String.format( "/acsps/memberships/%s", targetUserMembershipId ) )
                         .header("X-Request-Id", "theId123")

@@ -121,7 +121,7 @@ public class AcspMembershipController implements AcspMembershipInterface {
 
         final var targetAcsp = acspProfileService.fetchAcspProfile( membershipIdAssociation.getAcspNumber() );
         final var isLastOwner = UserRoleEnum.OWNER.getValue().equals( membershipIdAssociation.getUserRole() ) && acspMembershipService.fetchNumberOfActiveOwners( membershipIdAssociation.getAcspNumber() ) <= 1;
-        if ( isLastOwner && ( isOAuth2Request() || !( !isOAuth2Request() && targetAcsp.getStatus().equals( CEASED ) ) ) ){
+        if ( isLastOwner && !targetAcsp.getStatus().equals( CEASED ) ){
             LOG.errorContext( xRequestId, new Exception( String.format( "Acsp Membership with %s is the last owner", membershipId ) ), null );
             throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
         }
