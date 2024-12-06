@@ -1,6 +1,7 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
 import static uk.gov.companieshouse.GenerateEtagUtil.generateEtag;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -100,6 +101,7 @@ public class AcspMembersService {
   @Transactional
   public void updateMembership( final String membershipId, final UserStatusEnum userStatus, final UserRoleEnum userRole, final String requestingUserId ) {
     if (Objects.isNull(membershipId)) {
+      LOG.errorContext( getXRequestId(), new Exception( "membershipId is null" ), null );
       throw new IllegalArgumentException("membershipId cannot be null");
     }
 
@@ -118,7 +120,7 @@ public class AcspMembersService {
 
     final var numRecordsUpdated = acspMembersRepository.updateAcspMembership(membershipId, update);
     if (numRecordsUpdated == 0) {
-      LOG.error(String.format("Failed to update Acsp Membership %s", membershipId));
+      LOG.errorContext( getXRequestId(), new Exception( String.format("Failed to update Acsp Membership with id: %s", membershipId) ), null );
       throw new InternalServerErrorRuntimeException(
           String.format("Failed to update Acsp Membership %s", membershipId));
     }
@@ -126,10 +128,6 @@ public class AcspMembersService {
 
   @Transactional(readOnly = true)
   public AcspMembershipsList fetchAcspMemberships( final User user, final boolean includeRemoved, final String acspNumber ) {
-    LOG.debug(
-        String.format(
-            "Fetching Acsp memberships from the repository for user ID: %s, include removed: %b, acsp number: %s",
-            user.getUserId(), includeRemoved, acspNumber));
 
     List<AcspMembersDao> acspMembers;
     if (includeRemoved) {

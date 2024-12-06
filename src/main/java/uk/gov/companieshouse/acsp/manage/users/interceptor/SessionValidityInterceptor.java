@@ -21,6 +21,7 @@ public class SessionValidityInterceptor implements HandlerInterceptor  {
     private final AcspMembersService acspMembersService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger( StaticPropertyUtil.APPLICATION_NAMESPACE );
+    private static final String X_REQUEST_ID = "X-Request-Id";
 
     public SessionValidityInterceptor( final AcspMembersService acspMembersService ) {
         this.acspMembersService = acspMembersService;
@@ -50,7 +51,8 @@ public class SessionValidityInterceptor implements HandlerInterceptor  {
             return true;
         }
 
-        LOGGER.debugRequest( request, "Session is invalid", null );
+        final var xRequestId = request.getHeader( X_REQUEST_ID );
+        LOGGER.errorContext( xRequestId, new Exception( "Session is out of sync with the database" ), null );
         response.setStatus( 403 );
         return false;
     }

@@ -43,7 +43,7 @@ public class EmailService {
     @Async
     public void sendConfirmYouAreAMemberEmail( final String xRequestId, final String recipientEmail, final String addedBy, final String acspName, final UserRoleEnum role ){
         if ( Objects.isNull( recipientEmail ) || Objects.isNull( addedBy ) || Objects.isNull( acspName ) || Objects.isNull( role ) ){
-            LOG.error( "Attempted to send confirm-you-are-a-member email, with null recipientEmail, null addedBy, null acspName, or null role." );
+            LOG.errorContext( xRequestId, new Exception( "Attempted to send confirm-you-are-a-member email, with null recipientEmail, null addedBy, null acspName, or null role." ), null );
             throw new IllegalArgumentException( "recipientEmail, addedBy, acspName, and role must not be null." );
         }
 
@@ -62,17 +62,26 @@ public class EmailService {
                 messageType = CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE;
                 yield new ConfirmYouAreAStandardMemberEmailData( recipientEmail, addedBy, acspName, signinUrl );
             }
-            default -> throw new IllegalArgumentException( "Role is invalid" );
+            default -> {
+                LOG.errorContext( xRequestId, new Exception( String.format( "Role is invalid: %s", role.getValue() ) ), null );
+                throw new IllegalArgumentException( "Role is invalid" );
+            }
         };
 
-        emailProducer.sendEmail( emailData, messageType.getValue() );
-        LOG.infoContext( xRequestId, emailData.toNotificationSentLoggingMessage(), null );
+        try {
+            emailProducer.sendEmail( emailData, messageType.getValue() );
+            LOG.infoContext( xRequestId, emailData.toNotificationSentLoggingMessage(), null );
+        } catch ( Exception exception ){
+            LOG.errorContext( xRequestId, new Exception( emailData.toNotificationSendingFailureLoggingMessage() ), null );
+            throw exception;
+        }
+
     }
 
     @Async
     public void sendYourRoleAtAcspHasChangedEmail( final String xRequestId, final String recipientEmail, final String editedBy, final String acspName, final UserRoleEnum newRole ){
         if ( Objects.isNull( recipientEmail ) || Objects.isNull( editedBy ) || Objects.isNull( acspName ) || Objects.isNull( newRole ) ){
-            LOG.error( "Attempted to send your-role-at-acsp-has-changed email, with null recipientEmail, null editedBy, null acspName, or null newRole." );
+            LOG.errorContext( xRequestId, new Exception( "Attempted to send your-role-at-acsp-has-changed email, with null recipientEmail, null editedBy, null acspName, or null newRole." ), null );
             throw new IllegalArgumentException( "recipientEmail, editedBy, acspName, and newRole must not be null." );
         }
 
@@ -91,11 +100,20 @@ public class EmailService {
                 messageType = YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_STANDARD_MESSAGE_TYPE;
                 yield new YourRoleAtAcspHasChangedToStandardEmailData( recipientEmail, editedBy, acspName, signinUrl );
             }
-            default -> throw new IllegalArgumentException( "Role is invalid" );
+            default -> {
+                LOG.errorContext( xRequestId, new Exception( String.format( "Role is invalid: %s", newRole.getValue() ) ), null );
+                throw new IllegalArgumentException( "Role is invalid" );
+            }
         };
 
-        emailProducer.sendEmail( emailData, messageType.getValue() );
-        LOG.infoContext( xRequestId, emailData.toNotificationSentLoggingMessage(), null );
+        try {
+            emailProducer.sendEmail( emailData, messageType.getValue() );
+            LOG.infoContext( xRequestId, emailData.toNotificationSentLoggingMessage(), null );
+        } catch ( Exception exception ){
+            LOG.errorContext( xRequestId, new Exception( emailData.toNotificationSendingFailureLoggingMessage() ), null );
+            throw exception;
+        }
+
     }
 
 }

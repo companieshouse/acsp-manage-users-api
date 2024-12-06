@@ -1,5 +1,7 @@
 package uk.gov.companieshouse.acsp.manage.users.utils;
 
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
+
 import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
@@ -30,12 +32,12 @@ public class PaginationValidatorUtil {
     int validatedItemsPerPage = (itemsPerPage == null) ? DEFAULT_ITEMS_PER_PAGE : itemsPerPage;
 
     if (validatedPageIndex < 0) {
-      LOG.error("pageIndex was less than 0");
+      LOG.errorContext( getXRequestId(), new Exception( "pageIndex was less than 0" ), null );
       throw new BadRequestRuntimeException("Please check the request and try again");
     }
 
     if (validatedItemsPerPage <= 0) {
-      LOG.error("itemsPerPage was less than or equal to 0");
+      LOG.errorContext(getXRequestId(), new Exception( "itemsPerPage was less than or equal to 0" ), null );
       throw new BadRequestRuntimeException("Please check the request and try again");
     }
 

@@ -25,4 +25,6 @@ public abstract class BaseEmailData<T extends BaseEmailData<T>> extends EmailDat
 
     public abstract String toNotificationSentLoggingMessage();
 
+    public abstract String toNotificationSendingFailureLoggingMessage();
+
 }

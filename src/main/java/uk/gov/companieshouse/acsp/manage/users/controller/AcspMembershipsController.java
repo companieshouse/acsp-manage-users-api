@@ -1,9 +1,7 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import org.springframework.http.HttpStatus;
@@ -29,6 +27,7 @@ import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 
 import static uk.gov.companieshouse.acsp.manage.users.model.ErrorCode.*;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isOAuth2Request;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsActiveMemberOfAcsp;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsPermittedToCreateMembershipWith;
@@ -56,10 +55,11 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
 
   @Override
   public ResponseEntity<AcspMembership> addMemberForAcsp( final String xRequestId, final String acspNumber, final RequestBodyPost requestBodyPost ) {
+
     final var targetUserId = requestBodyPost.getUserId();
     final var targetUserRole = AcspMembership.UserRoleEnum.fromValue( requestBodyPost.getUserRole().getValue() );
 
-    LOG.infoContext( xRequestId, String.format( "Attempting to create %s membership for user %s at Acsp %s", targetUserRole.getValue(), targetUserId, acspNumber ), null );
+    LOG.infoContext( xRequestId, String.format( "Received request with acsp_number=%s, user_id=%s, user_role=%s ", acspNumber, targetUserId, targetUserRole.getValue() ), null );
 
     User targetUser;
     try {
@@ -75,19 +75,21 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
       throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
     }
 
+    LOG.debugContext( xRequestId, String.format( "Attempting to fetch memberships for user with id %s", targetUserId ), null );
     final var memberships = acspMembersService.fetchAcspMembershipDaos( targetUserId, false );
     if ( !memberships.isEmpty() ) {
-      LOG.error( "User already has an active Acsp membership" );
+      LOG.errorContext( xRequestId, new Exception( String.format( "%s user already has an active Acsp membership", targetUserId ) ), null );
       throw new BadRequestRuntimeException( ERROR_CODE_1002.getCode() );
     }
 
     final var requestingUser = UserContext.getLoggedUser();
     final var requestingUserId = Optional.ofNullable( requestingUser ).map( User::getUserId ).orElse( null );
     if ( isOAuth2Request() && ( !requestingUserIsActiveMemberOfAcsp( acspNumber ) || !requestingUserIsPermittedToCreateMembershipWith( targetUserRole ) ) ){
-        LOG.error( String.format( "User is not permitted to create %s membership", targetUserRole.getValue() ) );
+        LOG.errorContext( xRequestId, new Exception( String.format( "User %s is not permitted to create %s membership", requestingUserId, targetUserRole.getValue() ) ), null );
         throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
     }
 
+    LOG.debugContext( xRequestId, String.format( "Attempting to create membership for user %s and Acsp %s", targetUserId, acspNumber  ), null );
     final var membership = acspMembersService.addAcspMembership( targetUser, acspProfile, acspNumber, targetUserRole, requestingUserId );
 
     if ( isOAuth2Request() ){
@@ -107,25 +109,21 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
       final String acspNumber,
       final Boolean includeRemoved,
       final RequestBodyLookup requestBody) {
-    Map<String, Object> logMap = new HashMap<>();
-    logMap.put(REQUEST_ID_KEY, requestId);
-    logMap.put(ACSP_NUMBER_KEY, acspNumber);
-    logMap.put("includeRemoved", includeRemoved);
-    logMap.put("userEmail", requestBody.getUserEmail());
-    LOG.info("Getting members for Acsp & User email", logMap);
 
     if (Objects.isNull(requestBody.getUserEmail())) {
-      LOG.error(String.format("%s: A user email was not provided.", requestId));
+      LOG.errorContext( requestId, new Exception( "User email was not provided." ), null );
       throw new BadRequestRuntimeException(PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN);
     }
-
     final var userEmail = requestBody.getUserEmail();
+
+    LOG.infoContext( requestId, String.format( "Received request with acsp_number=%s, include_removed=%s, user_email=%s", acspNumber, includeRemoved, userEmail ), null );
+
     final var usersList =
         Optional.ofNullable(usersService.searchUserDetails(List.of(userEmail)))
             .filter(users -> !users.isEmpty())
             .orElseThrow(
                 () -> {
-                  LOG.error(String.format("User %s was not found", userEmail));
+                  LOG.errorContext( requestId, new Exception( String.format("User %s was not found", userEmail) ), null );
                   return new NotFoundRuntimeException(
                       StaticPropertyUtil.APPLICATION_NAMESPACE,
                       PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN);
@@ -134,14 +132,11 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
 
     acspProfileService.fetchAcspProfile(acspNumber);
 
+    LOG.debugContext( getXRequestId(), String.format( "Attempting to fetch memberships for Acsp %s and user %s", acspNumber, requestBody.getUserEmail() ), null );
     final var acspMembershipsList =
         acspMembersService.fetchAcspMemberships(user, includeRemoved, acspNumber);
 
-    Map<String, Object> successLogMap = new HashMap<>();
-    logMap.put(REQUEST_ID_KEY, requestId);
-    logMap.put("userEmail", userEmail);
-    logMap.put(ACSP_NUMBER_KEY, acspNumber);
-    LOG.info("Getting members for Acsp & User email", successLogMap);
+    LOG.infoContext( requestId, String.format( "Successfully fetched memberships for Acsp %s and user %s", acspNumber, requestBody.getUserEmail() ), null );
 
     return new ResponseEntity<>(acspMembershipsList, HttpStatus.OK);
   }
@@ -154,14 +149,8 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
       final Integer pageIndex,
       final Integer itemsPerPage,
       final String role) {
-    Map<String, Object> logMap = new HashMap<>();
-    logMap.put(REQUEST_ID_KEY, requestId);
-    logMap.put(ACSP_NUMBER_KEY, acspNumber);
-    logMap.put("includeRemoved", includeRemoved);
-    logMap.put("pageIndex", pageIndex);
-    logMap.put("itemsPerPage", itemsPerPage);
-    logMap.put("role", role);
-    LOG.info("Getting members for Acsp", logMap);
+
+    LOG.infoContext( requestId, String.format( "Received request with acsp_number=%s, include_removed=%b, page_index=%d, items_per_page=%d, role=%s", acspNumber, includeRemoved, pageIndex, itemsPerPage, role ), null );
 
     final boolean roleIsValid =
         Optional.ofNullable(role)
@@ -173,7 +162,7 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
             .orElse(true);
 
     if (!roleIsValid) {
-      LOG.error(String.format("Role was invalid: %s", role));
+      LOG.errorContext( requestId, new Exception( String.format("Role was invalid: %s", role) ), null);
       throw new BadRequestRuntimeException(PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN);
     }
 
@@ -182,6 +171,7 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
 
     final var acspProfile = acspProfileService.fetchAcspProfile(acspNumber);
 
+    LOG.debugContext( requestId, "Attempting to fetch memberships", null );
     final var acspMembershipsList =
         acspMembersService.findAllByAcspNumberAndRole(
             acspNumber,
@@ -191,13 +181,7 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
             paginationParams.pageIndex,
             paginationParams.itemsPerPage);
 
-    Map<String, Object> successLogMap = new HashMap<>();
-    logMap.put(REQUEST_ID_KEY, requestId);
-    logMap.put(ACSP_NUMBER_KEY, acspNumber);
-    logMap.put(
-        "membersCount",
-        Optional.ofNullable(acspMembershipsList.getItems()).map(List::size).orElse(0));
-    LOG.info("Getting members for Acsp", successLogMap);
+    LOG.infoContext( requestId, String.format( "Successfully to retrieved members for Acsp %s", acspNumber ), null );
 
     return new ResponseEntity<>(acspMembershipsList, HttpStatus.OK);
   }
