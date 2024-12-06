@@ -35,6 +35,7 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRole
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserStatusEnum;
 
 import java.util.stream.Stream;
+import uk.gov.companieshouse.api.acspprofile.Status;
 import uk.gov.companieshouse.email_producer.EmailProducer;
 import uk.gov.companieshouse.email_producer.factory.KafkaProducerFactory;
 
@@ -280,7 +281,7 @@ class AcspMembershipControllerTest {
 
 
     @Test
-    void updateAcspMembershipForAcspAndIdReturnsBadRequestWhenAttemptingToRemoveLastOwner() throws Exception {
+    void updateAcspMembershipForAcspAndIdWithOAuth2ReturnsBadRequestWhenAttemptingToRemoveLastOwner() throws Exception {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
 
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
@@ -294,7 +295,45 @@ class AcspMembershipControllerTest {
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
                 .andExpect( status().isBadRequest() );
+    }
 
+    @Test
+    void updateAcspMembershipForAcspAndIdWithApiKeyAndActiveAcspReturnsBadRequestWhenAttemptingToRemoveLastOwner() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
+        Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+        Mockito.doReturn( testDataManager.fetchAcspProfiles( "WITA001" ).getFirst() ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
+
+        mockMvc.perform( patch( "/acsps/memberships/WIT004" )
+                        .header("X-Request-Id", "theId123")
+                        .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
+                        .header("ERIC-Identity-Type", "key")
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "" )
+                        .contentType( MediaType.APPLICATION_JSON )
+                        .content( "{\"user_status\":\"removed\"}" ) )
+                .andExpect( status().isBadRequest() );
+    }
+
+    @Test
+    void updateAcspMembershipForAcspAndIdWithApiKeyAndCeasedAcspSucceedsWhenAttemptingToRemoveLastOwner() throws Exception {
+        final var acspProfile = testDataManager.fetchAcspProfiles( "WITA001" ).getFirst();
+        acspProfile.setStatus( Status.CEASED );
+
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
+        Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+        Mockito.doReturn( acspProfile ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
+
+        mockMvc.perform( patch( "/acsps/memberships/WIT004" )
+                        .header("X-Request-Id", "theId123")
+                        .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
+                        .header("ERIC-Identity-Type", "key")
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", "" )
+                        .contentType( MediaType.APPLICATION_JSON )
+                        .content( "{\"user_status\":\"removed\"}" ) )
+                .andExpect( status().isOk() );
     }
 
     @Test
