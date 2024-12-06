@@ -6,6 +6,7 @@ import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.i
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsActiveMemberOfAcsp;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsPermittedToRemoveUsersWith;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsPermittedToUpdateUsersWith;
+import static uk.gov.companieshouse.api.acspprofile.Status.CEASED;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -95,7 +96,7 @@ public class AcspMembershipController implements AcspMembershipInterface {
 
     @Override
     public ResponseEntity<Void> updateAcspMembershipForAcspAndId( final String xRequestId, final String membershipId, final RequestBodyPatch requestBody ) {
-        
+
         if ( Objects.isNull( requestBody ) || ( Objects.isNull( requestBody.getUserStatus() ) && Objects.isNull( requestBody.getUserRole() ) ) ){
             LOG.errorContext( xRequestId, new Exception( "Request body is empty" ), null );
             throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
@@ -118,7 +119,9 @@ public class AcspMembershipController implements AcspMembershipInterface {
                     return new NotFoundRuntimeException( StaticPropertyUtil.APPLICATION_NAMESPACE, PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
                 } );
 
-        if ( UserRoleEnum.OWNER.getValue().equals( membershipIdAssociation.getUserRole() ) && acspMembershipService.fetchNumberOfActiveOwners( membershipIdAssociation.getAcspNumber() ) <= 1 ){
+        final var targetAcsp = acspProfileService.fetchAcspProfile( membershipIdAssociation.getAcspNumber() );
+        final var isLastOwner = UserRoleEnum.OWNER.getValue().equals( membershipIdAssociation.getUserRole() ) && acspMembershipService.fetchNumberOfActiveOwners( membershipIdAssociation.getAcspNumber() ) <= 1;
+        if ( isLastOwner && !targetAcsp.getStatus().equals( CEASED ) ){
             LOG.errorContext( xRequestId, new Exception( String.format( "Acsp Membership with %s is the last owner", membershipId ) ), null );
             throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
         }
@@ -137,7 +140,6 @@ public class AcspMembershipController implements AcspMembershipInterface {
         if ( isOAuth2Request() && Objects.nonNull( userRole ) ){
             final var requestingUserDisplayName = Optional.ofNullable( requestingUser.getDisplayName() ).orElse( requestingUser.getEmail() );
             final var targetUser = usersService.fetchUserDetails( membershipIdAssociation.getUserId() );
-            final var targetAcsp = acspProfileService.fetchAcspProfile( membershipIdAssociation.getAcspNumber() );
             emailService.sendYourRoleAtAcspHasChangedEmail( xRequestId, targetUser.getEmail(), requestingUserDisplayName, targetAcsp.getName(), userRole );
         }
 
