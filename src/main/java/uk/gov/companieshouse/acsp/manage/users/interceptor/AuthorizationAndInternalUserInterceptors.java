@@ -1,12 +1,7 @@
 package uk.gov.companieshouse.acsp.manage.users.interceptor;
 
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isOAuth2Request;
-import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_IDENTITY_TYPE;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Objects;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.ModelAndView;
 import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
@@ -15,6 +10,12 @@ import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.interceptor.InternalUserInterceptor;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
+
+import java.io.IOException;
+import java.util.Objects;
+
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isOAuth2Request;
+import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_IDENTITY_TYPE;
 
 @Component
 public class AuthorizationAndInternalUserInterceptors extends AuthorizationInterceptor {

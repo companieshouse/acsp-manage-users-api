@@ -1,29 +1,20 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
-import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE;
-import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE;
-import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE;
-import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_ADMIN_MESSAGE_TYPE;
-import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_OWNER_MESSAGE_TYPE;
-import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_STANDARD_MESSAGE_TYPE;
-
-import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.acsp.manage.users.model.MessageType;
-import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAStandardMemberEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAnAdminMemberEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAnOwnerMemberEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChangedToAdminEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChangedToOwnerEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChangedToStandardEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.*;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.email_producer.EmailProducer;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
+
+import java.util.Objects;
+
+import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.*;
 
 @Service
 public class EmailService {

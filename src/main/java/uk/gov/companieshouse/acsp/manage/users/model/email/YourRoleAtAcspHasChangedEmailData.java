@@ -1,8 +1,9 @@
 package uk.gov.companieshouse.acsp.manage.users.model.email;
 
-import java.util.Objects;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+
+import java.util.Objects;
 
 public abstract class YourRoleAtAcspHasChangedEmailData extends BaseEmailData<YourRoleAtAcspHasChangedEmailData> {
 

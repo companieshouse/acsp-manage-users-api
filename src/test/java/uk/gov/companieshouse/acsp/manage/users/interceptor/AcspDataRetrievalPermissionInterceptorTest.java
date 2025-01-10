@@ -1,10 +1,5 @@
 package uk.gov.companieshouse.acsp.manage.users.interceptor;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_IDENTITY_TYPE;
-
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -17,6 +12,9 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import uk.gov.companieshouse.api.interceptor.TokenPermissionsInterceptor;
 import uk.gov.companieshouse.api.util.security.InvalidTokenPermissionException;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_IDENTITY_TYPE;
 
 @ExtendWith( MockitoExtension.class )
 @Tag( "unit-test" )

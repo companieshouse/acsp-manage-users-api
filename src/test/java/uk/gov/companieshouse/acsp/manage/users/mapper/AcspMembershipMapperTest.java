@@ -1,9 +1,5 @@
 package uk.gov.companieshouse.acsp.manage.users.mapper;
 
-import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.localDateTimeToNormalisedString;
-import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.reduceTimestampResolution;
-
-import java.time.LocalDateTime;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -19,6 +15,11 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.AcspStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
+
+import java.time.LocalDateTime;
+
+import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.localDateTimeToNormalisedString;
+import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.reduceTimestampResolution;
 
 @ExtendWith( MockitoExtension.class )
 @Tag( "unit-test" )

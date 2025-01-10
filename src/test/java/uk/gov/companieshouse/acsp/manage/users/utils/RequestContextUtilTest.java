@@ -1,16 +1,5 @@
 package uk.gov.companieshouse.acsp.manage.users.utils;
 
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.fetchRequestingUsersActiveAcspNumber;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.fetchRequestingUsersRole;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isOAuth2Request;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsActiveMemberOfAcsp;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsPermittedToCreateMembershipWith;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsPermittedToRemoveUsersWith;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsPermittedToRetrieveAcspData;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsPermittedToUpdateUsersWith;
-import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_IDENTITY_TYPE;
-
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -25,6 +14,11 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.interceptor.TokenPermissionsInterceptor;
 import uk.gov.companieshouse.api.util.security.InvalidTokenPermissionException;
+
+import java.util.stream.Stream;
+
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.*;
+import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_IDENTITY_TYPE;
 
 @ExtendWith( MockitoExtension.class )
 @Tag( "unit-test" )

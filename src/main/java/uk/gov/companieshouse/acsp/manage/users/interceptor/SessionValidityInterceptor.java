@@ -1,10 +1,5 @@
 package uk.gov.companieshouse.acsp.manage.users.interceptor;
 
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.fetchRequestingUsersActiveAcspNumber;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.fetchRequestingUsersRole;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isOAuth2Request;
-import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_IDENTITY;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
@@ -14,6 +9,9 @@ import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
+
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.*;
+import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_IDENTITY;
 
 @Component
 public class SessionValidityInterceptor implements HandlerInterceptor  {

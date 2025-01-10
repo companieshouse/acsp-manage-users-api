@@ -1,17 +1,5 @@
 package uk.gov.companieshouse.acsp.manage.users.common;
 
-import static uk.gov.companieshouse.GenerateEtagUtil.generateEtag;
-import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.localDateTimeToOffsetDateTime;
-
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
@@ -20,6 +8,14 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.Membersh
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.acspprofile.AcspProfile;
 import uk.gov.companieshouse.api.acspprofile.Status;
+
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import static uk.gov.companieshouse.GenerateEtagUtil.generateEtag;
+import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.localDateTimeToOffsetDateTime;
 
 public class TestDataManager {
 

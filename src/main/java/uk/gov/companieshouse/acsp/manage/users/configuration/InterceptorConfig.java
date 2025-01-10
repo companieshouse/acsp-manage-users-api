@@ -5,11 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import uk.gov.companieshouse.acsp.manage.users.interceptor.AcspDataRetrievalPermissionInterceptor;
-import uk.gov.companieshouse.acsp.manage.users.interceptor.AuthorizationAndInternalUserInterceptors;
-import uk.gov.companieshouse.acsp.manage.users.interceptor.AuthorizationInterceptor;
-import uk.gov.companieshouse.acsp.manage.users.interceptor.LoggingInterceptor;
-import uk.gov.companieshouse.acsp.manage.users.interceptor.SessionValidityInterceptor;
+import uk.gov.companieshouse.acsp.manage.users.interceptor.*;
 import uk.gov.companieshouse.api.interceptor.TokenPermissionsInterceptor;
 
 @Configuration

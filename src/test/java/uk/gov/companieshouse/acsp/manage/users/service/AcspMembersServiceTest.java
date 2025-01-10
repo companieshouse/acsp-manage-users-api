@@ -1,12 +1,5 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.isNull;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
@@ -28,9 +21,14 @@ import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepositor
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
-
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserStatusEnum;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 import static uk.gov.companieshouse.acsp.manage.users.common.ComparisonUtils.updateMatches;
 

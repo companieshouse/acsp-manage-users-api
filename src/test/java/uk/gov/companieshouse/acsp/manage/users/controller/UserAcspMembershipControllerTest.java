@@ -1,6 +1,5 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
-import java.util.Optional;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -13,8 +12,10 @@ import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 
+import java.util.Optional;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UserAcspMembershipController.class)
 @Tag("unit-test")

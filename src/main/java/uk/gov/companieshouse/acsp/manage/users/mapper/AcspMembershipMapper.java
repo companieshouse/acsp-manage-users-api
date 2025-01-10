@@ -1,14 +1,6 @@
 package uk.gov.companieshouse.acsp.manage.users.mapper;
 
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.Objects;
-import org.mapstruct.AfterMapping;
-import org.mapstruct.Context;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
+import org.mapstruct.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
@@ -17,6 +9,11 @@ import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.AcspStatusEnum;
 import uk.gov.companieshouse.api.acspprofile.AcspProfile;
+
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.Objects;
 
 @Mapper( componentModel = "spring" )
 public abstract class AcspMembershipMapper {

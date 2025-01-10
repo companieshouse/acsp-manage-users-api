@@ -1,9 +1,10 @@
 package uk.gov.companieshouse.acsp.manage.users.utils;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.junit.jupiter.api.Test;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class PaginationValidatorUtilTest {
 

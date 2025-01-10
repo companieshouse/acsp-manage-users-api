@@ -1,10 +1,5 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import java.util.Optional;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -18,8 +13,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.EmailService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
@@ -29,6 +24,13 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRole
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserStatusEnum;
 import uk.gov.companieshouse.api.acspprofile.Status;
 import uk.gov.companieshouse.api.sdk.ApiClientService;
+
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AcspMembershipController.class)
 @Tag("unit-test")

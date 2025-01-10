@@ -1,9 +1,5 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -21,6 +17,10 @@ import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.EmailService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 @Tag( "unit-test" )

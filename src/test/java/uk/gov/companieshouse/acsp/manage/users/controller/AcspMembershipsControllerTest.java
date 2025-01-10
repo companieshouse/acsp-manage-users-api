@@ -1,15 +1,5 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.mockito.Mockito.times;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
-
-import java.util.List;
-
-import java.util.Optional;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
@@ -25,14 +15,24 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.EmailService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.accounts.user.model.UsersList;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import static org.mockito.Mockito.times;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
 
 @WebMvcTest(AcspMembershipsController.class)
 @Tag("unit-test")
