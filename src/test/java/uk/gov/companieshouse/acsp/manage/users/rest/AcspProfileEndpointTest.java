@@ -1,12 +1,7 @@
 package uk.gov.companieshouse.acsp.manage.users.rest;
 
-import static org.mockito.ArgumentMatchers.any;
-
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpResponseException.Builder;
-import java.util.Map;
-import java.util.NoSuchElementException;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -25,6 +20,10 @@ import uk.gov.companieshouse.api.handler.acspprofile.PrivateAcspProfileResourceH
 import uk.gov.companieshouse.api.handler.acspprofile.request.PrivateAcspProfileAcspInfoGet;
 import uk.gov.companieshouse.api.handler.exception.URIValidationException;
 import uk.gov.companieshouse.api.model.ApiResponse;
+
+import java.util.Map;
+
+import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith( MockitoExtension.class )
 @Tag( "unit-test" )
@@ -51,8 +50,8 @@ class AcspProfileEndpointTest {
     }
 
     @Test
-    void createGetAcspInfoRequestWithNoSuchElementException(){
-        Assertions.assertThrows( NoSuchElementException.class, () -> acspProfileEndpoint.getAcspInfo( null ) );
+    void createGetAcspInfoRequestWithNullPointerExceptionException(){
+        Assertions.assertThrows( NullPointerException.class, () -> acspProfileEndpoint.getAcspInfo( null ) );
     }
 
     @Test
@@ -77,8 +76,8 @@ class AcspProfileEndpointTest {
 
 
     @Test
-    void getAcspInfoWithNullInputThrowsNoSuchElementExceptionException(){
-        Assertions.assertThrows( NoSuchElementException.class, () -> acspProfileEndpoint.getAcspInfo( null ) );
+    void getAcspInfoWithNullInputThrowsNullPointerExceptionException(){
+        Assertions.assertThrows( NullPointerException.class, () -> acspProfileEndpoint.getAcspInfo( null ) );
     }
 
     @Test

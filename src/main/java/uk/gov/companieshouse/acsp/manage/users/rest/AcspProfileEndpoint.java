@@ -9,8 +9,6 @@ import uk.gov.companieshouse.api.error.ApiErrorResponseException;
 import uk.gov.companieshouse.api.handler.exception.URIValidationException;
 import uk.gov.companieshouse.api.model.ApiResponse;
 
-import java.util.Optional;
-
 @Service
 public class AcspProfileEndpoint {
 
@@ -25,7 +23,6 @@ public class AcspProfileEndpoint {
     }
 
     public ApiResponse<AcspProfile> getAcspInfo(final String acspNumber) throws ApiErrorResponseException, URIValidationException {
-        Optional.ofNullable(acspNumber).orElseThrow();
         final var getAcspInfoUrl = String.format("/authorised-corporate-service-providers/%s", acspNumber);
         return apiClientUtil.getInternalApiClient(apiUrl)
                 .privateAcspProfileResourceHandler()
