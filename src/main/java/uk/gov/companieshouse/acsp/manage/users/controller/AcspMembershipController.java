@@ -1,15 +1,5 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.fetchRequestingUsersRole;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isOAuth2Request;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsActiveMemberOfAcsp;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsPermittedToRemoveUsersWith;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsPermittedToUpdateUsersWith;
-import static uk.gov.companieshouse.api.acspprofile.Status.CEASED;
-
-import java.util.Objects;
-import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,6 +20,12 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserStatusEnum;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
+
+import java.util.Objects;
+import java.util.Optional;
+
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.*;
+import static uk.gov.companieshouse.api.acspprofile.Status.CEASED;
 
 @RestController
 public class AcspMembershipController implements AcspMembershipInterface {

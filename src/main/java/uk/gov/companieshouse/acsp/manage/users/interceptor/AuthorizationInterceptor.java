@@ -2,7 +2,6 @@ package uk.gov.companieshouse.acsp.manage.users.interceptor;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.Objects;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -13,6 +12,8 @@ import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.util.security.AuthorisationUtil;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
+
+import java.util.Objects;
 
 @Component
 public class AuthorizationInterceptor implements HandlerInterceptor {
@@ -37,7 +38,7 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        LOGGER.infoRequest(request, "invalid user", null);
+        LOGGER.debugRequest(request, "invalid user", null);
         response.setStatus(401);
         return false;
     }
@@ -50,7 +51,7 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
             UserContext.setLoggedUser( userDetails );
             return true;
         } catch ( NotFoundRuntimeException e ){
-            LOGGER.errorRequest(request, "no user found with identity [" + identity + "]", e);
+            LOGGER.debugRequest(request, "no user found with identity [" + identity + "]", null);
             response.setStatus(403);
             return false;
         }

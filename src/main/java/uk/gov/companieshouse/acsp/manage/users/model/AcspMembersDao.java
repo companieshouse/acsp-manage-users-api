@@ -1,13 +1,14 @@
 package uk.gov.companieshouse.acsp.manage.users.model;
 
 import jakarta.validation.constraints.NotNull;
-import java.time.LocalDateTime;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+
+import java.time.LocalDateTime;
 
 @Document( "acsp_members" )
 public class AcspMembersDao {

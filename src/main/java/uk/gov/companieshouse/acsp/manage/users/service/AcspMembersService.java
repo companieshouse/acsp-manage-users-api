@@ -1,12 +1,5 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
-import static uk.gov.companieshouse.GenerateEtagUtil.generateEtag;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +19,14 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserSt
 import uk.gov.companieshouse.api.acspprofile.AcspProfile;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
+import static uk.gov.companieshouse.GenerateEtagUtil.generateEtag;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
 
 @Service
 public class AcspMembersService {

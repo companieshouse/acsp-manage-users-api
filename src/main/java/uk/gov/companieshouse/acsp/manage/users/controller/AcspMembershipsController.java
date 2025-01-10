@@ -1,17 +1,13 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
-import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
+import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.EmailService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.PaginationValidatorUtil;
@@ -26,11 +22,14 @@ import uk.gov.companieshouse.api.acspprofile.AcspProfile;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 
-import static uk.gov.companieshouse.acsp.manage.users.model.ErrorCode.*;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isOAuth2Request;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsActiveMemberOfAcsp;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.requestingUserIsPermittedToCreateMembershipWith;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
+import static uk.gov.companieshouse.acsp.manage.users.model.ErrorCode.ERROR_CODE_1001;
+import static uk.gov.companieshouse.acsp.manage.users.model.ErrorCode.ERROR_CODE_1002;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.*;
 
 @Controller
 public class AcspMembershipsController implements AcspMembershipsInterface {

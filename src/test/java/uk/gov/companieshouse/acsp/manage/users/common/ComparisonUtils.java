@@ -1,16 +1,17 @@
 package uk.gov.companieshouse.acsp.manage.users.common;
 
-import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.toMap;
+import org.bson.Document;
+import org.mockito.ArgumentMatcher;
+import org.springframework.data.mongodb.core.query.Update;
+import uk.gov.companieshouse.acsp.manage.users.common.Preprocessors.Preprocessor;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import org.bson.Document;
-import org.mockito.ArgumentMatcher;
-import org.springframework.data.mongodb.core.query.Update;
-import uk.gov.companieshouse.acsp.manage.users.common.Preprocessors.Preprocessor;
+
+import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.toMap;
 
 public class ComparisonUtils {
 

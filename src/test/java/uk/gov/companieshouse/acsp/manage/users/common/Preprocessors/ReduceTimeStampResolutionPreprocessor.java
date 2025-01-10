@@ -1,8 +1,8 @@
 package uk.gov.companieshouse.acsp.manage.users.common.Preprocessors;
 
-import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.reduceTimestampResolution;
-
 import java.util.Objects;
+
+import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.reduceTimestampResolution;
 
 public class ReduceTimeStampResolutionPreprocessor extends Preprocessor {
 

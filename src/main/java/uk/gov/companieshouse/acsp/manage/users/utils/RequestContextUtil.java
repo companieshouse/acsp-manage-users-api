@@ -1,25 +1,18 @@
 package uk.gov.companieshouse.acsp.manage.users.utils;
 
-import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_TOKEN_PERMISSIONS;
-import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_IDENTITY_TYPE;
-import static uk.gov.companieshouse.api.util.security.Permission.Key.ACSP_NUMBER;
-import static uk.gov.companieshouse.api.util.security.Permission.Key.ACSP_MEMBERS;
-import static uk.gov.companieshouse.api.util.security.Permission.Key.ACSP_MEMBERS_ADMINS;
-import static uk.gov.companieshouse.api.util.security.Permission.Key.ACSP_MEMBERS_OWNERS;
-import static uk.gov.companieshouse.api.util.security.Permission.Key.ACSP_MEMBERS_STANDARD;
-import static uk.gov.companieshouse.api.util.security.Permission.Value.CREATE;
-import static uk.gov.companieshouse.api.util.security.Permission.Value.DELETE;
-import static uk.gov.companieshouse.api.util.security.Permission.Value.READ;
-import static uk.gov.companieshouse.api.util.security.Permission.Value.UPDATE;
-
-import java.util.Optional;
-import java.util.regex.Pattern;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-
-import java.util.Objects;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.util.security.TokenPermissions;
+
+import java.util.Objects;
+import java.util.Optional;
+import java.util.regex.Pattern;
+
+import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_TOKEN_PERMISSIONS;
+import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_IDENTITY_TYPE;
+import static uk.gov.companieshouse.api.util.security.Permission.Key.*;
+import static uk.gov.companieshouse.api.util.security.Permission.Value.*;
 
 public class RequestContextUtil {
 

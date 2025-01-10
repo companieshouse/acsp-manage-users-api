@@ -1,9 +1,5 @@
 package uk.gov.companieshouse.acsp.manage.users.mapper;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import org.mapstruct.Mapper;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
@@ -13,6 +9,11 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsListLinks;
 import uk.gov.companieshouse.api.acspprofile.AcspProfile;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Component
 @Mapper( componentModel = "spring" )
