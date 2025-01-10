@@ -37,7 +37,7 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        LOGGER.debugRequest(request, "invalid user", null);
+        LOGGER.infoRequest(request, "invalid user", null);
         response.setStatus(401);
         return false;
     }
@@ -50,7 +50,7 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
             UserContext.setLoggedUser( userDetails );
             return true;
         } catch ( NotFoundRuntimeException e ){
-            LOGGER.debugRequest(request, "no user found with identity [" + identity + "]", null);
+            LOGGER.errorRequest(request, "no user found with identity [" + identity + "]", e);
             response.setStatus(403);
             return false;
         }
