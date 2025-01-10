@@ -4,6 +4,8 @@ import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpResponseException.Builder;
 import java.util.Map;
 import java.util.stream.Stream;
+
+import org.apache.logging.log4j.util.Strings;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -35,42 +37,33 @@ class AcspProfileServiceTest {
     private static final TestDataManager testDataManager = TestDataManager.getInstance();
 
     @Test
-    void createFetchAcspProfileRequestWithNullInputThrowsNullPointerException(){
-        Mockito.doThrow( new NullPointerException( "acspNumber was null" ) ).when( acspProfileEndpoint ).createGetAcspInfoRequest( null );
-        Assertions.assertThrows( NullPointerException.class, () -> acspProfileService.fetchAcspProfile( null ) );
+    void fetchAcspProfileRequestWithNullInputThrowsInternalServerException() {
+        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspProfileService.fetchAcspProfile( null ) );
     }
 
     @Test
     void createFetchAcspProfileRequestWithMalformedAcspNumberThrowsInternalServerErrorRuntimeException() throws ApiErrorResponseException, URIValidationException {
-        final var mockRequest = Mockito.mock( PrivateAcspProfileAcspInfoGet.class );
-        Mockito.doReturn( mockRequest ).when( acspProfileEndpoint ).createGetAcspInfoRequest( "£££" );
-        Mockito.doThrow( new URIValidationException( "acspNumber was malformed" ) ).when( mockRequest ).execute();
+        Mockito.doThrow( new URIValidationException( "acspNumber was malformed" ) ).when( acspProfileEndpoint ).getAcspInfo("£££");
 
         Assertions.assertThrows( InternalServerErrorRuntimeException.class, ()->acspProfileService.fetchAcspProfile( "£££" ) );
     }
 
     @Test
     void createFetchAcspProfileRequestWithNonexistentAcspNumberReturnsNotFoundRuntimeException() throws ApiErrorResponseException, URIValidationException {
-        final var mockRequest = Mockito.mock( PrivateAcspProfileAcspInfoGet.class );
-        Mockito.doReturn( mockRequest ).when( acspProfileEndpoint ).createGetAcspInfoRequest( "TSA001" );
-        Mockito.doThrow( new ApiErrorResponseException( new Builder( 404, "Not Found", new HttpHeaders() ) ) ).when( mockRequest ).execute();
+        Mockito.doThrow( new ApiErrorResponseException( new Builder( 404, "Not Found", new HttpHeaders() ) ) ).when( acspProfileEndpoint ).getAcspInfo( "TSA001" );
         Assertions.assertThrows( NotFoundRuntimeException.class, ()->acspProfileService.fetchAcspProfile( "TSA001" ) );
     }
 
     @Test
     void createFetchAcspProfileRequestThrowsInternalServerErrorRuntimeExceptionWhenRetrievalFails() throws ApiErrorResponseException, URIValidationException {
-        final var mockRequest = Mockito.mock( PrivateAcspProfileAcspInfoGet.class );
-        Mockito.doReturn( mockRequest ).when( acspProfileEndpoint ).createGetAcspInfoRequest( "TSA001" );
-        Mockito.doThrow( new ApiErrorResponseException( new Builder( 500, "Something went wrong", new HttpHeaders() ) ) ).when( mockRequest ).execute();
+        Mockito.doThrow( new ApiErrorResponseException( new Builder( 500, "Something went wrong", new HttpHeaders() ) ) ).when( acspProfileEndpoint ).getAcspInfo( "TSA001" );
 
         Assertions.assertThrows( InternalServerErrorRuntimeException.class,()-> acspProfileService.fetchAcspProfile( "TSA001" ) );
     }
 
     @Test
     void createFetchAcspProfileRequestThrowsInternalServerErrorRuntimeExceptionWhenSomethingUnexpectedHappens() throws ApiErrorResponseException, URIValidationException {
-        final var mockRequest = Mockito.mock( PrivateAcspProfileAcspInfoGet.class );
-        Mockito.doReturn( mockRequest ).when( acspProfileEndpoint ).createGetAcspInfoRequest( "TSA001" );
-        Mockito.doThrow( new NullPointerException() ).when( mockRequest ).execute();
+        Mockito.doThrow( new NullPointerException() ).when( acspProfileEndpoint ).getAcspInfo( "TSA001" );
 
         Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspProfileService.fetchAcspProfile( "TSA001" ) );
 
@@ -80,10 +73,8 @@ class AcspProfileServiceTest {
     void createFetchAcspProfileRequestRetrievesAcspProfile() throws ApiErrorResponseException, URIValidationException {
         final var acspProfile = testDataManager.fetchAcspProfiles( "TSA001" ).getFirst();
 
-        final var mockRequest = Mockito.mock( PrivateAcspProfileAcspInfoGet.class );
-        Mockito.doReturn( mockRequest ).when( acspProfileEndpoint ).createGetAcspInfoRequest( "TSA001" );
         final var intendedResponse = new ApiResponse<>( 200, Map.of(), acspProfile );
-        Mockito.doReturn( intendedResponse ).when( mockRequest ).execute();
+        Mockito.doReturn( intendedResponse ).when( acspProfileEndpoint ).getAcspInfo( "TSA001" );;
 
         final var response = acspProfileService.fetchAcspProfile( "TSA001" );
         Assertions.assertEquals( "TSA001", response.getNumber() );
@@ -91,44 +82,26 @@ class AcspProfileServiceTest {
         Assertions.assertEquals( Status.ACTIVE, response.getStatus() );
     }
 
-    @Test
-    void fetchAcspProfileWithNullInputThrowsNullPointerException(){
-        Mockito.doThrow( new NullPointerException( "acspNumber was null" ) ).when( acspProfileEndpoint ).createGetAcspInfoRequest( null );
-        Assertions.assertThrows( NullPointerException.class, () -> acspProfileService.fetchAcspProfile( null ) );
-    }
-
-    @Test
-    void fetchAcspProfileWithMalformedAcspNumberThrowsInternalServerErrorRuntimeException() throws ApiErrorResponseException, URIValidationException {
-        final var mockRequest = Mockito.mock( PrivateAcspProfileAcspInfoGet.class );
-        Mockito.doReturn( mockRequest ).when( acspProfileEndpoint ).createGetAcspInfoRequest( "£££" );
-        Mockito.doThrow( new URIValidationException( "acspNumber was malformed" ) ).when( mockRequest ).execute();
-
-        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspProfileService.fetchAcspProfile( "£££" ) );
-    }
 
     @Test
     void fetchAcspProfileWithNonexistentAcspNumberReturnsNotFoundRuntimeException() throws ApiErrorResponseException, URIValidationException {
-        final var mockRequest = Mockito.mock( PrivateAcspProfileAcspInfoGet.class );
-        Mockito.doReturn( mockRequest ).when( acspProfileEndpoint ).createGetAcspInfoRequest( "TSA001" );
-        Mockito.doThrow( new ApiErrorResponseException( new Builder( 404, "Not Found", new HttpHeaders() ) ) ).when( mockRequest ).execute();
+
+        Mockito.doThrow( new ApiErrorResponseException( new Builder( 404, "Not Found", new HttpHeaders() ) ) ).when( acspProfileEndpoint ).getAcspInfo( "TSA001" );
 
         Assertions.assertThrows( NotFoundRuntimeException.class, () -> acspProfileService.fetchAcspProfile( "TSA001" ) );
     }
 
     @Test
     void fetchAcspProfileThrowsInternalServerErrorRuntimeExceptionWhenRetrievalFails() throws ApiErrorResponseException, URIValidationException {
-        final var mockRequest = Mockito.mock( PrivateAcspProfileAcspInfoGet.class );
-        Mockito.doReturn( mockRequest ).when( acspProfileEndpoint ).createGetAcspInfoRequest( "TSA001" );
-        Mockito.doThrow( new ApiErrorResponseException( new Builder( 500, "Something went wrong", new HttpHeaders() ) ) ).when( mockRequest ).execute();
+
+        Mockito.doThrow( new ApiErrorResponseException( new Builder( 500, "Something went wrong", new HttpHeaders() ) ) ).when( acspProfileEndpoint ).getAcspInfo( "TSA001" );;
 
         Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspProfileService.fetchAcspProfile( "TSA001" ) );
     }
 
     @Test
     void fetchAcspProfileThrowsInternalServerErrorRuntimeExceptionWhenSomethingUnexpectedHappens() throws ApiErrorResponseException, URIValidationException {
-        final var mockRequest = Mockito.mock( PrivateAcspProfileAcspInfoGet.class );
-        Mockito.doReturn( mockRequest ).when( acspProfileEndpoint ).createGetAcspInfoRequest( "TSA001" );
-        Mockito.doThrow( new NullPointerException() ).when( mockRequest ).execute();
+        Mockito.doThrow( new NullPointerException() ).when( acspProfileEndpoint ).getAcspInfo( "TSA001" );
 
         Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspProfileService.fetchAcspProfile( "TSA001" ) );
     }
@@ -137,10 +110,8 @@ class AcspProfileServiceTest {
     void fetchAcspProfileRetrievesAcspProfile() throws ApiErrorResponseException, URIValidationException {
         final var acspProfile = testDataManager.fetchAcspProfiles( "TSA001" ).getFirst();
 
-        final var mockRequest = Mockito.mock( PrivateAcspProfileAcspInfoGet.class );
-        Mockito.doReturn( mockRequest ).when( acspProfileEndpoint ).createGetAcspInfoRequest( "TSA001" );
         final var intendedResponse = new ApiResponse<>( 200, Map.of(), acspProfile );
-        Mockito.doReturn( intendedResponse ).when( mockRequest ).execute();
+        Mockito.doReturn( intendedResponse ).when( acspProfileEndpoint ).getAcspInfo( "TSA001" );
 
         final var response = acspProfileService.fetchAcspProfile( "TSA001" );
         Assertions.assertEquals( "TSA001", response.getNumber() );
@@ -163,10 +134,8 @@ class AcspProfileServiceTest {
         final var acspMembers = testDataManager.fetchAcspMembersDaos( "TS001", "TS002" );
         final var acspProfile = testDataManager.fetchAcspProfiles( "TSA001" ).getFirst();
 
-        final var mockRequest = Mockito.mock( PrivateAcspProfileAcspInfoGet.class );
-        Mockito.doReturn( mockRequest ).when( acspProfileEndpoint ).createGetAcspInfoRequest( "TSA001" );
         final var intendedResponse = new ApiResponse<>( 200, Map.of(), acspProfile );
-        Mockito.doReturn( intendedResponse ).when( mockRequest ).execute();
+        Mockito.doReturn( intendedResponse ).when( acspProfileEndpoint ).getAcspInfo( "TSA001" );
 
         Assertions.assertEquals( Map.of( "TSA001", acspProfile ), acspProfileService.fetchAcspProfiles( acspMembers.stream() ) );
     }

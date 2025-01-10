@@ -47,29 +47,26 @@ class UsersServiceTest {
 
     @Test
     void fetchUserDetailsWithNullInputReturnsInternalServerError() throws ApiErrorResponseException, URIValidationException {
-        Mockito.doReturn(privateAccountsUserUserGet).when(accountsUserEndpoint).createGetUserDetailsRequest(any());
-        Mockito.doThrow(NullPointerException.class).when(privateAccountsUserUserGet).execute();
+        Mockito.doThrow(NullPointerException.class).when(accountsUserEndpoint).getUserDetails(any());
         Assertions.assertThrows(InternalServerErrorRuntimeException.class, () -> usersService.fetchUserDetails(Strings.EMPTY));
     }
 
     @Test
     void fetchUserDetailsWithMalformedInputReturnsInternalServerError() throws ApiErrorResponseException, URIValidationException {
-        Mockito.doReturn(privateAccountsUserUserGet).when(accountsUserEndpoint).createGetUserDetailsRequest(any());
-        Mockito.doThrow(new URIValidationException("Uri incorrectly formatted")).when(privateAccountsUserUserGet).execute();
+        Mockito.doThrow(new URIValidationException("Uri incorrectly formatted")).when(accountsUserEndpoint).getUserDetails(any());
         Assertions.assertThrows(InternalServerErrorRuntimeException.class, () -> usersService.fetchUserDetails("$"));
     }
 
     @Test
     void fetchUserDetailsWithNonexistentUserReturnsNotFound() throws ApiErrorResponseException, URIValidationException {
-        Mockito.doReturn(privateAccountsUserUserGet).when(accountsUserEndpoint).createGetUserDetailsRequest(any());
-        Mockito.doThrow(new ApiErrorResponseException(new Builder(404, "Not found", new HttpHeaders()))).when(privateAccountsUserUserGet).execute();
+
+        Mockito.doThrow(new ApiErrorResponseException(new Builder(404, "Not found", new HttpHeaders()))).when(accountsUserEndpoint).getUserDetails(any());
         Assertions.assertThrows(NotFoundRuntimeException.class, () -> usersService.fetchUserDetails("666"));
     }
 
     @Test
     void fetchUserDetailsReturnsInternalServerErrorWhenItReceivesApiErrorResponseWithNon404StatusCode() throws ApiErrorResponseException, URIValidationException {
-        Mockito.doReturn(privateAccountsUserUserGet).when(accountsUserEndpoint).createGetUserDetailsRequest(any());
-        Mockito.doThrow(new ApiErrorResponseException(new Builder(500, "Something unexpected happened", new HttpHeaders()))).when(privateAccountsUserUserGet).execute();
+        Mockito.doThrow(new ApiErrorResponseException(new Builder(500, "Something unexpected happened", new HttpHeaders()))).when(accountsUserEndpoint).getUserDetails(any());
         Assertions.assertThrows(InternalServerErrorRuntimeException.class, () -> usersService.fetchUserDetails("111"));
     }
 
@@ -77,10 +74,8 @@ class UsersServiceTest {
     void fetchUserDetailsSuccessfullyFetchesUserData() throws ApiErrorResponseException, URIValidationException {
         final var user = new User().userId("333");
 
-        Mockito.doReturn(privateAccountsUserUserGet).when(accountsUserEndpoint).createGetUserDetailsRequest(any());
-
         final var intendedResponse = new ApiResponse<>(200, Map.of(), user);
-        Mockito.doReturn(intendedResponse).when(privateAccountsUserUserGet).execute();
+        Mockito.doReturn(intendedResponse).when(accountsUserEndpoint).getUserDetails(any());
         final var response = usersService.fetchUserDetails("333");
 
         Assertions.assertEquals("333", response.getUserId());
@@ -88,29 +83,28 @@ class UsersServiceTest {
 
     @Test
     void createFetchUserDetailsRequestWithNullInputReturnsInternalServerError() throws ApiErrorResponseException, URIValidationException {
-        Mockito.doReturn(privateAccountsUserUserGet).when(accountsUserEndpoint).createGetUserDetailsRequest(any());
-        Mockito.doThrow(NullPointerException.class).when(privateAccountsUserUserGet).execute();
+        Mockito.doThrow(NullPointerException.class).when(accountsUserEndpoint).getUserDetails(any());
         Assertions.assertThrows(InternalServerErrorRuntimeException.class, () -> usersService.fetchUserDetails(Strings.EMPTY));
     }
 
     @Test
     void createFetchUserDetailsRequestWithMalformedInputReturnsInternalServerError() throws ApiErrorResponseException, URIValidationException {
-        Mockito.doReturn(privateAccountsUserUserGet).when(accountsUserEndpoint).createGetUserDetailsRequest(any());
-        Mockito.doThrow(new URIValidationException("Uri incorrectly formatted")).when(privateAccountsUserUserGet).execute();
+
+        Mockito.doThrow(new URIValidationException("Uri incorrectly formatted")).when(accountsUserEndpoint).getUserDetails(any());
         Assertions.assertThrows(InternalServerErrorRuntimeException.class, () -> usersService.fetchUserDetails("$"));
     }
 
     @Test
     void createFetchUserDetailsRequestWithNonexistentUserReturnsNotFound() throws ApiErrorResponseException, URIValidationException {
-        Mockito.doReturn(privateAccountsUserUserGet).when(accountsUserEndpoint).createGetUserDetailsRequest(any());
-        Mockito.doThrow(new ApiErrorResponseException(new Builder(404, "Not found", new HttpHeaders()))).when(privateAccountsUserUserGet).execute();
+
+        Mockito.doThrow(new ApiErrorResponseException(new Builder(404, "Not found", new HttpHeaders()))).when(accountsUserEndpoint).getUserDetails(any());
         Assertions.assertThrows(NotFoundRuntimeException.class, () -> usersService.fetchUserDetails("666"));
     }
 
     @Test
     void createFetchUserDetailsRequestReturnsInternalServerErrorWhenItReceivesApiErrorResponseWithNon404StatusCode() throws ApiErrorResponseException, URIValidationException {
-        Mockito.doReturn(privateAccountsUserUserGet).when(accountsUserEndpoint).createGetUserDetailsRequest(any());
-        Mockito.doThrow(new ApiErrorResponseException(new Builder(500, "Something unexpected happened", new HttpHeaders()))).when(privateAccountsUserUserGet).execute();
+
+        Mockito.doThrow(new ApiErrorResponseException(new Builder(500, "Something unexpected happened", new HttpHeaders()))).when(accountsUserEndpoint).getUserDetails(any());
         Assertions.assertThrows(InternalServerErrorRuntimeException.class, () -> usersService.fetchUserDetails("111"));
     }
 
@@ -118,10 +112,9 @@ class UsersServiceTest {
     void createFetchUserDetailsRequestSuccessfullyFetchesUserData() throws ApiErrorResponseException, URIValidationException {
         final var user = new User().userId("333");
 
-        Mockito.doReturn(privateAccountsUserUserGet).when(accountsUserEndpoint).createGetUserDetailsRequest(any());
 
         final var intendedResponse = new ApiResponse<>(200, Map.of(), user);
-        Mockito.doReturn(intendedResponse).when(privateAccountsUserUserGet).execute();
+        Mockito.doReturn(intendedResponse).when(accountsUserEndpoint).getUserDetails(any());
         final var response = usersService.fetchUserDetails("333");
 
         Assertions.assertEquals("333", response.getUserId());
@@ -191,22 +184,21 @@ class UsersServiceTest {
     @Test
     void doesUserExist_UserExists_ReturnsTrue() throws Exception {
         final var userDto = testDataManager.fetchUserDtos("TSU001").getFirst();
-        Mockito.doReturn(privateAccountsUserUserGet).when(accountsUserEndpoint).createGetUserDetailsRequest("TSU001");
-        Mockito.doReturn(new ApiResponse<>(200, Map.of(), userDto)).when(privateAccountsUserUserGet).execute();
+        Mockito.doReturn(new ApiResponse<>(200, Map.of(), userDto)).when(accountsUserEndpoint).getUserDetails("TSU001");
         Assertions.assertTrue(usersService.doesUserExist("TSU001"));
     }
 
     @Test
     void doesUserExist_UserDoesNotExist_ReturnsFalse() throws Exception {
-        Mockito.doReturn(privateAccountsUserUserGet).when(accountsUserEndpoint).createGetUserDetailsRequest("TSU001");
-        Mockito.doThrow(new ApiErrorResponseException(new Builder(404, "Not found", new HttpHeaders()))).when(privateAccountsUserUserGet).execute();
+
+        Mockito.doThrow(new ApiErrorResponseException(new Builder(404, "Not found", new HttpHeaders()))).when(accountsUserEndpoint).getUserDetails("TSU001");
         Assertions.assertFalse(usersService.doesUserExist("TSU001"));
     }
 
     @Test
     void doesUserExist_OtherException_Rethrows() throws Exception {
-        Mockito.doReturn(privateAccountsUserUserGet).when(accountsUserEndpoint).createGetUserDetailsRequest("TSU001");
-        Mockito.doThrow(new InternalServerErrorRuntimeException("Unexpected error")).when(privateAccountsUserUserGet).execute();
+
+        Mockito.doThrow(new InternalServerErrorRuntimeException("Unexpected error")).when(accountsUserEndpoint).getUserDetails("TSU001");
         Assertions.assertThrows(InternalServerErrorRuntimeException.class, () -> usersService.doesUserExist("TSU001"));
     }
 
@@ -225,10 +217,8 @@ class UsersServiceTest {
         final var acspMembers = testDataManager.fetchAcspMembersDaos("TS001", "NF001");
         final var user = testDataManager.fetchUserDtos("TSU001").getFirst();
 
-        Mockito.doReturn(privateAccountsUserUserGet).when(accountsUserEndpoint).createGetUserDetailsRequest(any());
-
         final var intendedResponse = new ApiResponse<>(200, Map.of(), user);
-        Mockito.doReturn(intendedResponse).when(privateAccountsUserUserGet).execute();
+        Mockito.doReturn(intendedResponse).when(accountsUserEndpoint).getUserDetails(any());
 
         Assertions.assertEquals(Map.of("TSU001", user), usersService.fetchUserDetails(acspMembers.stream()));
     }
