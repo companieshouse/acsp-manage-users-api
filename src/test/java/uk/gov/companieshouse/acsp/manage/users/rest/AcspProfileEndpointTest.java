@@ -5,6 +5,8 @@ import static org.mockito.ArgumentMatchers.any;
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpResponseException.Builder;
 import java.util.Map;
+import java.util.NoSuchElementException;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -49,8 +51,8 @@ class AcspProfileEndpointTest {
     }
 
     @Test
-    void createGetAcspInfoRequestWithNullInputThrowsNullPointerException(){
-        Assertions.assertThrows( NullPointerException.class, () -> acspProfileEndpoint.createGetAcspInfoRequest( null ) );
+    void createGetAcspInfoRequestWithNoSuchElementException(){
+        Assertions.assertThrows( NoSuchElementException.class, () -> acspProfileEndpoint.getAcspInfo( null ) );
     }
 
     @Test
@@ -60,8 +62,7 @@ class AcspProfileEndpointTest {
         Mockito.doReturn( privateAcspProfileAcspInfoGet ).when( privateAcspProfileResourceHandler ).getAcspInfo( any() );
         Mockito.doThrow( new URIValidationException( "URI pattern does not match expected URI pattern for this resource." ) ).when( privateAcspProfileAcspInfoGet ).execute();
 
-        final var getAcspInfoRequest = acspProfileEndpoint.createGetAcspInfoRequest( "£££" );
-        Assertions.assertThrows( URIValidationException.class, getAcspInfoRequest::execute );
+        Assertions.assertThrows( URIValidationException.class, ()->acspProfileEndpoint.getAcspInfo( "£££" ) );
     }
 
     @Test
@@ -71,27 +72,13 @@ class AcspProfileEndpointTest {
         Mockito.doReturn( privateAcspProfileAcspInfoGet ).when( privateAcspProfileResourceHandler ).getAcspInfo( any() );
         Mockito.doThrow( new ApiErrorResponseException( new Builder( 404, "Not Found", new HttpHeaders() ) ) ).when( privateAcspProfileAcspInfoGet ).execute();
 
-        final var getAcspInfoRequest = acspProfileEndpoint.createGetAcspInfoRequest( "TSA001" );
-        Assertions.assertThrows( ApiErrorResponseException.class, getAcspInfoRequest::execute );
+        Assertions.assertThrows( ApiErrorResponseException.class, ()->acspProfileEndpoint.getAcspInfo("TSA001") );
     }
 
-    @Test
-    void createGetAcspInfoRequestRetrievesAcspInfo() throws ApiErrorResponseException, URIValidationException {
-        Mockito.doReturn( internalApiClient ).when( apiClientUtil ).getInternalApiClient( any() );
-        Mockito.doReturn( privateAcspProfileResourceHandler ).when( internalApiClient ).privateAcspProfileResourceHandler();
-        Mockito.doReturn( privateAcspProfileAcspInfoGet ).when( privateAcspProfileResourceHandler ).getAcspInfo( any() );
-
-        final var intendedResponse = new ApiResponse<>( 200, Map.of(), new AcspProfile() );
-        Mockito.doReturn( intendedResponse ).when( privateAcspProfileAcspInfoGet ).execute();
-        final var response = acspProfileEndpoint.createGetAcspInfoRequest( "TSA001" ).execute();
-
-        Assertions.assertEquals( 200, response.getStatusCode() );
-        Assertions.assertEquals( new AcspProfile(), response.getData() );
-    }
 
     @Test
-    void getAcspInfoWithNullInputThrowsNullPointerException(){
-        Assertions.assertThrows( NullPointerException.class, () -> acspProfileEndpoint.getAcspInfo( null ) );
+    void getAcspInfoWithNullInputThrowsNoSuchElementExceptionException(){
+        Assertions.assertThrows( NoSuchElementException.class, () -> acspProfileEndpoint.getAcspInfo( null ) );
     }
 
     @Test

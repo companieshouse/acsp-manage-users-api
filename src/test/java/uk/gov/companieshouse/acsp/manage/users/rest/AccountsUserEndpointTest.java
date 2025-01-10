@@ -140,7 +140,7 @@ class AccountsUserEndpointTest {
 
     @Test
     void createGetUserDetailsRequestWithNullInputThrowsNullPointerException(){
-        Assertions.assertThrows( NullPointerException.class, () -> accountsUserEndpoint.createGetUserDetailsRequest( null ) );
+        Assertions.assertThrows( NullPointerException.class, () -> accountsUserEndpoint.getUserDetails( null ) );
     }
 
     @Test
@@ -150,7 +150,7 @@ class AccountsUserEndpointTest {
         Mockito.doReturn( privateAccountsUserUserGet ).when( privateAccountsUserResourceHandler ).getUserDetails( any() );
         Mockito.doThrow( new ApiErrorResponseException( new Builder( 400, "Bad request", new HttpHeaders() ) ) ).when( privateAccountsUserUserGet ).execute();
 
-        Assertions.assertThrows( ApiErrorResponseException.class, () -> accountsUserEndpoint.createGetUserDetailsRequest( "$" ).execute() );
+        Assertions.assertThrows( ApiErrorResponseException.class, () -> accountsUserEndpoint.getUserDetails( "$" ) );
     }
 
     @Test
@@ -161,7 +161,7 @@ class AccountsUserEndpointTest {
 
         final var intendedResponse = new ApiResponse<>( 200, Map.of(), new User().userId( "111" ) );
         Mockito.doReturn( intendedResponse ).when( privateAccountsUserUserGet ).execute();
-        final var response = accountsUserEndpoint.createGetUserDetailsRequest( "111" ).execute();
+        final var response = accountsUserEndpoint.getUserDetails( "111" );
 
         Assertions.assertEquals( 200, response.getStatusCode() );
         Assertions.assertEquals( "111", response.getData().getUserId() );
@@ -174,7 +174,7 @@ class AccountsUserEndpointTest {
         Mockito.doReturn( privateAccountsUserUserGet ).when( privateAccountsUserResourceHandler ).getUserDetails( any() );
         Mockito.doThrow( new ApiErrorResponseException( new Builder( 404, "Not Found", new HttpHeaders() ) ) ).when( privateAccountsUserUserGet ).execute();
 
-        Assertions.assertThrows( ApiErrorResponseException.class, () -> accountsUserEndpoint.createGetUserDetailsRequest( "666" ).execute() );
+        Assertions.assertThrows( ApiErrorResponseException.class, () -> accountsUserEndpoint.getUserDetails( "666" ) );
     }
 
 }

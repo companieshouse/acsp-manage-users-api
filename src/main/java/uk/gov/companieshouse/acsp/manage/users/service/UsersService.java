@@ -9,7 +9,6 @@ import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.accounts.user.model.UsersList;
 import uk.gov.companieshouse.api.error.ApiErrorResponseException;
-import uk.gov.companieshouse.api.handler.accountsuser.request.PrivateAccountsUserUserGet;
 import uk.gov.companieshouse.api.handler.exception.URIValidationException;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
@@ -34,12 +33,11 @@ public class UsersService {
     }
 
     public User fetchUserDetails(final String userId) {
-        PrivateAccountsUserUserGet request = accountsUserEndpoint.createGetUserDetailsRequest(userId);
         final String xRequestId = getXRequestId();
 
         try {
-            LOG.debugContext(xRequestId, String.format("Sending request to accounts-user-api: GET /users/{user_id}. Attempting to retrieve user: %s", userId), null);
-            return request.execute().getData();
+            LOG.infoContext(xRequestId, String.format("Sending request to accounts-user-api: GET /users/{user_id}. Attempting to retrieve user: %s", userId), null);
+            return accountsUserEndpoint.getUserDetails(userId).getData();
         } catch (ApiErrorResponseException exception) {
             if (exception.getStatusCode() == 404) {
                 LOG.errorContext(xRequestId, String.format("Could not find user details for user with id %s", userId), exception, null);
@@ -55,6 +53,9 @@ public class UsersService {
         catch (Exception exception) {
             LOG.errorContext(getXRequestId(), String.format("Unexpected error while checking if user %s exists", userId), exception, null);
             throw new InternalServerErrorRuntimeException("Failed to retrieve user details");
+        } finally {
+            LOG.infoContext(xRequestId, String.format("Finished request to accounts-user-api for user: %s", userId), null);
+
         }
 
     }
