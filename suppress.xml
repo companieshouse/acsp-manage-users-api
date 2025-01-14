@@ -7,6 +7,7 @@
     <cve>CVE-2022-34917</cve>
     <cve>CVE-2023-25194</cve>
     <cve>CVE-2024-31141</cve>
+    <cve>CVE-2024-56128</cve>
   </suppress>
   <suppress until="2025-06-01Z">
     <notes><![CDATA[
@@ -35,5 +36,11 @@
     <cve>CVE-2023-34454</cve>
     <cve>CVE-2023-34453</cve>
     <cve>CVE-2023-43642</cve>
+  </suppress>
+  <suppress until="2025-06-01Z">
+    <notes><![CDATA[
+   file name: logback-core-1.5.12.jar
+   ]]></notes>
+    <cve>CVE-2024-12798</cve>
   </suppress>
 </suppressions>
