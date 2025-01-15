@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.acsp.manage.users.rest;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.accounts.user.model.UsersList;
@@ -16,6 +17,7 @@ public class AccountsUserEndpoint {
 
     private final PrivateAccountsUserResourceHandler privateAccountsUserResourceHandler;
 
+    @Autowired
     public AccountsUserEndpoint(PrivateAccountsUserResourceHandler privateAccountsUserResourceHandler) {
         this.privateAccountsUserResourceHandler = privateAccountsUserResourceHandler;
     }
