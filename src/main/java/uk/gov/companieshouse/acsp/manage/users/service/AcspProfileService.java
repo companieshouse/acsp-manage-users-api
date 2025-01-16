@@ -29,7 +29,6 @@ public class AcspProfileService {
     this.acspProfileEndpoint = acspProfileEndpoint;
   }
 
-  @Retryable( maxAttempts = 2, retryFor = ApiErrorResponseException.class )
   public AcspProfile fetchAcspProfile( final String acspNumber ) {
 
     final var xRequestId = getXRequestId();

@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
@@ -32,7 +31,6 @@ public class UsersService {
     this.accountsUserEndpoint = accountsUserEndpoint;
   }
 
-  @Retryable( maxAttempts = 2, retryFor = ApiErrorResponseException.class )
   public User fetchUserDetails( final String userId ) {
 
     final String xRequestId = getXRequestId();
@@ -75,7 +73,7 @@ public class UsersService {
     }
   }
 
-  @Retryable( maxAttempts = 2, retryFor = ApiErrorResponseException.class )
+
   public UsersList searchUserDetails( final List<String> emails ) {
     final String xRequestId = getXRequestId();
     try {
