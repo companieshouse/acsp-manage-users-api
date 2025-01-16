@@ -3,11 +3,9 @@ package uk.gov.companieshouse.acsp.manage.users;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.retry.annotation.EnableRetry;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 
 @SpringBootApplication
-@EnableRetry
 public class AcspManageUsersServiceApplication {
 
     StaticPropertyUtil staticPropertyUtil;
