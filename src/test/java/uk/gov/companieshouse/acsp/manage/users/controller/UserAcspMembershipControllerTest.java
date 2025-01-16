@@ -1,13 +1,19 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
+import uk.gov.companieshouse.acsp.manage.users.configuration.WebSecurityConfig;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
@@ -18,11 +24,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UserAcspMembershipController.class)
+@Import(WebSecurityConfig.class)
 @Tag("unit-test")
 class UserAcspMembershipControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private WebApplicationContext context;
 
     @MockBean
     private StaticPropertyUtil staticPropertyUtil;
@@ -34,6 +43,13 @@ class UserAcspMembershipControllerTest {
     private AcspMembersService acspMembersService;
 
     private static final TestDataManager testDataManager = TestDataManager.getInstance();
+
+    @BeforeEach
+    void setup() {
+        mockMvc = MockMvcBuilders.webAppContextSetup( context )
+                .apply( SecurityMockMvcConfigurers.springSecurity() )
+                .build();
+    }
 
     @Test
     void getAcspMembershipsForUserIdWithoutXRequestIdReturnsBadRequest() throws Exception {
