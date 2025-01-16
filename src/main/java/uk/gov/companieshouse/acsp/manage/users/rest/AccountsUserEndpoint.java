@@ -1,13 +1,12 @@
 package uk.gov.companieshouse.acsp.manage.users.rest;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-import uk.gov.companieshouse.acsp.manage.users.utils.ApiClientUtil;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.accounts.user.model.UsersList;
 import uk.gov.companieshouse.api.error.ApiErrorResponseException;
-import uk.gov.companieshouse.api.handler.accountsuser.request.PrivateAccountsUserUserGet;
+import uk.gov.companieshouse.api.handler.accountsuser.PrivateAccountsUserResourceHandler;
 import uk.gov.companieshouse.api.handler.exception.URIValidationException;
 import uk.gov.companieshouse.api.model.ApiResponse;
 
@@ -16,33 +15,26 @@ import java.util.List;
 @Service
 public class AccountsUserEndpoint {
 
-    @Value("${account.api.url}")
-    private String accountApiUrl;
-
-    private final ApiClientUtil apiClientUtil;
+    private final PrivateAccountsUserResourceHandler privateAccountsUserResourceHandler;
 
     @Autowired
-    public AccountsUserEndpoint(ApiClientUtil apiClientUtil) {
-        this.apiClientUtil = apiClientUtil;
+    public AccountsUserEndpoint(PrivateAccountsUserResourceHandler privateAccountsUserResourceHandler) {
+        this.privateAccountsUserResourceHandler = privateAccountsUserResourceHandler;
     }
 
+    @Retryable(maxAttempts = 2, retryFor = ApiErrorResponseException.class)
     public ApiResponse<UsersList> searchUserDetails(final List<String> emails) throws ApiErrorResponseException, URIValidationException {
         final var searchUserDetailsUrl = "/users/search";
-        return apiClientUtil.getInternalApiClient(accountApiUrl)
-                .privateAccountsUserResourceHandler()
+        return privateAccountsUserResourceHandler
                 .searchUserDetails(searchUserDetailsUrl, emails)
                 .execute();
     }
 
-    public PrivateAccountsUserUserGet createGetUserDetailsRequest(final String userId) {
-        final var getUserDetailsUrl = String.format("/users/%s", userId);
-        return apiClientUtil.getInternalApiClient(accountApiUrl)
-                .privateAccountsUserResourceHandler()
-                .getUserDetails(getUserDetailsUrl);
-    }
-
+    @Retryable(maxAttempts = 2, retryFor = ApiErrorResponseException.class)
     public ApiResponse<User> getUserDetails(final String userId) throws ApiErrorResponseException, URIValidationException {
-        return createGetUserDetailsRequest(userId).execute();
+        final var getUserDetailsUrl = String.format("/users/%s", userId);
+        return privateAccountsUserResourceHandler
+                .getUserDetails(getUserDetailsUrl).execute();
     }
 
 }
