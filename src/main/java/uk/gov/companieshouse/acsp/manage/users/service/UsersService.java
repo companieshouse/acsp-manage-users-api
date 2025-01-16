@@ -39,7 +39,10 @@ public class UsersService {
     try {
       LOG.infoContext(xRequestId,
         String.format("Sending request to accounts-user-api: GET /users/{user_id}. Attempting to retrieve user: %s", userId), null);
-      return accountsUserEndpoint.getUserDetails(userId).getData();
+
+      final var response = accountsUserEndpoint.getUserDetails(userId);
+      LOG.infoContext( xRequestId, response.toString(), null );
+      return response.getData();
 
     } catch ( ApiErrorResponseException exception ) {
       if ( exception.getStatusCode() == 404 ) {
