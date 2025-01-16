@@ -19,13 +19,16 @@ import static org.junit.jupiter.api.Assertions.*;
 class AuthorizationAndInternalUserInterceptorsTest {
 
     @Mock
-    private UsersService usersService;
+    private InterceptorHelper interceptorHelper;
+
+    @Mock
+    UsersService usersService;
 
     private AuthorizationAndInternalUserInterceptors authorizationAndInternalUserInterceptors;
 
     @BeforeEach
     void setup(){
-        authorizationAndInternalUserInterceptors = new AuthorizationAndInternalUserInterceptors( usersService );
+        authorizationAndInternalUserInterceptors = new AuthorizationAndInternalUserInterceptors( interceptorHelper );
     }
 
     @Test

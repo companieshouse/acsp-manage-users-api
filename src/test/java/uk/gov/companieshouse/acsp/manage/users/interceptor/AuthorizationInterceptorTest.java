@@ -28,11 +28,14 @@ class AuthorizationInterceptorTest {
     @InjectMocks
     private AuthorizationInterceptor authorizationInterceptor;
 
+    @Mock
+    private InterceptorHelper interceptorHelper;
+
     private AuthorizationInterceptor interceptor;
 
     @BeforeEach
     void setup(){
-         interceptor = new AuthorizationInterceptor( usersService );
+         interceptor = new AuthorizationInterceptor( interceptorHelper );
     }
 
     @Test
