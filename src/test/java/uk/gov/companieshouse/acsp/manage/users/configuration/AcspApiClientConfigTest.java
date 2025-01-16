@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import uk.gov.companieshouse.api.handler.acspprofile.PrivateAcspProfileResourceHandler;
 
 @Tag("unit-test")
-public class AcspApiClientConfigTest {
+class AcspApiClientConfigTest {
 
     @Test
     void getAcspResourceHAndlerIsCorrectType(){

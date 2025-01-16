@@ -5,7 +5,6 @@ import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.g
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;

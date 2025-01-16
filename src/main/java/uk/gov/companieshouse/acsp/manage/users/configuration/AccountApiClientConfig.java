@@ -19,7 +19,7 @@ public class AccountApiClientConfig {
 
     @Bean
     public PrivateAccountsUserResourceHandler getAccountUserResourceHandler(){
-        final InternalApiClient internalApiClient = new InternalApiClient(new ApiKeyHttpClient(chsInternalApiKey));
+        final var internalApiClient = new InternalApiClient(new ApiKeyHttpClient(chsInternalApiKey));
         internalApiClient.setInternalBasePath(accountApiUrl);
         return internalApiClient.privateAccountsUserResourceHandler();
     }

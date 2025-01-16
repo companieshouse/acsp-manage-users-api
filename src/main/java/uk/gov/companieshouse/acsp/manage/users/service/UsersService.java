@@ -31,6 +31,8 @@ public class UsersService {
     this.accountsUserEndpoint = accountsUserEndpoint;
   }
 
+  private final String FAILED_TO_RETRIEVE_USER_DETAILS = "Failed to retrieve user details";
+
   public User fetchUserDetails( final String userId ) {
 
     final String xRequestId = getXRequestId();
@@ -45,7 +47,7 @@ public class UsersService {
         throw new NotFoundRuntimeException("acsp-manage-users-api", "Failed to find user");
       } else {
         LOG.errorContext(xRequestId, String.format("Failed to retrieve user details for user with id %s", userId), exception, null);
-        throw new InternalServerErrorRuntimeException("Failed to retrieve user details");
+        throw new InternalServerErrorRuntimeException(FAILED_TO_RETRIEVE_USER_DETAILS);
       }
     } catch ( URIValidationException exception ) {
       LOG.errorContext(xRequestId, String.format("Failed to fetch user details for user %s, because uri was incorrectly formatted", userId),
@@ -53,7 +55,7 @@ public class UsersService {
       throw new InternalServerErrorRuntimeException("Invalid uri for accounts-user-api service");
     } catch ( Exception exception ) {
       LOG.errorContext(getXRequestId(), String.format("Unexpected error while checking if user %s exists", userId), exception, null);
-      throw new InternalServerErrorRuntimeException("Failed to retrieve user details");
+      throw new InternalServerErrorRuntimeException(FAILED_TO_RETRIEVE_USER_DETAILS);
     } finally {
       LOG.infoContext(xRequestId, String.format("Finished request to accounts-user-api for user: %s", userId), null);
 
@@ -83,8 +85,8 @@ public class UsersService {
       return accountsUserEndpoint.searchUserDetails(emails)
         .getData();
     } catch ( ApiErrorResponseException exception ) {
-      LOG.errorContext(xRequestId, "Failed to retrieve user details", exception, null);
-      throw new InternalServerErrorRuntimeException("Failed to retrieve user details");
+      LOG.errorContext(xRequestId, FAILED_TO_RETRIEVE_USER_DETAILS, exception, null);
+      throw new InternalServerErrorRuntimeException(FAILED_TO_RETRIEVE_USER_DETAILS);
 
     } catch ( URIValidationException exception ) {
       LOG.errorContext(getXRequestId(), new Exception(

@@ -19,7 +19,7 @@ public class AcspApiClientConfig {
 
     @Bean
     public PrivateAcspProfileResourceHandler getAcspResourceHAndler() {
-        final InternalApiClient internalApiClient = new InternalApiClient(new ApiKeyHttpClient(chsInternalApiKey));
+        final var internalApiClient = new InternalApiClient(new ApiKeyHttpClient(chsInternalApiKey));
         internalApiClient.setInternalBasePath(apiUrl);
         return internalApiClient.privateAcspProfileResourceHandler();
     }
