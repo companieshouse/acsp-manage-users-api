@@ -52,6 +52,9 @@ public class AcspProfileService {
     } catch ( Exception exception ) {
       LOG.errorContext(xRequestId, String.format("Failed to retrieve profile for Acsp %s", acspNumber), exception, null);
       throw new InternalServerErrorRuntimeException("Failed to retrieve Acsp Profile");
+    } finally {
+      LOG.infoContext(xRequestId,
+        "Finished request to acsp-profile-data-api: GET /authorised-corporate-service-providers/{acsp_number}.", null);
     }
   }
 
