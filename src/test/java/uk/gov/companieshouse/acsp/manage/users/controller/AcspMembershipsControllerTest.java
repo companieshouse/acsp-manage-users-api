@@ -2,6 +2,7 @@ package uk.gov.companieshouse.acsp.manage.users.controller;
 
 import java.util.Arrays;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -14,8 +15,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
+import uk.gov.companieshouse.acsp.manage.users.configuration.WebSecurityConfig;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.interceptor.InterceptorHelper;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
@@ -38,12 +43,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
 
 @WebMvcTest(AcspMembershipsController.class)
-@Import(InterceptorHelper.class)
+@Import({InterceptorHelper.class, WebSecurityConfig.class})
 @Tag("unit-test")
 class AcspMembershipsControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private WebApplicationContext context;
 
     @MockBean
     private StaticPropertyUtil staticPropertyUtil;
@@ -64,6 +72,13 @@ class AcspMembershipsControllerTest {
 
     private void mockFetchUserDetailsFor( final String... userIds ) {
         Arrays.stream( userIds ).forEach( userId -> Mockito.doReturn( testDataManager.fetchUserDtos( userId ).getFirst() ).when( usersService ).fetchUserDetails( userId ) );
+    }
+
+    @BeforeEach
+    void setup() {
+        mockMvc = MockMvcBuilders.webAppContextSetup( context )
+                .apply( SecurityMockMvcConfigurers.springSecurity() )
+                .build();
     }
 
     @Nested
