@@ -36,7 +36,14 @@ public class AcspProfileService {
       LOG.infoContext(xRequestId, String.format(
         "Sending request to acsp-profile-data-api: GET /authorised-corporate-service-providers/{acsp_number}. Attempting to retrieve acsp: %s",
         acspNumber), null);
-      return acspProfileEndpoint.getAcspInfo(acspNumber).getData();
+      final var acspProfileApiResponse = acspProfileEndpoint.getAcspInfo(acspNumber);
+      if( !acspProfileApiResponse.hasErrors() ){
+          return acspProfileApiResponse.getData();
+      }
+      throw new InternalServerErrorRuntimeException(String.format(
+        "Error from acsp-profile-data-api: GET /authorised-corporate-service-providers/{acsp_number} for acsp: %s",
+        acspNumber));
+
     } catch ( ApiErrorResponseException exception ) {
       if ( exception.getStatusCode() == 404 ) {
         LOG.errorContext(xRequestId, String.format("Could not find profile for Acsp id: %s", acspNumber), exception, null);
@@ -63,7 +70,6 @@ public class AcspProfileService {
 
     return acspMembers.map(AcspMembersDao::getAcspNumber)
       .distinct()
-      .parallel()
       .map(this::fetchAcspProfile)
       .collect(Collectors.toMap(AcspProfile::getNumber, acspProfile -> acspProfile));
 

@@ -23,6 +23,7 @@ import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.rest.AccountsUserEndpoint;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.accounts.user.model.UsersList;
+import uk.gov.companieshouse.api.error.ApiError;
 import uk.gov.companieshouse.api.error.ApiErrorResponseException;
 import uk.gov.companieshouse.api.handler.accountsuser.request.PrivateAccountsUserUserGet;
 import uk.gov.companieshouse.api.handler.exception.URIValidationException;
@@ -75,6 +76,19 @@ class UsersServiceTest {
         Assertions.assertEquals( "333", response.getUserId() );
     }
 
+    @Test
+    void fetchUserDetailsReturnsInternalServerErrorRuntimeExceptionWhenHasErrors() throws ApiErrorResponseException, URIValidationException, IllegalAccessException, NoSuchFieldException {
+        final var user = new User().userId( "333" );
+
+        final var intendedResponse = new ApiResponse<>( 200, Map.of(), user );
+
+        final var errorsField = intendedResponse.getClass().getDeclaredField("errors");
+        errorsField.setAccessible(true);
+        errorsField.set(intendedResponse, new ArrayList<>( List.of( new ApiError() ) ));
+        Mockito.doReturn( intendedResponse ).when( accountsUserEndpoint ).getUserDetails( any() );
+
+        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> usersService.fetchUserDetails( "333" ) );
+    }
 
     @Test
     void searchUserDetailsWithNullInputThrowsNullPointerException() {

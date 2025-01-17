@@ -2,6 +2,9 @@ package uk.gov.companieshouse.acsp.manage.users.service;
 
 import com.google.api.client.http.HttpHeaders;
 import com.google.api.client.http.HttpResponseException.Builder;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.util.Strings;
@@ -18,6 +21,7 @@ import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRun
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.rest.AcspProfileEndpoint;
 import uk.gov.companieshouse.api.acspprofile.Status;
+import uk.gov.companieshouse.api.error.ApiError;
 import uk.gov.companieshouse.api.error.ApiErrorResponseException;
 import uk.gov.companieshouse.api.handler.exception.URIValidationException;
 import uk.gov.companieshouse.api.model.ApiResponse;
@@ -107,4 +111,17 @@ class AcspProfileServiceTest {
         Assertions.assertEquals( Map.of( "TSA001", acspProfile ), acspProfileService.fetchAcspProfiles( acspMembers.stream() ) );
     }
 
+    @Test
+    void fetchAcspProfileReturnsInternalServerErrorRuntimeExceptionWhenHasErrors() throws ApiErrorResponseException, URIValidationException, NoSuchFieldException, IllegalAccessException {
+        final var acspProfile = testDataManager.fetchAcspProfiles( "TSA001" ).getFirst();
+
+        final var intendedResponse = new ApiResponse<>( 200, Map.of(), acspProfile );
+
+        final var errorsField = intendedResponse.getClass().getDeclaredField("errors");
+        errorsField.setAccessible(true);
+        errorsField.set(intendedResponse, new ArrayList<>( List.of( new ApiError() ) ));
+        Mockito.doReturn( intendedResponse ).when( acspProfileEndpoint ).getAcspInfo( "TSA001" );
+
+        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspProfileService.fetchAcspProfile( "TSA001" ) );
+    }
 }
