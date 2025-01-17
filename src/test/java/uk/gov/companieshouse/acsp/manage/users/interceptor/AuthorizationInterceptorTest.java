@@ -32,7 +32,7 @@ class AuthorizationInterceptorTest {
 
     @BeforeEach
     void setup(){
-         interceptor = new AuthorizationInterceptor( usersService );
+         interceptor = new AuthorizationInterceptor( new InterceptorHelper( usersService ) );
     }
 
     @Test

@@ -70,6 +70,8 @@ class UserAcspMembershipControllerIntegrationTest {
     void getAcspMembershipsForUserIdWithoutXRequestIdReturnsBadRequest() throws Exception {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
+        mockFetchUserDetailsFor("COMU002" );
+
         mockMvc.perform(get("/user/acsps/memberships")
                     .header("Eric-identity", "COMU002")
                     .header("ERIC-Identity-Type", "oauth2")
@@ -81,6 +83,8 @@ class UserAcspMembershipControllerIntegrationTest {
     @Test
     void getAcspMembershipsForUserIdWithWrongIncludeRemovedParameterInBodyReturnsBadRequest() throws Exception {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
+        mockFetchUserDetailsFor("COMU002" );
 
         mockMvc.perform(get("/user/acsps/memberships?include_removed=null")
                     .header("X-Request-Id", "theId123")

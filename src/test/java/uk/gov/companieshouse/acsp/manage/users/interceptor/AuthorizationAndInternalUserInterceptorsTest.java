@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
@@ -19,13 +20,13 @@ import static org.junit.jupiter.api.Assertions.*;
 class AuthorizationAndInternalUserInterceptorsTest {
 
     @Mock
-    private UsersService usersService;
+    UsersService usersService;
 
     private AuthorizationAndInternalUserInterceptors authorizationAndInternalUserInterceptors;
 
     @BeforeEach
     void setup(){
-        authorizationAndInternalUserInterceptors = new AuthorizationAndInternalUserInterceptors( usersService );
+        authorizationAndInternalUserInterceptors = new AuthorizationAndInternalUserInterceptors( new InterceptorHelper( usersService ) );
     }
 
     @Test
