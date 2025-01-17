@@ -108,6 +108,8 @@ class AcspMembershipsControllerIntegrationTest {
         void getMembersForAcspWithoutXRequestIdReturnsBadRequest() throws Exception {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
+            mockFetchUserDetailsFor("COMU002" );
+
             mockMvc.perform( get("/acsps/COMA001/memberships")
                         .header("Eric-identity", "COMU002")
                         .header("ERIC-Identity-Type", "oauth2")
@@ -119,6 +121,8 @@ class AcspMembershipsControllerIntegrationTest {
         @Test
         void getMembersForAcspWithMalformedAcspNumberReturnsBadRequest() throws Exception {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
+            mockFetchUserDetailsFor("COMU002" );
 
             mockMvc.perform(get("/acsps/££££££/memberships")
                         .header("X-Request-Id", "theId123")
@@ -133,6 +137,7 @@ class AcspMembershipsControllerIntegrationTest {
         void getMembersForAcspWithNonExistentAcspNumberReturnsNotFound() throws Exception {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
+            mockFetchUserDetailsFor("COMU002" );
             Mockito.doThrow(new NotFoundRuntimeException("acsp-manage-users-api", "Was not found")).when(
                     acspProfileService).fetchAcspProfile("919191");
 
@@ -250,6 +255,8 @@ class AcspMembershipsControllerIntegrationTest {
         void findMembershipsForUserAndAcspWithoutXRequestIdReturnsBadRequest() throws Exception {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
+            mockFetchUserDetailsFor("COMU002" );
+
             mockMvc.perform(post("/acsps/COMA001/memberships/lookup")
                             .header("Eric-identity", "COMU002")
                             .header("ERIC-Identity-Type", "oauth2")
@@ -263,6 +270,8 @@ class AcspMembershipsControllerIntegrationTest {
         @Test
         void findMembershipsForUserAndAcspWithMalformedAcspNumberReturnsBadRequest() throws Exception {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
+            mockFetchUserDetailsFor("COMU002" );
 
             mockMvc.perform(post("/acsps/££££££/memberships/lookup")
                             .header("X-Request-Id", "theId123")
@@ -279,7 +288,8 @@ class AcspMembershipsControllerIntegrationTest {
         void findMembershipsForUserAndAcspWithNonExistentAcspNumberReturnsNotFound() throws Exception {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
-          Mockito.doThrow(new NotFoundRuntimeException("acsp-manage-users-api", "Was not found")).when(
+            mockFetchUserDetailsFor("COMU002" );
+            Mockito.doThrow(new NotFoundRuntimeException("acsp-manage-users-api", "Was not found")).when(
                   acspProfileService).fetchAcspProfile("NONEXISTENT");
 
           mockMvc.perform(post("/acsps/NONEXISTENT/memberships/lookup")
@@ -297,6 +307,8 @@ class AcspMembershipsControllerIntegrationTest {
         void findMembershipsForUserAndAcspWithNullUserEmailReturnsBadRequest() throws Exception {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
+            mockFetchUserDetailsFor("COMU002" );
+
             mockMvc.perform(post("/acsps/COMA001/memberships/lookup")
                           .header("X-Request-Id", "theId123")
                           .header("Eric-identity", "COMU002")
@@ -312,6 +324,7 @@ class AcspMembershipsControllerIntegrationTest {
         void findMembershipsForUserAndAcspWithNonExistentUserReturnsNotFound() throws Exception {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
+            mockFetchUserDetailsFor("COMU002" );
             Mockito.doReturn(new UsersList()).when(usersService).searchUserDetails(List.of("shaun.lock@comedy.com"));
             mockMvc.perform(post("/acsps/COMA001/memberships/lookup")
                             .header("X-Request-Id", "theId123")
@@ -334,6 +347,7 @@ class AcspMembershipsControllerIntegrationTest {
 
             acspMembersRepository.insert(acspMemberDaos);
 
+            mockFetchUserDetailsFor("COMU002" );
             Mockito.doReturn(usersList).when(usersService).searchUserDetails(List.of(userDto.getEmail()));
             Mockito.doReturn(acspProfile).when(acspProfileService).fetchAcspProfile("COMA001");
 
@@ -364,6 +378,8 @@ class AcspMembershipsControllerIntegrationTest {
 
             acspMembersRepository.insert(activeMembers);
             acspMembersRepository.insert(removedMembers);
+
+            mockFetchUserDetailsFor("COMU002" );
 
             final var usersList = new UsersList();
             usersList.add(activeUserDto);
@@ -399,6 +415,7 @@ class AcspMembershipsControllerIntegrationTest {
             usersList.add(removedUserDto);
             Mockito.doReturn( usersList ).when( usersService ).searchUserDetails(List.of(removedUserDto.getEmail()));
             Mockito.doReturn(acspProfile).when(acspProfileService).fetchAcspProfile("COMA001");
+            mockFetchUserDetailsFor("COMU002" );
 
             final var response =
             mockMvc.perform(post("/acsps/COMA001/memberships/lookup?include_removed=true")
@@ -429,6 +446,7 @@ class AcspMembershipsControllerIntegrationTest {
             usersList.add(removedUserDto);
             Mockito.doReturn( usersList ).when( usersService ).searchUserDetails(List.of(removedUserDto.getEmail()));
             Mockito.doReturn(acspProfile).when(acspProfileService).fetchAcspProfile("COMA001");
+            mockFetchUserDetailsFor("COMU002" );
 
             final var response =
             mockMvc.perform(post("/acsps/COMA001/memberships/lookup?include_removed=false")
@@ -454,6 +472,7 @@ class AcspMembershipsControllerIntegrationTest {
         void addMemberForAcspWithoutXRequestIdReturnsBadRequest() throws Exception {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
+            mockFetchUserDetailsFor("COMU002" );
             mockMvc.perform(post("/acsps/TSA001/memberships")
                         .header("Eric-identity", "COMU002")
                         .header("ERIC-Identity-Type", "oauth2")
@@ -467,6 +486,8 @@ class AcspMembershipsControllerIntegrationTest {
         @Test
         void addMemberForAcspWithMalformedUserIdReturnsBadRequest() throws Exception {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
+            mockFetchUserDetailsFor("COMU002" );
 
             mockMvc.perform( post( "/acsps/TSA001/memberships" )
                             .header( "X-Request-Id", "theId123" )
@@ -483,6 +504,8 @@ class AcspMembershipsControllerIntegrationTest {
         void addMemberForAcspWithMalformedAcspNumberReturnsBadRequest() throws Exception {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
+            mockFetchUserDetailsFor("COMU002" );
+
             mockMvc.perform( post( "/acsps/TSA001-&/memberships" )
                             .header( "X-Request-Id", "theId123" )
                             .header( "Eric-identity", "COMU002" )
@@ -497,6 +520,8 @@ class AcspMembershipsControllerIntegrationTest {
         @Test
         void addMemberForAcspWithoutUserIdInBodyReturnsBadRequest() throws Exception {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
+            mockFetchUserDetailsFor("COMU002" );
 
             mockMvc.perform( post( "/acsps/TSA001/memberships" )
                             .header( "X-Request-Id", "theId123" )
@@ -513,6 +538,8 @@ class AcspMembershipsControllerIntegrationTest {
         void addMemberForAcspWithoutUserRoleReturnsBadRequest() throws Exception {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
+            mockFetchUserDetailsFor("COMU002" );
+
             mockMvc.perform( post( "/acsps/TSA001/memberships" )
                             .header( "X-Request-Id", "theId123" )
                             .header( "Eric-identity", "COMU002" )
@@ -527,6 +554,8 @@ class AcspMembershipsControllerIntegrationTest {
         @Test
         void addMemberForAcspWithNonexistentUserRoleReturnsBadRequest() throws Exception {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
+
+            mockFetchUserDetailsFor("COMU002" );
 
             mockMvc.perform( post( "/acsps/TSA001/memberships" )
                             .header( "X-Request-Id", "theId123" )
@@ -543,6 +572,7 @@ class AcspMembershipsControllerIntegrationTest {
         void addMemberForAcspWithNonexistentAcspNumberReturnsBadRequest() throws Exception {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
+            mockFetchUserDetailsFor("COMU002" );
             Mockito.doThrow( new NotFoundRuntimeException( "", "" ) ).when(acspProfileService).fetchAcspProfile( "TSA001" );
 
             mockMvc.perform( post( "/acsps/TSA001/memberships" )
@@ -560,6 +590,7 @@ class AcspMembershipsControllerIntegrationTest {
         void addMemberForAcspWithNonexistentUserIdReturnsBadRequest() throws Exception {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
+            mockFetchUserDetailsFor("COMU002" );
             Mockito.doThrow( new NotFoundRuntimeException( "", "" ) ).when( usersService ).fetchUserDetails( "COMU001" );
 
             mockMvc.perform( post( "/acsps/TSA001/memberships" )

@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.acsp.manage.users.integration;
 
+import java.util.Arrays;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
@@ -95,9 +96,15 @@ class AcspMembershipControllerTest {
         } ).when( emailProducer ).sendEmail( any(), any() );
     }
 
+    private void mockFetchUserDetailsFor( final String... userIds ) {
+        Arrays.stream( userIds ).forEach( userId -> Mockito.doReturn( testDataManager.fetchUserDtos( userId ).getFirst() ).when( usersService ).fetchUserDetails( userId ) );
+    }
+
     @Test
     void getAcspMembershipForAcspAndIdWithoutXRequestIdReturnsBadRequest() throws Exception {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
+        mockFetchUserDetailsFor("67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
         mockMvc.perform( get( "/acsps/memberships/TS001" )
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
@@ -111,6 +118,8 @@ class AcspMembershipControllerTest {
     void getAcspMembershipForAcspAndIdWithMalformedMembershipIdReturnsBadRequest() throws Exception {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
 
+        mockFetchUserDetailsFor("67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+
         mockMvc.perform( get( "/acsps/memberships/$$$" )
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
@@ -123,6 +132,8 @@ class AcspMembershipControllerTest {
     @Test
     void getAcspMembershipForAcspAndIdWithNonexistentMembershipIdReturnsNotFound() throws Exception {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
+        mockFetchUserDetailsFor("67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
         mockMvc.perform( get( "/acsps/memberships/TS001" )
                         .header("X-Request-Id", "theId123")
@@ -140,6 +151,7 @@ class AcspMembershipControllerTest {
         final var dao = testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst();
         acspMembersRepository.insert( dao );
 
+        mockFetchUserDetailsFor("67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
         Mockito.doReturn( testDataManager.fetchUserDtos( "TSU001" ).getFirst() ).when( usersService ).fetchUserDetails( "TSU001" );
         Mockito.doReturn( testDataManager.fetchAcspProfiles( "TSA001" ).getFirst() ).when(
                 acspProfileService).fetchAcspProfile( "TSA001" );
@@ -193,6 +205,8 @@ class AcspMembershipControllerTest {
     void updateAcspMembershipForAcspAndIdWithNullXRequestIdThrowsBadRequest() throws Exception {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
 
+        mockFetchUserDetailsFor("67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+
         mockMvc.perform( patch( "/acsps/memberships/WIT001" )
                         .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
@@ -206,6 +220,8 @@ class AcspMembershipControllerTest {
     @Test
     void updateAcspMembershipForAcspAndIdWithMalformedMembershipIdThrowsBadRequest() throws Exception {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
+        mockFetchUserDetailsFor("67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
         mockMvc.perform( patch( "/acsps/memberships/£££" )
                         .header("X-Request-Id", "theId123")
@@ -238,6 +254,8 @@ class AcspMembershipControllerTest {
     @Test
     void updateAcspMembershipForAcspAndIdWithoutRequestBodyReturnsBadRequest() throws Exception {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
+
+        mockFetchUserDetailsFor("67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT001" )
                         .header("X-Request-Id", "theId123")
