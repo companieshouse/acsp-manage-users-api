@@ -31,8 +31,7 @@ public class UserAcspMembershipController implements UserAcspMembershipInterface
 
     LOG.infoContext( xRequestId, String.format( "Received request with user_id=%s, include_removed=%b", ericIdentity, includeRemoved ), null );
 
-    final var loggedUser = UserContext.getLoggedUser();
-    Optional.ofNullable(loggedUser).orElseThrow(()-> new InternalServerErrorRuntimeException(String.format("User not in context:%s",ericIdentity)));
+    final var loggedUser = Optional.ofNullable( UserContext.getLoggedUser() ).orElseThrow( ()-> new InternalServerErrorRuntimeException( String.format( "User not in context:%s",ericIdentity ) ) );
     LOG.debugContext( xRequestId, String.format( "Attempting to fetch memberships for user %s", loggedUser.getUserId() ), null );
     final var acspMemberships =
       acspMembersService.fetchAcspMemberships(loggedUser, includeRemoved);
