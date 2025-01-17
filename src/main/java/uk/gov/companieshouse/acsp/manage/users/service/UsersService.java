@@ -39,7 +39,11 @@ public class UsersService {
     try {
       LOG.infoContext(xRequestId,
         String.format("Sending request to accounts-user-api: GET /users/{user_id}. Attempting to retrieve user: %s", userId), null);
-      return accountsUserEndpoint.getUserDetails(userId).getData();
+      final var userApiResponse = accountsUserEndpoint.getUserDetails(userId);
+      if(!userApiResponse.hasErrors()){
+        return userApiResponse.getData();
+      }
+      throw new InternalServerErrorRuntimeException(String.format("Error from accounts-user-api: GET /users/{user_id}. for user: %s", userId));
 
     } catch ( ApiErrorResponseException exception ) {
       if ( exception.getStatusCode() == 404 ) {
@@ -106,7 +110,6 @@ public class UsersService {
 
     return acspMembers.map(AcspMembersDao::getUserId)
       .distinct()
-      .parallel()
       .map(this::fetchUserDetails)
       .collect(Collectors.toMap(User::getUserId, user -> user));
 
