@@ -13,6 +13,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
+import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.api.acspprofile.AcspProfile;
 import uk.gov.companieshouse.api.error.ApiErrorResponseException;
 import uk.gov.companieshouse.api.handler.acspprofile.PrivateAcspProfileResourceHandler;
@@ -37,9 +39,9 @@ class AcspProfileEndpointTest {
 
 
     @Test
-    void getAcspInfoWithNullInputThrowsNullPointerExceptionException(){
+    void getAcspInfoWithNullInputThrowsInternalException(){
         Mockito.doThrow(NullPointerException.class).when(privateAcspProfileResourceHandler).getAcspInfo( any() );
-        Assertions.assertThrows( NullPointerException.class, () -> acspProfileEndpoint.getAcspInfo( null ) );
+        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspProfileEndpoint.getAcspInfo( null ) );
     }
 
     @Test
@@ -48,7 +50,7 @@ class AcspProfileEndpointTest {
         Mockito.doReturn( privateAcspProfileAcspInfoGet ).when( privateAcspProfileResourceHandler ).getAcspInfo( any() );
         Mockito.doThrow( new URIValidationException( "URI pattern does not match expected URI pattern for this resource." ) ).when( privateAcspProfileAcspInfoGet ).execute();
 
-        Assertions.assertThrows( URIValidationException.class, () -> acspProfileEndpoint.getAcspInfo( "£££" ) );
+        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspProfileEndpoint.getAcspInfo( "£££" ) );
     }
 
     @Test
@@ -57,7 +59,7 @@ class AcspProfileEndpointTest {
         Mockito.doReturn( privateAcspProfileAcspInfoGet ).when( privateAcspProfileResourceHandler ).getAcspInfo( any() );
         Mockito.doThrow( new ApiErrorResponseException( new Builder( 404, "Not Found", new HttpHeaders() ) ) ).when( privateAcspProfileAcspInfoGet ).execute();
 
-        Assertions.assertThrows( ApiErrorResponseException.class, () -> acspProfileEndpoint.getAcspInfo( "TSA001" ) );
+        Assertions.assertThrows( NotFoundRuntimeException.class, () -> acspProfileEndpoint.getAcspInfo( "TSA001" ) );
     }
 
     @Test
@@ -68,9 +70,9 @@ class AcspProfileEndpointTest {
         final var intendedResponse = new ApiResponse<>( 200, Map.of(), new AcspProfile() );
         Mockito.doReturn( intendedResponse ).when( privateAcspProfileAcspInfoGet ).execute();
         final var response = acspProfileEndpoint.getAcspInfo( "TSA001" );
-
-        Assertions.assertEquals( 200, response.getStatusCode() );
-        Assertions.assertEquals( new AcspProfile(), response.getData() );
+        Assertions.assertEquals( new AcspProfile(), response );
     }
+
+
 
 }
