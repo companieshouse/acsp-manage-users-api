@@ -38,9 +38,13 @@ public class AccountsUserEndpoint {
         LOG.infoContext(xRequestId,
           String.format("Sending request to accounts-user-api: GET /users/search. Attempting to retrieve users: %s", String.join(", ", emails)),
           null);
-        return privateAccountsUserResourceHandler
-                .searchUserDetails(searchUserDetailsUrl, emails)
-                .execute()
+        final var response = privateAccountsUserResourceHandler
+          .searchUserDetails(searchUserDetailsUrl, emails)
+          .execute();
+        if(response.hasErrors()){
+          throw new InternalServerErrorRuntimeException("Failed to search for user info");
+        }
+        return response
                 .getData();
       }  catch ( ApiErrorResponseException exception ) {
           LOG.errorContext(xRequestId, FAILED_TO_RETRIEVE_USER_DETAILS, exception, null);
@@ -64,9 +68,13 @@ public class AccountsUserEndpoint {
       try {
         LOG.infoContext(xRequestId,
           String.format("Sending request to accounts-user-api: GET /users/{user_id}. Attempting to retrieve user: %s", userId), null);
-        return privateAccountsUserResourceHandler
-                .getUserDetails(getUserDetailsUrl)
-                .execute()
+        final var response = privateAccountsUserResourceHandler
+          .getUserDetails(getUserDetailsUrl)
+          .execute();
+        if(response.hasErrors()){
+          throw new InternalServerErrorRuntimeException(FAILED_TO_RETRIEVE_USER_DETAILS);
+        }
+        return response
                 .getData();
       } catch ( ApiErrorResponseException exception ) {
         if ( exception.getStatusCode() == 404 ) {

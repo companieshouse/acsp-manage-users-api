@@ -31,9 +31,12 @@ public class AcspProfileEndpoint {
         LOG.infoContext(xRequestId, String.format(
           "Sending request to acsp-profile-data-api: GET /authorised-corporate-service-providers/{acsp_number}. Attempting to retrieve acsp: %s",
           acspNumber), null);
-        return privateAcspProfileResourceHandler.getAcspInfo( getAcspInfoUrl )
-          .execute()
-          .getData();
+        final var response = privateAcspProfileResourceHandler.getAcspInfo( getAcspInfoUrl )
+          .execute();
+        if(response.hasErrors()){
+          throw new InternalServerErrorRuntimeException("acsp-manage-users-api - Failed to find Acsp Profile");
+        }
+        return response.getData();
       } catch ( ApiErrorResponseException exception ) {
           if ( exception.getStatusCode() == 404 ) {
               LOG.errorContext(xRequestId, String.format("Could not find profile for Acsp id: %s", acspNumber), exception, null);
