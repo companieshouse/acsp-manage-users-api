@@ -1,11 +1,14 @@
 package uk.gov.companieshouse.acsp.manage.users.configuration;
 
+import static uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil.APPLICATION_NAMESPACE;
+
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import uk.gov.companieshouse.acsp.manage.users.interceptor.*;
+import uk.gov.companieshouse.api.interceptor.RolePermissionInterceptor;
 import uk.gov.companieshouse.api.interceptor.TokenPermissionsInterceptor;
 
 @Configuration
@@ -57,6 +60,8 @@ public class InterceptorConfig implements WebMvcConfigurer {
         registry.addInterceptor( new AcspDataRetrievalPermissionInterceptor() )
                 .addPathPatterns( OAUTH_AND_KEY_PROTECTED_ENDPOINTS )
                 .excludePathPatterns( HEALTH_CHECK_ENDPOINT, OAUTH_PROTECTED_ENDPOINTS );
+
+        registry.addInterceptor( new RolePermissionInterceptor( APPLICATION_NAMESPACE, "/admin/test/permission" ) );
 
     }
 
