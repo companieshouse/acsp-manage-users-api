@@ -32,7 +32,7 @@ public class AcspProfileService {
         this.acspWebClient = acspWebClient;
     }
 
-    private Mono<AcspProfile> toFetchAcspProfileRequest( final String acspNumber ) {
+    private Mono<AcspProfile> toFetchAcspProfileRequest( final String acspNumber, final String xRequestId ) {
         return acspWebClient.get()
                 .uri( String.format( "/authorised-corporate-service-providers/%s", acspNumber ) )
                 .retrieve()
@@ -41,26 +41,28 @@ public class AcspProfileService {
                 .onErrorMap( throwable -> {
                     if ( throwable instanceof WebClientResponseException exception ){
                         if ( NOT_FOUND.equals( exception.getStatusCode() ) ){
-                            LOG.errorContext( getXRequestId(), String.format( "Could not find profile for Acsp id: %s", acspNumber ), exception, null );
+                            LOG.errorContext( xRequestId, String.format( "Could not find profile for Acsp id: %s", acspNumber ), exception, null );
                             return new NotFoundRuntimeException( APPLICATION_NAMESPACE, "Failed to find Acsp Profile" );
                         }
                     }
-                    LOG.errorContext( getXRequestId(), String.format( "Failed to retrieve profile for Acsp id: %s", acspNumber ), (Exception) throwable, null );
+                    LOG.errorContext( xRequestId, String.format( "Failed to retrieve profile for Acsp id: %s", acspNumber ), (Exception) throwable, null );
                     throw new InternalServerErrorRuntimeException( "Failed to retrieve Acsp Profile" );
                 } )
-                .doOnSubscribe( onSubscribe -> LOG.infoContext( getXRequestId(), String.format( "Sending request to acsp-profile-data-api: GET /authorised-corporate-service-providers/{acsp_number}. Attempting to retrieve acsp: %s", acspNumber ), null ) )
-                .doFinally( signalType -> LOG.infoContext( getXRequestId(), String.format( "Finished request to acsp-profile-data-api for acsp: %s.", acspNumber ), null ) );
+                .doOnSubscribe( onSubscribe -> LOG.infoContext( xRequestId, String.format( "Sending request to acsp-profile-data-api: GET /authorised-corporate-service-providers/{acsp_number}. Attempting to retrieve acsp: %s", acspNumber ), null ) )
+                .doFinally( signalType -> LOG.infoContext( xRequestId, String.format( "Finished request to acsp-profile-data-api for acsp: %s.", acspNumber ), null ) );
     }
 
     public AcspProfile fetchAcspProfile( final String acspNumber ){
-        return toFetchAcspProfileRequest( acspNumber ).block( Duration.ofSeconds( 20L ) );
+        final var xRequestId = getXRequestId();
+        return toFetchAcspProfileRequest( acspNumber, xRequestId ).block( Duration.ofSeconds( 20L ) );
     }
 
     public Map<String, AcspProfile> fetchAcspProfiles( final Stream<AcspMembersDao> acspMembers ) {
+        final var xRequestId = getXRequestId();
         return Flux.fromStream( acspMembers )
                 .map( AcspMembersDao::getAcspNumber )
                 .distinct()
-                .flatMap( this::toFetchAcspProfileRequest )
+                .flatMap( acspNumber -> toFetchAcspProfileRequest( acspNumber, xRequestId ) )
                 .collectMap( AcspProfile::getNumber )
                 .block( Duration.ofSeconds( 20L ) );
     }

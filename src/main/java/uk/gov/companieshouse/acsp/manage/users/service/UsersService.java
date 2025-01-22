@@ -35,7 +35,7 @@ public class UsersService {
         this.usersWebClient = usersWebClient;
     }
 
-    private Mono<User> toFetchUserDetailsRequest( final String userId ) {
+    private Mono<User> toFetchUserDetailsRequest( final String userId, final String xRequestId ) {
         return usersWebClient.get()
                 .uri( String.format( "/users/%s", userId ) )
                 .retrieve()
@@ -44,42 +44,45 @@ public class UsersService {
                 .onErrorMap( throwable -> {
                     if ( throwable instanceof WebClientResponseException exception ){
                         if ( NOT_FOUND.equals( exception.getStatusCode() ) ){
-                            LOG.errorContext( getXRequestId(), String.format( "Could not find user details for user with id %s", userId ), exception, null );
+                            LOG.errorContext( xRequestId, String.format( "Could not find user details for user with id %s", userId ), exception, null );
                             return new NotFoundRuntimeException( APPLICATION_NAMESPACE, "Failed to find user" );
                         }
                     }
-                    LOG.errorContext( getXRequestId(), String.format( "Failed to retrieve user details for user with id %s", userId ), (Exception) throwable, null );
+                    LOG.errorContext( xRequestId, String.format( "Failed to retrieve user details for user with id %s", userId ), (Exception) throwable, null );
                     throw new InternalServerErrorRuntimeException( "Failed to retrieve user details" );
                 } )
-                .doOnSubscribe( onSubscribe -> LOG.infoContext( getXRequestId(), String.format( "Sending request to accounts-user-api: GET /users/{user_id}. Attempting to retrieve user: %s", userId ), null ) )
-                .doFinally( signalType -> LOG.infoContext( getXRequestId(), String.format( "Finished request to accounts-user-api for user: %s", userId ), null ) );
+                .doOnSubscribe( onSubscribe -> LOG.infoContext( xRequestId, String.format( "Sending request to accounts-user-api: GET /users/{user_id}. Attempting to retrieve user: %s", userId ), null ) )
+                .doFinally( signalType -> LOG.infoContext( xRequestId, String.format( "Finished request to accounts-user-api for user: %s", userId ), null ) );
     }
 
     public User fetchUserDetails( final String userId ){
-        return toFetchUserDetailsRequest( userId ).block( Duration.ofSeconds( 20L ) );
+        final var xRequestId = getXRequestId();
+        return toFetchUserDetailsRequest( userId, xRequestId ).block( Duration.ofSeconds( 20L ) );
     }
 
     public Map<String, User> fetchUserDetails( final Stream<AcspMembersDao> acspMembers ){
+        final var xRequestId = getXRequestId();
         return Flux.fromStream( acspMembers )
                 .map( AcspMembersDao::getUserId )
                 .distinct()
-                .flatMap( this::toFetchUserDetailsRequest )
+                .flatMap( userId -> toFetchUserDetailsRequest( userId, xRequestId ) )
                 .collectMap( User::getUserId )
                 .block( Duration.ofSeconds( 20L ) );
     }
 
     public UsersList searchUserDetails( final List<String> emails ) {
+        final var xRequestId = getXRequestId();
         return usersWebClient.get()
                 .uri( "/users/search?user_email=" + String.join( "&user_email=", emails ) )
                 .retrieve()
                 .bodyToMono( String.class )
                 .map( parseJsonTo( UsersList.class ) )
                 .onErrorMap( throwable -> {
-                    LOG.errorContext( getXRequestId(), "Failed to retrieve user details", (Exception) throwable, null );
+                    LOG.errorContext( xRequestId, "Failed to retrieve user details", (Exception) throwable, null );
                     throw new InternalServerErrorRuntimeException( "Failed to retrieve user details" );
                 } )
-                .doOnSubscribe( onSubscribe -> LOG.infoContext( getXRequestId(), String.format( "Sending request to accounts-user-api: GET /users/search. Attempting to retrieve users: %s", String.join( ", ", emails ) ), null ) )
-                .doFinally( signalType -> LOG.infoContext( getXRequestId(), String.format( "Finished request to accounts-user-api for users: %s", String.join( ", ", emails ) ), null ) )
+                .doOnSubscribe( onSubscribe -> LOG.infoContext( xRequestId, String.format( "Sending request to accounts-user-api: GET /users/search. Attempting to retrieve users: %s", String.join( ", ", emails ) ), null ) )
+                .doFinally( signalType -> LOG.infoContext( xRequestId, String.format( "Finished request to accounts-user-api for users: %s", String.join( ", ", emails ) ), null ) )
                 .block( Duration.ofSeconds( 20L ) );
     }
 
