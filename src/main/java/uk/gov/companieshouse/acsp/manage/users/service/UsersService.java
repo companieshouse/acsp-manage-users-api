@@ -59,13 +59,6 @@ public class UsersService {
         return toFetchUserDetailsRequest( userId ).block( Duration.ofSeconds( 20L ) );
     }
 
-    public boolean doesUserExist( final String userId ) {
-        return Boolean.TRUE.equals( toFetchUserDetailsRequest( userId )
-                .map( Objects::nonNull )
-                .onErrorResume( NotFoundRuntimeException.class, throwable -> Mono.just( false ) )
-                .block( Duration.ofSeconds( 20L ) ) );
-    }
-
     public Map<String, User> fetchUserDetails( final Stream<AcspMembersDao> acspMembers ){
         return Flux.fromStream( acspMembers )
                 .map( AcspMembersDao::getUserId )

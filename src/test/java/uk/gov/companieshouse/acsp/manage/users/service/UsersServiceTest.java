@@ -135,33 +135,6 @@ class UsersServiceTest {
     }
 
     @Test
-    void doesUserExistWithMalformedUserIdReturnsInternalServerErrorRuntimeException(){
-        mockWebClientForFetchUserDetailsErrorResponse( "£$@123", 400 );
-        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> usersService.doesUserExist( "£$@123" ) );
-    }
-
-    @Test
-    void doesUserExistWithArbitraryErrorReturnsInternalServerErrorRuntimeException() {
-        mockWebClientForFetchUserDetailsJsonParsingError( "WITU001" );
-        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> usersService.doesUserExist( "WITU001" ) );
-    }
-
-    @Test
-    void doesUserExistWithExistingUserReturnsTrue() throws JsonProcessingException {
-        mockWebClientForFetchUserDetails( "WITU001" );
-        Assertions.assertTrue( usersService.doesUserExist( "WITU001" ) );
-    }
-
-    @Test
-    void doesUserExistWithNullOrNonexistentUserReturnsFalse() {
-        mockWebClientForFetchUserDetailsErrorResponse( null, 404 );
-        Assertions.assertFalse( usersService.doesUserExist( null ) );
-
-        mockWebClientForFetchUserDetailsErrorResponse( "404User", 404 );
-        Assertions.assertFalse( usersService.doesUserExist( "404User" ) );
-    }
-
-    @Test
     void fetchUserDetailsWithNullStreamThrowsNullPointerException(){
         Assertions.assertThrows( NullPointerException.class, () -> usersService.fetchUserDetails( (Stream<AcspMembersDao>) null ) );
     }
