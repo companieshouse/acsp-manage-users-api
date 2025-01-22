@@ -6,18 +6,18 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
-public class ReactiveUsersWebClientConfig {
+public class AcspWebClientConfig {
 
-    @Value( "${account.api.url}" )
-    private String accountApiUrl;
+    @Value( "${api.url}" )
+    private String apiUrl;
 
     @Value( "${chs.internal.api.key}" )
     private String chsInternalApiKey;
 
     @Bean
-    public WebClient usersWebClient(){
+    public WebClient acspWebClient(){
         return WebClient.builder()
-                .baseUrl( accountApiUrl )
+                .baseUrl( apiUrl )
                 .defaultHeader( "Authorization", chsInternalApiKey )
                 .build();
     }

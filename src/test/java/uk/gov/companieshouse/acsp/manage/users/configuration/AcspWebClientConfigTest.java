@@ -6,11 +6,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Tag("unit-test")
-class ReactiveAcspWebClientConfigTest {
+class AcspWebClientConfigTest {
 
     @Test
     void webClientIsCreatedCorrectly(){
-        Assertions.assertTrue( WebClient.class.isAssignableFrom( new ReactiveAcspWebClientConfig().acspWebClient().getClass() ) );
+        Assertions.assertTrue( WebClient.class.isAssignableFrom( new AcspWebClientConfig().acspWebClient().getClass() ) );
     }
 
 }
