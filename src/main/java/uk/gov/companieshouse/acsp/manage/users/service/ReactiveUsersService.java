@@ -60,11 +60,10 @@ public class ReactiveUsersService {
     }
 
     public boolean doesUserExist( final String userId ) {
-        return toFetchUserDetailsRequest( userId )
+        return Boolean.TRUE.equals( toFetchUserDetailsRequest( userId )
                 .map( Objects::nonNull )
                 .onErrorResume( NotFoundRuntimeException.class, throwable -> Mono.just( false ) )
-                .block( Duration.ofSeconds( 20L ) )
-                .booleanValue();
+                .block( Duration.ofSeconds( 20L ) ) );
     }
 
     public Map<String, User> fetchUserDetails( final Stream<AcspMembersDao> acspMembers ){
