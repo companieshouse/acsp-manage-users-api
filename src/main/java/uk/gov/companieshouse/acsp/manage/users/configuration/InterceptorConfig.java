@@ -46,6 +46,10 @@ public class InterceptorConfig implements WebMvcConfigurer {
                 .addPathPatterns( OAUTH_AND_KEY_PROTECTED_ENDPOINTS )
                 .excludePathPatterns( HEALTH_CHECK_ENDPOINT, OAUTH_PROTECTED_ENDPOINTS );
 
+        registry.addInterceptor( new AdminPermissionsInterceptor() )
+                .addPathPatterns( OAUTH_PROTECTED_ENDPOINTS, OAUTH_AND_KEY_PROTECTED_ENDPOINTS )
+                .excludePathPatterns( HEALTH_CHECK_ENDPOINT );
+
         registry.addInterceptor( new TokenPermissionsInterceptor() )
                 .addPathPatterns( OAUTH_AND_KEY_PROTECTED_ENDPOINTS )
                 .excludePathPatterns( HEALTH_CHECK_ENDPOINT, OAUTH_PROTECTED_ENDPOINTS );

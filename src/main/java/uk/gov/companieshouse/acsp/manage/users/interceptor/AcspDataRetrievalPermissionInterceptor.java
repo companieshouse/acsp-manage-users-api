@@ -17,10 +17,11 @@ public class AcspDataRetrievalPermissionInterceptor implements HandlerIntercepto
 
     private static final Logger LOGGER = LoggerFactory.getLogger( StaticPropertyUtil.APPLICATION_NAMESPACE );
     private static final String X_REQUEST_ID = "X-Request-Id";
+    private static final String HAS_ADMIN_PRIVILEGE = "has_admin_privilege";
 
     @Override
     public boolean preHandle( final HttpServletRequest request, final HttpServletResponse response, final Object handler ) {
-        if ( !isOAuth2Request() || requestingUserIsPermittedToRetrieveAcspData() ){
+        if ( !isOAuth2Request() || requestingUserIsPermittedToRetrieveAcspData() || (boolean) request.getAttribute( HAS_ADMIN_PRIVILEGE ) ){
             return true;
         }
 

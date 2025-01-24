@@ -53,6 +53,8 @@ class SessionValidityInterceptorTest {
 
         final var response = new MockHttpServletResponse();
 
+        new AdminPermissionsInterceptor().preHandle( request, response, null );
+
         assertTrue( sessionValidityInterceptor.preHandle( request, response, null ) );
     }
 
@@ -71,6 +73,7 @@ class SessionValidityInterceptorTest {
         final var response = new MockHttpServletResponse();
 
         new TokenPermissionsInterceptor().preHandle( request, response, null );
+        new AdminPermissionsInterceptor().preHandle( request, response, null );
 
         assertFalse( sessionValidityInterceptor.preHandle( request, response, null ) );
         assertEquals(403, response.getStatus() );
@@ -92,6 +95,7 @@ class SessionValidityInterceptorTest {
         final var response = new MockHttpServletResponse();
 
         new TokenPermissionsInterceptor().preHandle( request, response, null );
+        new AdminPermissionsInterceptor().preHandle( request, response, null );
 
         assertFalse( sessionValidityInterceptor.preHandle( request, response, null ) );
         assertEquals(403, response.getStatus() );
@@ -112,6 +116,7 @@ class SessionValidityInterceptorTest {
         final var response = new MockHttpServletResponse();
 
         new TokenPermissionsInterceptor().preHandle( request, response, null );
+        new AdminPermissionsInterceptor().preHandle( request, response, null );
 
         assertFalse( sessionValidityInterceptor.preHandle( request, response, null ) );
         assertEquals(403, response.getStatus() );
@@ -133,6 +138,7 @@ class SessionValidityInterceptorTest {
         final var response = new MockHttpServletResponse();
 
         new TokenPermissionsInterceptor().preHandle( request, response, null );
+        new AdminPermissionsInterceptor().preHandle( request, response, null );
 
         assertFalse( sessionValidityInterceptor.preHandle( request, response, null ) );
         assertEquals(403, response.getStatus() );
@@ -176,6 +182,7 @@ class SessionValidityInterceptorTest {
         final var response = new MockHttpServletResponse();
 
         new TokenPermissionsInterceptor().preHandle( request, response, null );
+        new AdminPermissionsInterceptor().preHandle( request, response, null );
 
         assertFalse( sessionValidityInterceptor.preHandle( request, response, null ) );
         assertEquals(403, response.getStatus() );
@@ -199,6 +206,26 @@ class SessionValidityInterceptorTest {
         final var response = new MockHttpServletResponse();
 
         new TokenPermissionsInterceptor().preHandle( request, response, null );
+        new AdminPermissionsInterceptor().preHandle( request, response, null );
+
+        assertTrue( sessionValidityInterceptor.preHandle( request, response, null ) );
+    }
+
+    @Test
+    void preHandleReturnsTrueForAdminUser() throws InvalidTokenPermissionException {
+        final var request = new MockHttpServletRequest();
+        request.addHeader( "ERIC-Identity-Type", "oauth2" );
+        request.addHeader( "ERIC-Authorised-Roles", "/admin/acsp/search" );
+        request.setMethod( "GET" );
+        request.setRequestURI( "/acsps/WITA001/memberships" );
+
+        final var requestAttributes = new ServletRequestAttributes( request );
+        RequestContextHolder.setRequestAttributes( requestAttributes );
+
+        final var response = new MockHttpServletResponse();
+
+        new TokenPermissionsInterceptor().preHandle( request, response, null );
+        new AdminPermissionsInterceptor().preHandle( request, response, null );
 
         assertTrue( sessionValidityInterceptor.preHandle( request, response, null ) );
     }
