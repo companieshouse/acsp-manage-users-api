@@ -13,7 +13,6 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
-import uk.gov.companieshouse.api.util.security.AuthorisationUtil;
 
 @Component
 public class AdminPermissionsInterceptor implements HandlerInterceptor {
@@ -53,11 +52,7 @@ public class AdminPermissionsInterceptor implements HandlerInterceptor {
     public boolean preHandle( final HttpServletRequest request, final HttpServletResponse response, final Object handler ) {
         final var httpRequestLine = String.format( "%s %s", request.getMethod(), request.getRequestURI() );
         final var adminPermission = fetchPermissionForHttpRequestLine( httpRequestLine );
-        if ( NONE.equals( adminPermission ) ){
-            request.setAttribute( HAS_ADMIN_PRIVILEGE, false );
-            return true;
-        }
-        request.setAttribute( HAS_ADMIN_PRIVILEGE, isOAuth2Request() && requestingUserHasPermission( request, adminPermission ) );
+        request.setAttribute( HAS_ADMIN_PRIVILEGE, !NONE.equals( adminPermission ) && isOAuth2Request() && requestingUserHasPermission( request, adminPermission ) );
         return true;
     }
 
