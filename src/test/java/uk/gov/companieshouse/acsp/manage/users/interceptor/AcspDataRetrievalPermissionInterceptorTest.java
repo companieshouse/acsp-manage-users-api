@@ -39,6 +39,7 @@ class AcspDataRetrievalPermissionInterceptorTest {
         HttpServletResponse response = new MockHttpServletResponse();
 
         new TokenPermissionsInterceptor().preHandle( request, response, null );
+        new AdminPermissionsInterceptor().preHandle( request, response, null );
 
         assertFalse( acspDataRetrievalPermissionInterceptor.preHandle( request, response, null ) );
         assertEquals(403, response.getStatus() );
@@ -56,6 +57,27 @@ class AcspDataRetrievalPermissionInterceptorTest {
         HttpServletResponse response = new MockHttpServletResponse();
 
         new TokenPermissionsInterceptor().preHandle( request, response, null );
+        new AdminPermissionsInterceptor().preHandle( request, response, null );
+
+        assertTrue( acspDataRetrievalPermissionInterceptor.preHandle( request, response, null ) );
+        assertEquals( 200, response.getStatus() );
+    }
+
+    @Test
+    void prehandleReturnsTrueForAdminUser() throws InvalidTokenPermissionException {
+        final var request = new MockHttpServletRequest();
+        request.addHeader( "ERIC-Identity-Type", "oauth2" );
+        request.addHeader( "ERIC-Authorised-Roles", "/admin/acsp/search" );
+        request.setMethod( "GET" );
+        request.setRequestURI( "/acsps/WITA001/memberships" );
+
+        final var requestAttributes = new ServletRequestAttributes( request );
+        RequestContextHolder.setRequestAttributes( requestAttributes );
+
+        final var response = new MockHttpServletResponse();
+
+        new TokenPermissionsInterceptor().preHandle( request, response, null );
+        new AdminPermissionsInterceptor().preHandle( request, response, null );
 
         assertTrue( acspDataRetrievalPermissionInterceptor.preHandle( request, response, null ) );
         assertEquals( 200, response.getStatus() );
