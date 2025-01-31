@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Objects;
-import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
