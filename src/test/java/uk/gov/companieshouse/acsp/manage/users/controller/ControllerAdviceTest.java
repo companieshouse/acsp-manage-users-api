@@ -19,7 +19,6 @@ import uk.gov.companieshouse.acsp.manage.users.configuration.WebSecurityConfig;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.interceptor.InterceptorHelper;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.EmailService;
@@ -32,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 @Tag( "unit-test" )
-@Import({InterceptorHelper.class, WebSecurityConfig.class})
+@Import({WebSecurityConfig.class})
 @WebMvcTest( AcspMembershipController.class )
 class ControllerAdviceTest {
 
