@@ -23,7 +23,6 @@ public class AdminPermissionsInterceptor implements HandlerInterceptor {
 
     private static final String HAS_ADMIN_PRIVILEGE = "has_admin_privilege";
 
-
     private String fetchPermissionForHttpRequestLine( final String httpRequestLine ){
         for ( Entry<Pattern, String> mapper: httpRequestLineToPermissionMapper.entrySet() ){
             final var httpRequestLinePattern = mapper.getKey();
@@ -35,8 +34,6 @@ public class AdminPermissionsInterceptor implements HandlerInterceptor {
         return NONE;
     }
 
-
-
     private boolean requestingUserHasPermission( final HttpServletRequest request, final String permission ){
         final var requestingUsersPermissions =
         Optional.ofNullable( request )
@@ -46,7 +43,6 @@ public class AdminPermissionsInterceptor implements HandlerInterceptor {
                 .orElse( List.of() );
         return requestingUsersPermissions.contains( permission );
     }
-
 
     @Override
     public boolean preHandle( final HttpServletRequest request, final HttpServletResponse response, final Object handler ) {

@@ -189,6 +189,30 @@ class SessionValidityInterceptorTest {
     }
 
     @Test
+    void prehandleWhereSessionIsValidButDoesNotHaveReadPermissionReturnsForbidden() throws InvalidTokenPermissionException {
+        final var acspMembersDao = testDataManager.fetchAcspMembersDaos( "WIT004" ).getFirst();
+
+        final var request = new MockHttpServletRequest();
+        request.addHeader("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ");
+        request.addHeader("Eric-identity-type", "oauth2");
+        request.addHeader("ERIC-Authorised-Key-Roles","*");
+        request.addHeader( "Eric-Authorised-Token-Permissions", "acsp_number=WITA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" );
+
+        ServletRequestAttributes requestAttributes = new ServletRequestAttributes( request );
+        RequestContextHolder.setRequestAttributes( requestAttributes );
+
+        Mockito.doReturn( Optional.of( acspMembersDao ) ).when( acspMembersService ).fetchActiveAcspMembership( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
+
+        final var response = new MockHttpServletResponse();
+
+        new TokenPermissionsInterceptor().preHandle( request, response, null );
+        new AdminPermissionsInterceptor().preHandle( request, response, null );
+
+        assertFalse( sessionValidityInterceptor.preHandle( request, response, null ) );
+        assertEquals(403, response.getStatus() );
+    }
+
+    @Test
     void preHandleReturnsTrueWhenSessionIsValid() throws InvalidTokenPermissionException {
         final var acspMembersDao = testDataManager.fetchAcspMembersDaos( "WIT004" ).getFirst();
 
