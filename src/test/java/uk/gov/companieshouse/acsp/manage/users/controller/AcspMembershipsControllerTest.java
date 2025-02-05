@@ -22,6 +22,7 @@ import org.springframework.web.context.WebApplicationContext;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.configuration.WebSecurityConfig;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
+import uk.gov.companieshouse.acsp.manage.users.interceptor.InterceptorHelper;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.EmailService;
@@ -42,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
 
 @WebMvcTest(AcspMembershipsController.class)
-@Import({WebSecurityConfig.class})
+@Import({InterceptorHelper.class, WebSecurityConfig.class})
 @Tag("unit-test")
 class AcspMembershipsControllerTest {
 
