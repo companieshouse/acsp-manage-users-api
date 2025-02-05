@@ -334,23 +334,6 @@ class AcspMembersServiceTest {
     }
 
     @Test
-    void addAcspMemberReturnsAddedAcspMembersDao() {
-        final var acspMembersDao = testDataManager.fetchAcspMembersDaos( "COM004" ).getFirst();
-
-        Mockito.doReturn( acspMembersDao ).when( acspMembersRepository ).insert( any( AcspMembersDao.class ) );
-
-        final var result = acspMembersService.addAcspMember( "COMU004", "COMA001", UserRoleEnum.ADMIN, "COMU002" );
-
-        Assertions.assertEquals( "COMU004", result.getUserId() );
-        Assertions.assertEquals( "COMA001", result.getAcspNumber() );
-        Assertions.assertEquals( UserRoleEnum.ADMIN.getValue(), result.getUserRole() );
-        Assertions.assertEquals( "COMU002", result.getAddedBy() );
-        Assertions.assertEquals( MembershipStatusEnum.ACTIVE.getValue(), result.getStatus() );
-        Assertions.assertFalse( result.getEtag().isEmpty() );
-        Mockito.verify( acspMembersRepository ).insert( argThat( comparisonUtils.compare( acspMembersDao, List.of( "userId", "acspNumber", "userRole", "addedBy", "status" ), List.of(), Map.of() ) ) );
-    }
-
-    @Test
     void addAcspMembershipReturnsAddedAcspMembership() {
         final var acspMembersDao = testDataManager.fetchAcspMembersDaos( "COM004" ).getFirst();
         final var acspMembershipDto = testDataManager.fetchAcspMembershipDtos( "COM004" ).getFirst();
