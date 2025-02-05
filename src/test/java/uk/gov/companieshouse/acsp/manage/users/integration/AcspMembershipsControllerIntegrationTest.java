@@ -247,36 +247,6 @@ class AcspMembershipsControllerIntegrationTest {
             Assertions.assertEquals( 1, roles.size() );
             Assertions.assertTrue( roles.contains( role ) );
         }
-
-        @Test
-        void getMembersForAcspWithAdminUserPrivilegeReturnsData() throws Exception {
-            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016" ) );
-
-            mockFetchUserDetailsFor( "COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008", "COMU009", "COMU010", "COMU011", "COMU012", "COMU013", "COMU014", "COMU015", "COMU016" );
-            mockFetchAcspProfilesFor( "COMA001" );
-
-            final var response =
-                    mockMvc.perform( get( "/acsps/COMA001/memberships?include_removed=true&items_per_page=20" )
-                                    .header( "X-Request-Id", "theId123" )
-                                    .header( "Eric-identity", "COMU002" )
-                                    .header( "ERIC-Identity-Type", "oauth2" )
-                                    .header( "ERIC-Authorised-Key-Roles", "*" )
-                                    .header( "ERIC-Authorised-Roles", "/admin/acsp/search" ) )
-                            .andExpect( status().isOk() );
-
-            final var acspMembers = parseResponseTo( response, AcspMembershipsList.class );
-            final var links = acspMembers.getLinks();
-
-            final var acspIds = acspMembers.getItems().stream().map( AcspMembership::getId ).collect( Collectors.toSet() );
-
-            Assertions.assertEquals( 0, acspMembers.getPageNumber() );
-            Assertions.assertEquals( 20, acspMembers.getItemsPerPage() );
-            Assertions.assertEquals( 16, acspMembers.getTotalResults() );
-            Assertions.assertEquals( 1, acspMembers.getTotalPages() );
-            Assertions.assertEquals( "/acsps/COMA001/memberships?page_index=0&items_per_page=20", links.getSelf() );
-            Assertions.assertEquals( "", links.getNext() );
-            assertTrue( acspIds.containsAll( Set.of( "COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016" ) ) );
-        }
     }
 
     @Nested

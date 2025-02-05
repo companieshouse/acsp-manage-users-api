@@ -407,24 +407,7 @@ class AcspMembersServiceIntegrationTest {
         Assertions.assertNull(updatedDao.getRemovedBy());
     }
 
-    @Nested
-    class AddAcspMember {
 
-        @Test
-        void addAcspMemberReturnsAddedAcspMembersDao() {
-            final var user = testDataManager.fetchUserDtos("TSU001").getFirst();
-            final var userRole = AcspMembership.UserRoleEnum.ADMIN;
-
-            final var result = acspMembersService.addAcspMember(user.getUserId(), "TS001", userRole, "COMU001");
-
-            assertEquals(user.getUserId(), result.getUserId());
-            assertEquals("TS001", result.getAcspNumber());
-            assertEquals(userRole.getValue(), result.getUserRole());
-            assertEquals("COMU001", result.getAddedBy());
-            assertEquals(AcspMembership.MembershipStatusEnum.ACTIVE.getValue(), result.getStatus());
-            assertFalse(result.getEtag().isEmpty());
-        }
-    }
 
     @Nested
     class AddAcspMembership {

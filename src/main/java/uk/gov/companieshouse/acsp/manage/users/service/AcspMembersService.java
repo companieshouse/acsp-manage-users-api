@@ -71,8 +71,9 @@ public class AcspMembersService {
     return includeRemoved ? acspMembersRepository.fetchAllAcspMembersByUserId( userId ) : acspMembersRepository.fetchActiveAcspMembersByUserId( userId );
   }
 
+  @Transactional( readOnly = true )
   public AcspMembershipsList fetchAcspMemberships( final User user, final boolean includeRemoved ) {
-    final var acspMembershipDaos = fetchAcspMembershipDaos( user.getUserId(), includeRemoved );
+    final var acspMembershipDaos = includeRemoved ? acspMembersRepository.fetchAllAcspMembersByUserId( user.getUserId() ) : acspMembersRepository.fetchActiveAcspMembersByUserId( user.getUserId() );
     final var acspMembershipDtos = acspMembershipCollectionMappers.daoToDto( acspMembershipDaos, user, null );
     return new AcspMembershipsList().items( acspMembershipDtos );
   }
@@ -82,8 +83,9 @@ public class AcspMembersService {
     return acspMembersRepository.findById(membershipId);
   }
 
+  @Transactional(readOnly = true)
   public Optional<AcspMembership> fetchMembership(final String membershipId) {
-    return fetchMembershipDao(membershipId).map( dao -> acspMembershipCollectionMappers.daoToDto( dao, null, null ));
+    return acspMembersRepository.findById(membershipId).map( dao -> acspMembershipCollectionMappers.daoToDto( dao, null, null ));
   }
 
   @Transactional(readOnly = true)
@@ -143,8 +145,7 @@ public class AcspMembersService {
     return acspMembershipsList;
   }
 
-  @Transactional
-  public AcspMembersDao addAcspMember( final String userId, final String acspNumber, final AcspMembership.UserRoleEnum userRole, final String addedByUserId ) {
+  private AcspMembersDao addAcspMember( final String userId, final String acspNumber, final AcspMembership.UserRoleEnum userRole, final String addedByUserId ) {
     final var now = LocalDateTime.now();
     final var newAcspMembersDao = new AcspMembersDao();
     newAcspMembersDao.setUserId(userId);
@@ -158,6 +159,7 @@ public class AcspMembersService {
     return acspMembersRepository.insert(newAcspMembersDao);
   }
 
+  @Transactional
   public AcspMembership addAcspMembership( final User user, final AcspProfile acspProfile, final String acspNumber, final AcspMembership.UserRoleEnum userRole, final String addedByUserId ) {
     final var acspMembersDao = addAcspMember(user.getUserId(), acspNumber, userRole, addedByUserId);
     return acspMembershipCollectionMappers.daoToDto( acspMembersDao, user, acspProfile );

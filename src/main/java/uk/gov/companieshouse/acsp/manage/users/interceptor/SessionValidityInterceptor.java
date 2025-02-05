@@ -17,8 +17,9 @@ import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_IDENTIT
 public class SessionValidityInterceptor implements HandlerInterceptor  {
 
     private final AcspMembersService acspMembersService;
+
     private static final Logger LOGGER = LoggerFactory.getLogger( StaticPropertyUtil.APPLICATION_NAMESPACE );
-    private static final String HAS_ADMIN_PRIVILEGE = "has_admin_privilege";
+    private static final String X_REQUEST_ID = "X-Request-Id";
 
     public SessionValidityInterceptor( final AcspMembersService acspMembersService ) {
         this.acspMembersService = acspMembersService;
@@ -38,22 +39,18 @@ public class SessionValidityInterceptor implements HandlerInterceptor  {
 
     @Override
     public boolean preHandle( final HttpServletRequest request, final HttpServletResponse response, final Object handler ) {
-        if ( !isOAuth2Request() || (boolean) request.getAttribute( HAS_ADMIN_PRIVILEGE ) ) {
+        if ( !isOAuth2Request() ) {
             return true;
         }
 
         final var requestingUserId = request.getHeader( ERIC_IDENTITY );
         final var requestingUsersActiveAcspNumber = fetchRequestingUsersActiveAcspNumber();
         if ( sessionIsValid( requestingUserId, requestingUsersActiveAcspNumber ) ){
-            if ( !requestingUserIsPermittedToRetrieveAcspData() ){
-                LOGGER.errorContext( getXRequestId(), new Exception( String.format( "%s user does not have permission to access Acsp data", requestingUserId ) ), null );
-                response.setStatus( 403 );
-                return false;
-            }
             return true;
         }
 
-        LOGGER.errorContext( getXRequestId(), new Exception( "Session is out of sync with the database" ), null );
+        final var xRequestId = request.getHeader( X_REQUEST_ID );
+        LOGGER.errorContext( xRequestId, new Exception( "Session is out of sync with the database" ), null );
         response.setStatus( 403 );
         return false;
     }
