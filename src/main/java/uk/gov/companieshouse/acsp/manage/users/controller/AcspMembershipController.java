@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.RestController;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
-import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.EmailService;
@@ -24,7 +23,12 @@ import uk.gov.companieshouse.logging.LoggerFactory;
 import java.util.Objects;
 import java.util.Optional;
 
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.*;
+import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.fetchRequestingUsersRole;
+import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.requestingUserIsActiveMemberOfAcsp;
+import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.requestingUserCanManageMembership;
+import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.UserContext.getLoggedUser;
+import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.RequestDetailsContext.getXRequestId;
+import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.RequestDetailsContext.isOAuth2Request;
 import static uk.gov.companieshouse.api.acspprofile.Status.CEASED;
 
 @RestController
@@ -73,13 +77,13 @@ public class AcspMembershipController implements AcspMembershipInterface {
             throw new NotFoundRuntimeException( StaticPropertyUtil.APPLICATION_NAMESPACE, PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
         }
 
-        if ( Objects.nonNull( userStatus ) && !requestingUserIsPermittedToRemoveUsersWith( targetUsersRole ) ){
+        if ( Objects.nonNull( userStatus ) && !requestingUserCanManageMembership( targetUsersRole ) ){
             LOG.errorContext( getXRequestId(), new Exception( String.format( "User %s is not permitted to remove user %s", requestingUserId, targetUserId ) ), null );
             throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
         }
 
         if ( Objects.nonNull( userRole ) ){
-            final var requestingUserIsNotPermittedToUpdateTargetUser = !requestingUserIsPermittedToUpdateUsersWith( targetUsersRole );
+            final var requestingUserIsNotPermittedToUpdateTargetUser = !requestingUserCanManageMembership( targetUsersRole );
             final var requestingUserIsAdmin = UserRoleEnum.ADMIN.equals( fetchRequestingUsersRole() );
             final var attemptingToChangeTargetUsersRoleToOwner = UserRoleEnum.OWNER.equals( userRole );
             if ( requestingUserIsNotPermittedToUpdateTargetUser || ( requestingUserIsAdmin && attemptingToChangeTargetUsersRoleToOwner ) ){
@@ -122,7 +126,7 @@ public class AcspMembershipController implements AcspMembershipInterface {
             throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
         }
 
-        final var requestingUser = UserContext.getLoggedUser();
+        final var requestingUser = getLoggedUser();
         final var requestingUserId = Optional.ofNullable( requestingUser ).map( User::getUserId ).orElse( null );
         if ( isOAuth2Request() ){
             throwBadRequestWhenActionIsNotPermittedByOAuth2User( requestingUserId, membershipIdAssociation, userRole, userStatus );

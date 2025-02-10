@@ -5,7 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.EmailService;
@@ -29,7 +28,11 @@ import java.util.Optional;
 
 import static uk.gov.companieshouse.acsp.manage.users.model.ErrorCode.ERROR_CODE_1001;
 import static uk.gov.companieshouse.acsp.manage.users.model.ErrorCode.ERROR_CODE_1002;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.*;
+import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.requestingUserIsActiveMemberOfAcsp;
+import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.requestingUserCanManageMembership;
+import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.UserContext.getLoggedUser;
+import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.RequestDetailsContext.getXRequestId;
+import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.RequestDetailsContext.isOAuth2Request;
 
 @Controller
 public class AcspMembershipsController implements AcspMembershipsInterface {
@@ -81,9 +84,9 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
       throw new BadRequestRuntimeException( ERROR_CODE_1002.getCode() );
     }
 
-    final var requestingUser = UserContext.getLoggedUser();
+    final var requestingUser = getLoggedUser();
     final var requestingUserId = Optional.ofNullable( requestingUser ).map( User::getUserId ).orElse( null );
-    if ( isOAuth2Request() && ( !requestingUserIsActiveMemberOfAcsp( acspNumber ) || !requestingUserIsPermittedToCreateMembershipWith( targetUserRole ) ) ){
+    if ( isOAuth2Request() && ( !requestingUserIsActiveMemberOfAcsp( acspNumber ) || !requestingUserCanManageMembership( targetUserRole ) ) ){
         LOG.errorContext( xRequestId, new Exception( String.format( "User %s is not permitted to create %s membership", requestingUserId, targetUserRole.getValue() ) ), null );
         throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
     }
