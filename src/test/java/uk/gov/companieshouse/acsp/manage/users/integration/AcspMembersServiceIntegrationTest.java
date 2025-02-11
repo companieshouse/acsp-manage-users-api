@@ -9,10 +9,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.mock.web.MockHttpServletRequest;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipCollectionMappers;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
+import uk.gov.companieshouse.acsp.manage.users.model.RequestContext;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
@@ -63,6 +65,13 @@ class AcspMembersServiceIntegrationTest {
     private static final TestDataManager testDataManager = TestDataManager.getInstance();
 
     private static final String DEFAULT_DISPLAY_NAME = "Not Provided";
+
+    @BeforeEach
+    void setup(){
+        final var request = new MockHttpServletRequest();
+        request.addHeader( "X-Request-Id", "theId123" );
+        RequestContext.setRequestDetails( request );
+    }
 
     @Nested
     class FetchAcspMembershipsTests {

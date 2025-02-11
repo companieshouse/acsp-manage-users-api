@@ -387,7 +387,7 @@ class AcspMembershipsControllerTest {
         }
 
         @Test
-        void addMemberForAcspWithLoggedStandardUserReturnsBadRequest() throws Exception {
+        void addMemberForAcspWithLoggedStandardUserReturnsForbidden() throws Exception {
             final var users = testDataManager.fetchUserDtos( "COMU007", "COMU001" );
             final var acspProfile = testDataManager.fetchAcspProfiles( "COMA001" ).getFirst();
             final var membership = testDataManager.fetchAcspMembersDaos( "COM007" ).getFirst();
@@ -405,11 +405,11 @@ class AcspMembershipsControllerTest {
                             .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM007" ) )
                             .contentType(MediaType.APPLICATION_JSON)
                             .content( "{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}" ) )
-                    .andExpect( status().isBadRequest() );
+                    .andExpect( status().isForbidden() );
         }
 
         @Test
-        void addMemberForAcspWithLoggedAdminUserAndNewOwnerUserReturnsBadRequest() throws Exception {
+        void addMemberForAcspWithLoggedAdminUserAndNewOwnerUserReturnsForbidden() throws Exception {
             final var users = testDataManager.fetchUserDtos( "COMU005", "COMU001" );
             final var acspProfile = testDataManager.fetchAcspProfiles( "COMA001" ).getFirst();
             final var membership = testDataManager.fetchAcspMembersDaos( "COM005" ).getFirst();
@@ -427,7 +427,7 @@ class AcspMembershipsControllerTest {
                             .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM005" ) )
                             .contentType(MediaType.APPLICATION_JSON)
                             .content( "{\"user_id\":\"COMU001\",\"user_role\":\"owner\"}" ) )
-                    .andExpect( status().isBadRequest() );
+                    .andExpect( status().isForbidden() );
         }
 
         @Test

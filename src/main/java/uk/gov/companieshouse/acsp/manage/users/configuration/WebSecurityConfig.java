@@ -14,7 +14,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CsrfFilter;
-import uk.gov.companieshouse.acsp.manage.users.filter.RoleAssignmentFilter;
+import uk.gov.companieshouse.acsp.manage.users.filter.UserAuthenticationFilter;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.api.filter.CustomCorsFilter;
@@ -43,12 +43,12 @@ public class WebSecurityConfig {
                 .sessionManagement( s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS ) )
                 .csrf( AbstractHttpConfigurer::disable )
                 .addFilterBefore( new CustomCorsFilter( externalMethods.get() ), CsrfFilter.class )
-                .addFilterAfter( new RoleAssignmentFilter( usersService, acspMembersService ), CsrfFilter.class )
+                .addFilterAfter( new UserAuthenticationFilter( usersService, acspMembersService ), CsrfFilter.class )
                 .authorizeHttpRequests( request -> request
                         .requestMatchers( GET, "/acsp-manage-users-api/healthcheck" ).permitAll()
                         .requestMatchers( GET, "/user/acsps/memberships" ).hasAnyRole( ACSP_OWNER_ROLE, ACSP_ADMIN_ROLE, ACSP_STANDARD_ROLE )
-                        .requestMatchers( POST, "/acsps/*/memberships" ).hasAnyRole( ACSP_OWNER_ROLE, ACSP_ADMIN_ROLE, ACSP_STANDARD_ROLE, KEY_ROLE )
-                        .requestMatchers( PATCH, "/acsps/memberships/*" ).hasAnyRole( ACSP_OWNER_ROLE, ACSP_ADMIN_ROLE, ACSP_STANDARD_ROLE, KEY_ROLE )
+                        .requestMatchers( POST, "/acsps/*/memberships" ).hasAnyRole( ACSP_OWNER_ROLE, ACSP_ADMIN_ROLE, KEY_ROLE )
+                        .requestMatchers( PATCH, "/acsps/memberships/*" ).hasAnyRole( ACSP_OWNER_ROLE, ACSP_ADMIN_ROLE, KEY_ROLE )
                         .requestMatchers( GET, "/acsps/memberships/*" ).hasAnyRole( ACSP_OWNER_ROLE, ACSP_ADMIN_ROLE, ACSP_STANDARD_ROLE, KEY_ROLE )
                         .requestMatchers( GET, "/acsps/*/memberships" ).hasAnyRole( ACSP_OWNER_ROLE, ACSP_ADMIN_ROLE, ACSP_STANDARD_ROLE, KEY_ROLE, ADMIN_WITH_ACSP_SEARCH_PRIVILEGE_ROLE )
                         .requestMatchers( POST, "/acsps/*/memberships/lookup" ).hasAnyRole( ACSP_OWNER_ROLE, ACSP_ADMIN_ROLE, ACSP_STANDARD_ROLE, KEY_ROLE, ADMIN_WITH_ACSP_SEARCH_PRIVILEGE_ROLE )
