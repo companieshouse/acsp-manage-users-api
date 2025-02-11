@@ -31,9 +31,9 @@ import uk.gov.companieshouse.api.accounts.user.model.User;
 
 @ExtendWith( MockitoExtension.class )
 @Tag( "unit-test" )
-class RoleAssignmentFilterTest {
+class UserAuthenticationFilterTest {
 
-    private RoleAssignmentFilter roleAssignmentFilter;
+    private UserAuthenticationFilter userAuthenticationFilter;
     private UsersService usersService;
     private AcspMembersService acspMembersService;
 
@@ -43,7 +43,15 @@ class RoleAssignmentFilterTest {
     void setup(){
         usersService = Mockito.mock( UsersService.class );
         acspMembersService = Mockito.mock( AcspMembersService.class );
-        roleAssignmentFilter = new RoleAssignmentFilter( usersService, acspMembersService );
+        userAuthenticationFilter = new UserAuthenticationFilter( usersService, acspMembersService );
+    }
+
+    private List<String> fetchRoles(){
+        return Optional.ofNullable( SecurityContextHolder.getContext() )
+                .map( SecurityContext::getAuthentication )
+                .map( Authentication::getAuthorities )
+                .map( grantedAuthorities -> grantedAuthorities.stream().map( GrantedAuthority::getAuthority ).toList() )
+                .orElse( List.of() );
     }
 
     @Test
@@ -61,16 +69,9 @@ class RoleAssignmentFilterTest {
 
         Mockito.doThrow( new IllegalArgumentException( "Something odd happened here" ) ).when( usersService ).fetchUserDetails( user.getUserId() );
 
-        roleAssignmentFilter.doFilterInternal( request, response, filterChain );
+        userAuthenticationFilter.doFilterInternal( request, response, filterChain );
 
-        final var roles =
-                Optional.ofNullable( SecurityContextHolder.getContext() )
-                        .map( SecurityContext::getAuthentication )
-                        .map( Authentication::getAuthorities )
-                        .map( grantedAuthorities -> grantedAuthorities.stream().map( GrantedAuthority::getAuthority ).toList() )
-                        .orElse( List.of() );
-
-        Assertions.assertTrue( roles.isEmpty() );
+        Assertions.assertTrue( fetchRoles().isEmpty() );
     }
 
     private static Stream<Arguments> doFilterInternalWithoutEricIdentityDoesNotAddAnyRolesScenarios(){
@@ -90,15 +91,9 @@ class RoleAssignmentFilterTest {
         final var response = new MockHttpServletResponse();
         final var filterChain = Mockito.mock( FilterChain.class );
 
-        roleAssignmentFilter.doFilterInternal( request, response, filterChain );
-        final var roles = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getAuthorities()
-                .stream()
-                .map( GrantedAuthority::getAuthority )
-                .toList();
+        userAuthenticationFilter.doFilterInternal( request, response, filterChain );
 
-        Assertions.assertTrue( roles.isEmpty() );
+        Assertions.assertTrue( fetchRoles().isEmpty() );
     }
 
     @Test
@@ -110,15 +105,9 @@ class RoleAssignmentFilterTest {
         final var response = new MockHttpServletResponse();
         final var filterChain = Mockito.mock( FilterChain.class );
 
-        roleAssignmentFilter.doFilterInternal( request, response, filterChain );
-        final var roles = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getAuthorities()
-                .stream()
-                .map( GrantedAuthority::getAuthority )
-                .toList();
+        userAuthenticationFilter.doFilterInternal( request, response, filterChain );
 
-        Assertions.assertTrue( roles.isEmpty() );
+        Assertions.assertTrue( fetchRoles().isEmpty() );
     }
 
     @Test
@@ -131,15 +120,9 @@ class RoleAssignmentFilterTest {
         final var response = new MockHttpServletResponse();
         final var filterChain = Mockito.mock( FilterChain.class );
 
-        roleAssignmentFilter.doFilterInternal( request, response, filterChain );
-        final var roles = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getAuthorities()
-                .stream()
-                .map( GrantedAuthority::getAuthority )
-                .toList();
+        userAuthenticationFilter.doFilterInternal( request, response, filterChain );
 
-        Assertions.assertTrue( roles.isEmpty() );
+        Assertions.assertTrue( fetchRoles().isEmpty() );
     }
 
     @Test
@@ -151,15 +134,9 @@ class RoleAssignmentFilterTest {
         final var response = new MockHttpServletResponse();
         final var filterChain = Mockito.mock( FilterChain.class );
 
-        roleAssignmentFilter.doFilterInternal( request, response, filterChain );
-        final var roles = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getAuthorities()
-                .stream()
-                .map( GrantedAuthority::getAuthority )
-                .toList();
+        userAuthenticationFilter.doFilterInternal( request, response, filterChain );
 
-        Assertions.assertTrue( roles.isEmpty() );
+        Assertions.assertTrue( fetchRoles().isEmpty() );
     }
 
     @Test
@@ -174,15 +151,9 @@ class RoleAssignmentFilterTest {
 
         Mockito.doThrow( new NotFoundRuntimeException( "acsp-manage-users-api", "Could not find user" ) ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
-        roleAssignmentFilter.doFilterInternal( request, response, filterChain );
-        final var roles = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getAuthorities()
-                .stream()
-                .map( GrantedAuthority::getAuthority )
-                .toList();
+        userAuthenticationFilter.doFilterInternal( request, response, filterChain );
 
-        Assertions.assertTrue( roles.isEmpty() );
+        Assertions.assertTrue( fetchRoles().isEmpty() );
     }
 
     @Test
@@ -202,15 +173,9 @@ class RoleAssignmentFilterTest {
         Mockito.doReturn( user ).when( usersService ).fetchUserDetails( user.getUserId() );
         Mockito.doReturn( Optional.of( membership ) ).when( acspMembersService ).fetchActiveAcspMembership( membership.getUserId(), membership.getAcspNumber() );
 
-        roleAssignmentFilter.doFilterInternal( request, response, filterChain );
-        final var roles = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getAuthorities()
-                .stream()
-                .map( GrantedAuthority::getAuthority )
-                .toList();
+        userAuthenticationFilter.doFilterInternal( request, response, filterChain );
 
-        Assertions.assertTrue( roles.isEmpty() );
+        Assertions.assertTrue( fetchRoles().isEmpty() );
     }
 
     @Test
@@ -229,15 +194,9 @@ class RoleAssignmentFilterTest {
         Mockito.doReturn( user ).when( usersService ).fetchUserDetails( user.getUserId() );
         Mockito.doReturn( Optional.of( membership ) ).when( acspMembersService ).fetchActiveAcspMembership( membership.getUserId(), membership.getAcspNumber() );
 
-        roleAssignmentFilter.doFilterInternal( request, response, filterChain );
-        final var roles = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getAuthorities()
-                .stream()
-                .map( GrantedAuthority::getAuthority )
-                .toList();
+        userAuthenticationFilter.doFilterInternal( request, response, filterChain );
 
-        Assertions.assertTrue( roles.isEmpty() );
+        Assertions.assertTrue( fetchRoles().isEmpty() );
     }
 
     @Test
@@ -250,13 +209,8 @@ class RoleAssignmentFilterTest {
         final var response = new MockHttpServletResponse();
         final var filterChain = Mockito.mock( FilterChain.class );
 
-        roleAssignmentFilter.doFilterInternal( request, response, filterChain );
-        final var roles = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getAuthorities()
-                .stream()
-                .map( GrantedAuthority::getAuthority )
-                .toList();
+        userAuthenticationFilter.doFilterInternal( request, response, filterChain );
+        final var roles = fetchRoles();
 
         Assertions.assertEquals( 1, roles.size() );
         Assertions.assertTrue( roles.contains( "ROLE_KEY" ) );
@@ -276,13 +230,8 @@ class RoleAssignmentFilterTest {
 
         Mockito.doReturn( user ).when( usersService ).fetchUserDetails( user.getUserId() );
 
-        roleAssignmentFilter.doFilterInternal( request, response, filterChain );
-        final var roles = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getAuthorities()
-                .stream()
-                .map( GrantedAuthority::getAuthority )
-                .toList();
+        userAuthenticationFilter.doFilterInternal( request, response, filterChain );
+        final var roles = fetchRoles();
 
         Assertions.assertEquals( 1, roles.size() );
         Assertions.assertTrue( roles.contains( "ROLE_ADMIN_WITH_ACSP_SEARCH_PRIVILEGE" ) );
@@ -320,13 +269,8 @@ class RoleAssignmentFilterTest {
         Mockito.doReturn( user ).when( usersService ).fetchUserDetails( user.getUserId() );
         Mockito.doReturn( Optional.of( membership ) ).when( acspMembersService ).fetchActiveAcspMembership( membership.getUserId(), membership.getAcspNumber() );
 
-        roleAssignmentFilter.doFilterInternal( request, response, filterChain );
-        final var roles = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getAuthorities()
-                .stream()
-                .map( GrantedAuthority::getAuthority )
-                .toList();
+        userAuthenticationFilter.doFilterInternal( request, response, filterChain );
+        final var roles = fetchRoles();
 
         Assertions.assertEquals( 1, roles.size() );
         Assertions.assertTrue( roles.contains( expectedOutcome ) );

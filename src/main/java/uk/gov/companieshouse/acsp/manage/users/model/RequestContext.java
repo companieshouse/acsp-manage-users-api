@@ -3,14 +3,10 @@ package uk.gov.companieshouse.acsp.manage.users.model;
 import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum.ADMIN;
 import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum.OWNER;
 import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum.STANDARD;
-import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_ROLES;
-import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_TOKEN_PERMISSIONS;
-import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_IDENTITY_TYPE;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
@@ -19,79 +15,34 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRole
 
 public final class RequestContext {
 
-    private static final ThreadLocal<Map<String, String>> requestDetailsThreadLocal = new ThreadLocal<>();
-    private static final ThreadLocal<User> userContextThreadLocal = new ThreadLocal<>();
-    private static final ThreadLocal<String> ericAuthorisedRolesThreadLocal = new ThreadLocal<>();
-    private static final ThreadLocal<String> ericAuthorisedTokenPermissionsThreadLocal = new ThreadLocal<>();
+    private static final ThreadLocal<RequestContextData> requestDetailsThreadLocal = new ThreadLocal<>();
+
+    public static void setRequestDetails( final HttpServletRequest request ){
+        requestDetailsThreadLocal.set( new RequestContextData( request ) );
+    }
 
     public static final class RequestDetailsContext {
 
-        private static final String X_REQUEST_ID = "X-Request-Id";
-        private static final String UNKNOWN = "unknown";
         private static final String OAUTH2_REQUEST_TYPE = "oauth2";
 
-        public static void setRequestDetails( final HttpServletRequest request ){
-            final var xRequestId = Optional.ofNullable( request )
-                    .map( req -> req.getHeader( X_REQUEST_ID ) )
-                    .orElse( UNKNOWN );
-
-            final var ericIdentityType = Optional.ofNullable( request )
-                    .map( req -> req.getHeader( ERIC_IDENTITY_TYPE ) )
-                    .orElse( UNKNOWN );
-
-            requestDetailsThreadLocal.set( Map.of( X_REQUEST_ID, xRequestId, ERIC_IDENTITY_TYPE, ericIdentityType ) );
+        public static String getXRequestId() {
+            return requestDetailsThreadLocal.get().getXRequestId();
         }
 
-        public static String getXRequestId() {
-            return Optional.of( requestDetailsThreadLocal )
-                    .map( ThreadLocal::get )
-                    .map( requestDetails -> requestDetails.get( X_REQUEST_ID ) )
-                    .orElse( UNKNOWN );
+        public static String getEricIdentity(){
+            return requestDetailsThreadLocal.get().getEricIdentity();
         }
 
         public static boolean isOAuth2Request() {
-            final var ericIdentityType = Optional.of( requestDetailsThreadLocal )
-                    .map( ThreadLocal::get )
-                    .map( requestDetails -> requestDetails.get( ERIC_IDENTITY_TYPE ) )
-                    .orElse( UNKNOWN );
-            return ericIdentityType.equals( OAUTH2_REQUEST_TYPE );
-        }
-
-    }
-
-    public static final class UserContext {
-
-        public static void setLoggedUser( final User user ) {
-            userContextThreadLocal.set( user );
-        }
-
-        public static User getLoggedUser() {
-            return userContextThreadLocal.get();
+            return requestDetailsThreadLocal.get().getEricIdentityType().equals( OAUTH2_REQUEST_TYPE );
         }
 
     }
 
     public static final class EricAuthorisedRolesContext {
 
-        private static final String ADMIN_ACSP_SEARCH_PERMISSION = "/admin/acsp/search";
-
-        public static void setEricAuthorisedRoles( final HttpServletRequest request ){
-            final var ericAuthorisedRoles = Optional.ofNullable( request )
-                    .map( req -> req.getHeader( ERIC_AUTHORISED_ROLES ) )
-                    .orElse( "" );
-            ericAuthorisedRolesThreadLocal.set( ericAuthorisedRoles );
-        }
-
-        private static boolean hasPermission( final String permission ){
-            return Optional.ofNullable( ericAuthorisedRolesThreadLocal.get() )
-                    .map( roles -> roles.split( " " ) )
-                    .map( Arrays::asList )
-                    .orElse( List.of() )
-                    .contains( permission );
-        }
-
         public static boolean hasAdminAcspSearchPermission(){
-            return hasPermission( ADMIN_ACSP_SEARCH_PERMISSION );
+            return requestDetailsThreadLocal.get().getEricAuthorisedRoles().contains( "/admin/acsp/search" );
         }
 
     }
@@ -103,13 +54,6 @@ public final class RequestContext {
         private static final String ACSP_MEMBERS_ADMINS = "acsp_members_admins=create,update,delete";
         private static final String ACSP_MEMBERS_STANDARD = "acsp_members_standard=create,update,delete";
         private static final String ACSP_MEMBERS_READ_PERMISSION = "acsp_members=read";
-
-        public static void setEricAuthorisedTokenPermissions( final HttpServletRequest request ){
-            final var ericAuthorisedTokenPermissions = Optional.ofNullable( request )
-                    .map( req -> req.getHeader( ERIC_AUTHORISED_TOKEN_PERMISSIONS ) )
-                    .orElse( "" );
-            ericAuthorisedTokenPermissionsThreadLocal.set( ericAuthorisedTokenPermissions );
-        }
 
         public static boolean ericAuthorisedTokenPermissionsAreValid( final AcspMembersService acspMembersService, final String userId ){
             final var acspNumber = fetchRequestingUsersActiveAcspNumber();
@@ -125,13 +69,14 @@ public final class RequestContext {
         }
 
         public static String fetchRequestingUsersActiveAcspNumber(){
-            final var ericAuthorisedTokenPermissions = ericAuthorisedTokenPermissionsThreadLocal.get();
+            final var ericAuthorisedTokenPermissions = requestDetailsThreadLocal.get().getEricAuthorisedTokenPermissions();
             final var matcher = ACSP_NUMBER_PATTERN.matcher( ericAuthorisedTokenPermissions );
             return matcher.find() ? matcher.group( 1 ) : null;
         }
 
         private static boolean hasPermission( final String permission ){
-            return Optional.ofNullable( ericAuthorisedTokenPermissionsThreadLocal.get() )
+            return Optional.ofNullable( requestDetailsThreadLocal.get() )
+                    .map( RequestContextData::getEricAuthorisedTokenPermissions )
                     .map( roles -> roles.split( " " ) )
                     .map( Arrays::asList )
                     .orElse( List.of() )
@@ -167,11 +112,20 @@ public final class RequestContext {
 
     }
 
+    public static final class UserContext {
+
+        public static void setLoggedUser( final User user ) {
+            requestDetailsThreadLocal.get().setUser( user );
+        }
+
+        public static User getLoggedUser() {
+            return requestDetailsThreadLocal.get().getUser();
+        }
+
+    }
+
     public static void clear(){
         requestDetailsThreadLocal.remove();
-        userContextThreadLocal.remove();
-        ericAuthorisedRolesThreadLocal.remove();
-        ericAuthorisedTokenPermissionsThreadLocal.remove();
     }
 
 }

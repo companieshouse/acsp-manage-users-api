@@ -18,6 +18,7 @@ import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.configuration.InterceptorConfig;
 import uk.gov.companieshouse.acsp.manage.users.configuration.WebSecurityConfig;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
+import uk.gov.companieshouse.acsp.manage.users.exceptions.ForbiddenRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
@@ -145,6 +146,21 @@ class ControllerAdviceTest {
                         .header("ERIC-Authorised-Key-Roles", "*")
                         .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "TS001" ) ) )
                 .andExpect( status().isInternalServerError() );
+    }
+
+    @Test
+    void testForbiddenRuntimeError() throws Exception {
+        mockFetchUserDetailsFor( "TSU001" );
+        Mockito.doReturn( Optional.of( testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst() ) ).when( acspMemersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
+        Mockito.doThrow( new ForbiddenRuntimeException( "Request was less than ideal" ) ).when( acspMemersService ).fetchMembership( any() );
+
+        mockMvc.perform( get("/acsps/memberships/TS001")
+                        .header( "X-Request-Id", "theId123" )
+                        .header( "ERIC-Identity", "TSU001")
+                        .header("ERIC-Identity-Type", "oauth2")
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "TS001" ) ) )
+                .andExpect( status().isForbidden() );
     }
 
 }

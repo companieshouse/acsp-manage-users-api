@@ -1,16 +1,16 @@
 package uk.gov.companieshouse.acsp.manage.users.filter;
 
 import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedRolesContext.hasAdminAcspSearchPermission;
-import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedRolesContext.setEricAuthorisedRoles;
 import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.ericAuthorisedTokenPermissionsAreValid;
 import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.fetchRequestingUsersActiveAcspNumber;
 import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.fetchRequestingUsersRole;
 import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.requestingUserIsPermittedToRetrieveAcspData;
-import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.setEricAuthorisedTokenPermissions;
+import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.RequestDetailsContext.getEricIdentity;
 import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.UserContext.setLoggedUser;
 import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.clear;
 import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.RequestDetailsContext.getXRequestId;
-import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.RequestDetailsContext.setRequestDetails;
+import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.setRequestDetails;
+import static uk.gov.companieshouse.api.util.security.RequestUtils.getRequestHeader;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -33,12 +33,11 @@ import uk.gov.companieshouse.api.util.security.AuthorisationUtil;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 
-public class RoleAssignmentFilter extends OncePerRequestFilter {
+public class UserAuthenticationFilter extends OncePerRequestFilter {
 
     private final UsersService usersService;
     private final AcspMembersService acspMembersService;
     private static final Logger LOGGER = LoggerFactory.getLogger( StaticPropertyUtil.APPLICATION_NAMESPACE );
-    private static final String OAUTH2 = "oauth2";
     private static final String KEY = "key";
     private static final String UNDEFINED = "undefined";
     private static final String KEY_ROLE = "KEY";
@@ -47,7 +46,7 @@ public class RoleAssignmentFilter extends OncePerRequestFilter {
     private static final String X_REQUEST_ID = "X-Request-Id";
     private static final String UNKNOWN = "unknown";
 
-    public RoleAssignmentFilter( final UsersService usersService, final AcspMembersService acspMembersService ){
+    public UserAuthenticationFilter( final UsersService usersService, final AcspMembersService acspMembersService ){
         this.usersService = usersService;
         this.acspMembersService = acspMembersService;
     }
@@ -67,16 +66,14 @@ public class RoleAssignmentFilter extends OncePerRequestFilter {
 
     private boolean isValidOAuth2Request( final HttpServletRequest request ){
         LOGGER.infoContext( getXRequestId(), "Checking if this is a valid OAuth2 Request...", null );
-        final var ericIdentity = AuthorisationUtil.getAuthorisedIdentity( request );
-        final var ericIdentityType = AuthorisationUtil.getAuthorisedIdentityType( request );
-        if ( Objects.nonNull( ericIdentity ) && OAUTH2.equals( ericIdentityType ) ){
+        if ( AuthorisationUtil.isOauth2User( request ) ){
             try {
-                final var userDetails = usersService.fetchUserDetails( ericIdentity );
+                final var userDetails = usersService.fetchUserDetails( getEricIdentity() );
                 setLoggedUser( userDetails );
                 LOGGER.debugContext( getXRequestId(), "Confirmed this is a valid OAuth2 Request.", null );
                 return true;
             } catch ( NotFoundRuntimeException exception ) {
-                LOGGER.debugContext( getXRequestId(), String.format( "Confirmed this is not a valid OAuth2 Request, because requesting user %s was not found.", ericIdentity ), null );
+                LOGGER.debugContext( getXRequestId(), String.format( "Confirmed this is not a valid OAuth2 Request, because requesting user %s was not found.", getEricIdentity() ), null );
                 return false;
             }
         }
@@ -103,8 +100,6 @@ public class RoleAssignmentFilter extends OncePerRequestFilter {
                 LOGGER.debugContext( getXRequestId(), "API Key Spring role will be added...", null );
                 springRoles.add( KEY_ROLE );
             } else if ( isValidOAuth2Request( request ) ){
-                setEricAuthorisedRoles( request );
-                setEricAuthorisedTokenPermissions( request );
 
                 LOGGER.infoContext( getXRequestId(), "Calculating Spring roles based on Eric-Authorised-Roles...", null );
                 if ( hasAdminAcspSearchPermission() ){
@@ -129,10 +124,8 @@ public class RoleAssignmentFilter extends OncePerRequestFilter {
             }
             setSpringRoles( springRoles );
         } catch ( Exception exception ){
-            final var xRequestId = Optional.ofNullable( request )
-                    .map( req -> req.getHeader( X_REQUEST_ID ) )
-                    .orElse( UNKNOWN );
-            LOGGER.errorContext( xRequestId, "Unhandled exception was thrown in RoleAssignmentFilter", exception, null );
+            final var xRequestId = Optional.ofNullable( getRequestHeader( request, X_REQUEST_ID ) ).orElse( UNKNOWN );
+            LOGGER.errorContext( xRequestId, "Unhandled exception was thrown in UserAuthenticationFilter", exception, null );
         }
 
         try {

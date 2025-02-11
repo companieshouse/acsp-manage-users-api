@@ -1,20 +1,18 @@
 package uk.gov.companieshouse.acsp.manage.users.model;
 
 import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedRolesContext.hasAdminAcspSearchPermission;
-import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedRolesContext.setEricAuthorisedRoles;
 import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.ericAuthorisedTokenPermissionsAreValid;
 import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.fetchRequestingUsersActiveAcspNumber;
 import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.fetchRequestingUsersRole;
 import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.requestingUserCanManageMembership;
 import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.requestingUserIsActiveMemberOfAcsp;
 import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.requestingUserIsPermittedToRetrieveAcspData;
-import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.setEricAuthorisedTokenPermissions;
 import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.UserContext.getLoggedUser;
 import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.UserContext.setLoggedUser;
 import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.clear;
 import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.RequestDetailsContext.getXRequestId;
 import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.RequestDetailsContext.isOAuth2Request;
-import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.RequestDetailsContext.setRequestDetails;
+import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.setRequestDetails;
 import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum.OWNER;
 import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum.STANDARD;
 import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum.ADMIN;
@@ -33,6 +31,9 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
+import uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedRolesContext;
+import uk.gov.companieshouse.acsp.manage.users.model.RequestContext.RequestDetailsContext;
+import uk.gov.companieshouse.acsp.manage.users.model.RequestContext.UserContext;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 
@@ -100,13 +101,13 @@ class RequestContextTest {
 
     @Test
     void setEricAuthorisedRolesWillNullDoesNotSetPermission(){
-        setEricAuthorisedRoles( null );
+        setRequestDetails( null );
         Assertions.assertFalse( hasAdminAcspSearchPermission() );
     }
 
     @Test
     void setEricAuthorisedRolesWithRequestThatDoesNotHaveEricAuthorisedRolesDoesNotSetPermission(){
-        setEricAuthorisedRoles( new MockHttpServletRequest() );
+        setRequestDetails( new MockHttpServletRequest() );
         Assertions.assertFalse( hasAdminAcspSearchPermission() );
     }
 
@@ -124,19 +125,19 @@ class RequestContextTest {
     void hasAdminAcspSearchPermissionTests( final String ericAuthorisedRoles, final boolean expectedOutcome ){
         final var request = new MockHttpServletRequest();
         request.addHeader( "ERIC-Authorised-Roles", ericAuthorisedRoles );
-        setEricAuthorisedRoles( request );
+        setRequestDetails( request );
         Assertions.assertEquals( expectedOutcome, hasAdminAcspSearchPermission() );
     }
 
     @Test
     void setEricAuthorisedTokenPermissionsWithNullRequestDoesNotSetAnyPermissions(){
-        setEricAuthorisedTokenPermissions( null );
+        setRequestDetails( null );
         Assertions.assertFalse( requestingUserIsPermittedToRetrieveAcspData() );
     }
 
     @Test
     void setEricAuthorisedTokenPermissionsWithRequestThatDoesNotHaveEricAuthorisedTokenPermissionsDoesNotSetAnyPermissions(){
-        setEricAuthorisedTokenPermissions( new MockHttpServletRequest() );
+        setRequestDetails( new MockHttpServletRequest() );
         Assertions.assertFalse( requestingUserIsPermittedToRetrieveAcspData() );
     }
 
@@ -144,7 +145,7 @@ class RequestContextTest {
     void setEricAuthorisedTokenPermissionsSetsSpecifiedPermissions(){
         final var request = new MockHttpServletRequest();
         request.addHeader( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "TS001" ) );
-        setEricAuthorisedTokenPermissions( request );
+        setRequestDetails( request );
         Assertions.assertTrue( requestingUserIsPermittedToRetrieveAcspData() );
     }
 
@@ -152,7 +153,7 @@ class RequestContextTest {
     void ericAuthorisedTokenPermissionsAreValidWithNullOrMalformedOrNonexistentUserIdOrUserWithoutActiveMembershipReturnsFalse(){
         final var request = new MockHttpServletRequest();
         request.addHeader( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "TS001" ) );
-        setEricAuthorisedTokenPermissions( request );
+        setRequestDetails( request );
 
         Mockito.doReturn(Optional.empty() ).when( acspMembersService ).fetchActiveAcspMembership( null, "TSA001" );
         Mockito.doReturn(Optional.empty() ).when( acspMembersService ).fetchActiveAcspMembership( "$$$", "TSA001" );
@@ -171,7 +172,7 @@ class RequestContextTest {
 
         final var request = new MockHttpServletRequest();
         request.addHeader( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM004" ) );
-        setEricAuthorisedTokenPermissions( request );
+        setRequestDetails( request );
 
         Mockito.doReturn( Optional.of( activeMembership ) ).when( acspMembersService ).fetchActiveAcspMembership( "COMU002", "COMA001" );
 
@@ -184,7 +185,7 @@ class RequestContextTest {
 
         final var request = new MockHttpServletRequest();
         request.addHeader( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "TS001" ) );
-        setEricAuthorisedTokenPermissions( request );
+        setRequestDetails( request );
 
         Mockito.doReturn( Optional.of( activeMembership ) ).when( acspMembersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
 
@@ -211,7 +212,7 @@ class RequestContextTest {
     void fetchRequestingUsersActiveAcspNumberRetrievesAcspNumberFromSession( final String ericAuthorisedTokenPermissions, final String expectedAcspNumber ){
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader( "Eric-Authorised-Token-Permissions", ericAuthorisedTokenPermissions );
-        setEricAuthorisedTokenPermissions( request );
+        setRequestDetails( request );
 
         Assertions.assertEquals( expectedAcspNumber, fetchRequestingUsersActiveAcspNumber() );
     }
@@ -230,7 +231,7 @@ class RequestContextTest {
     void requestingUserIsPermittedToRetrieveAcspDataTests( final String ericAuthorisedTokenPermissions, final boolean expectedOutcome ){
         final var request = new MockHttpServletRequest();
         request.addHeader( "Eric-Authorised-Token-Permissions", ericAuthorisedTokenPermissions );
-        setEricAuthorisedTokenPermissions( request );
+        setRequestDetails( request );
         Assertions.assertEquals( expectedOutcome, requestingUserIsPermittedToRetrieveAcspData() );
     }
 
@@ -239,7 +240,7 @@ class RequestContextTest {
         final var request = new MockHttpServletRequest();
         final var ownerPermissions = testDataManager.fetchTokenPermissions( "COM002" );
         request.addHeader( "Eric-Authorised-Token-Permissions", ownerPermissions );
-        setEricAuthorisedTokenPermissions( request );
+        setRequestDetails( request );
         Assertions.assertThrows( NullPointerException.class, () -> requestingUserCanManageMembership( null ) );
     }
 
@@ -270,7 +271,7 @@ class RequestContextTest {
     void requestingUserCanManageMembershipTests( final String requestingUsersEricAuthorisedTokenPermissions, final UserRoleEnum targetRole, final boolean canManage ){
         final var request = new MockHttpServletRequest();
         request.addHeader( "Eric-Authorised-Token-Permissions", requestingUsersEricAuthorisedTokenPermissions );
-        setEricAuthorisedTokenPermissions( request );
+        setRequestDetails( request );
         Assertions.assertEquals( canManage, requestingUserCanManageMembership( targetRole ) );
     }
 
@@ -284,7 +285,7 @@ class RequestContextTest {
         final var request = new MockHttpServletRequest();
         final var ericAuthorisedTokenPermissions = testDataManager.fetchTokenPermissions( "COM002" );
         request.addHeader( "Eric-Authorised-Token-Permissions", ericAuthorisedTokenPermissions );
-        setEricAuthorisedTokenPermissions( request );
+        setRequestDetails( request );
 
         Assertions.assertFalse( requestingUserIsActiveMemberOfAcsp( "TSA001" ) );
     }
@@ -294,7 +295,7 @@ class RequestContextTest {
         final var request = new MockHttpServletRequest();
         final var ericAuthorisedTokenPermissions = testDataManager.fetchTokenPermissions( "COM002" );
         request.addHeader( "Eric-Authorised-Token-Permissions", ericAuthorisedTokenPermissions );
-        setEricAuthorisedTokenPermissions( request );
+        setRequestDetails( request );
 
         Assertions.assertTrue( requestingUserIsActiveMemberOfAcsp( "COMA001" ) );
     }
@@ -318,7 +319,7 @@ class RequestContextTest {
     void fetchRequestingUsersRoleTests( final String requestingUsersEricAuthorisedTokenPermissions, final UserRoleEnum expectedOutcome ){
         final var request = new MockHttpServletRequest();
         request.addHeader( "Eric-Authorised-Token-Permissions", requestingUsersEricAuthorisedTokenPermissions );
-        setEricAuthorisedTokenPermissions( request );
+        setRequestDetails( request );
 
         Assertions.assertEquals( expectedOutcome, fetchRequestingUsersRole() );
     }
@@ -335,8 +336,6 @@ class RequestContextTest {
 
         setRequestDetails( request );
         setLoggedUser( user );
-        setEricAuthorisedRoles( request );
-        setEricAuthorisedTokenPermissions( request );
 
         Assertions.assertEquals( "theId123", getXRequestId() );
         Assertions.assertEquals( user, getLoggedUser() );
@@ -345,10 +344,12 @@ class RequestContextTest {
 
         clear();
 
-        Assertions.assertEquals( UNKNOWN, getXRequestId() );
-        Assertions.assertNull( getLoggedUser() );
-        Assertions.assertFalse( hasAdminAcspSearchPermission() );
+        Assertions.assertThrows( NullPointerException.class, RequestDetailsContext::getXRequestId );
+        Assertions.assertThrows( NullPointerException.class, UserContext::getLoggedUser );
+        Assertions.assertThrows( NullPointerException.class, EricAuthorisedRolesContext::hasAdminAcspSearchPermission );
         Assertions.assertFalse( requestingUserIsPermittedToRetrieveAcspData() );
     }
 
 }
+
+

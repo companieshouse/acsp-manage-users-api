@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
+import uk.gov.companieshouse.acsp.manage.users.exceptions.ForbiddenRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
@@ -88,7 +89,7 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
     final var requestingUserId = Optional.ofNullable( requestingUser ).map( User::getUserId ).orElse( null );
     if ( isOAuth2Request() && ( !requestingUserIsActiveMemberOfAcsp( acspNumber ) || !requestingUserCanManageMembership( targetUserRole ) ) ){
         LOG.errorContext( xRequestId, new Exception( String.format( "User %s is not permitted to create %s membership", requestingUserId, targetUserRole.getValue() ) ), null );
-        throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
+        throw new ForbiddenRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
     }
 
     LOG.debugContext( xRequestId, String.format( "Attempting to create membership for user %s and Acsp %s", targetUserId, acspNumber  ), null );
