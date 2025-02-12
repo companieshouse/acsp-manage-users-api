@@ -15,10 +15,10 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRole
 
 public final class RequestContext {
 
-    private static final ThreadLocal<RequestContextData> requestDetailsThreadLocal = new ThreadLocal<>();
+    private static final RequestContextThreadLocal requestDetailsThreadLocal = new RequestContextThreadLocal();
 
     public static void setRequestDetails( final HttpServletRequest request ){
-        requestDetailsThreadLocal.set( new RequestContextData( request ) );
+        requestDetailsThreadLocal.setRequestDetails( request );
     }
 
     public static final class RequestDetailsContext {
@@ -115,7 +115,7 @@ public final class RequestContext {
     public static final class UserContext {
 
         public static void setLoggedUser( final User user ) {
-            requestDetailsThreadLocal.get().setUser( user );
+            requestDetailsThreadLocal.setLoggedUser( user );
         }
 
         public static User getLoggedUser() {

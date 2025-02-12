@@ -14,17 +14,17 @@ import uk.gov.companieshouse.api.accounts.user.model.User;
 
 public class RequestContextData {
 
-    private final String xRequestId;
-    private final String ericIdentity;
-    private final String ericIdentityType;
-    private final List<String> ericAuthorisedRoles;
-    private final String ericAuthorisedTokenPermissions;
+    private String xRequestId;
+    private String ericIdentity;
+    private String ericIdentityType;
+    private List<String> ericAuthorisedRoles;
+    private String ericAuthorisedTokenPermissions;
     private User user;
     private static final String X_REQUEST_ID = "X-Request-Id";
     private static final String UNKNOWN = "unknown";
 
 
-    public RequestContextData( final HttpServletRequest request ){
+    public void setRequestContextData( final HttpServletRequest request ){
         xRequestId = getRequestHeader( request, X_REQUEST_ID );
         ericIdentity = getRequestHeader( request, ERIC_IDENTITY );
         ericIdentityType = getRequestHeader( request, ERIC_IDENTITY_TYPE );
