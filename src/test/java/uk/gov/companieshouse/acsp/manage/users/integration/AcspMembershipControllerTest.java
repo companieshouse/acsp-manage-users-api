@@ -297,7 +297,7 @@ class AcspMembershipControllerTest {
 
 
     @Test
-    void updateAcspMembershipForAcspAndIdWithOAuth2ReturnsBadRequestWhenAttemptingToRemoveLastOwner() throws Exception {
+    void updateAcspMembershipForAcspAndIdWithOAuth2ReturnsForbiddenWhenAttemptingToRemoveLastOwner() throws Exception {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
 
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
@@ -311,11 +311,11 @@ class AcspMembershipControllerTest {
                         .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
-                .andExpect( status().isBadRequest() );
+                .andExpect( status().isForbidden() );
     }
 
     @Test
-    void updateAcspMembershipForAcspAndIdWithApiKeyAndActiveAcspReturnsBadRequestWhenAttemptingToRemoveLastOwner() throws Exception {
+    void updateAcspMembershipForAcspAndIdWithApiKeyAndActiveAcspReturnsForbiddenWhenAttemptingToRemoveLastOwner() throws Exception {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
 
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
@@ -329,7 +329,7 @@ class AcspMembershipControllerTest {
                         .header( "Eric-Authorised-Token-Permissions", "" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
-                .andExpect( status().isBadRequest() );
+                .andExpect( status().isForbidden() );
     }
 
     @Test
@@ -419,7 +419,7 @@ class AcspMembershipControllerTest {
 
     @ParameterizedTest
     @MethodSource( "membershipRemovalFailureScenarios" )
-    void updateAcspMembershipForAcspAndIdWithUnprivilegedCallerReturnsBadRequestWhenAttemptingToRemoveMembership( final String requestingUserMembershipId, final String targetUserMembershipId, final String tokenPermissions ) throws Exception {
+    void updateAcspMembershipForAcspAndIdWithUnprivilegedCallerReturnsForbiddenWhenAttemptingToRemoveMembership( final String requestingUserMembershipId, final String targetUserMembershipId, final String tokenPermissions ) throws Exception {
         final var acspMembersDaos = testDataManager.fetchAcspMembersDaos( requestingUserMembershipId, targetUserMembershipId );
         final var requestUserId = acspMembersDaos.getFirst().getUserId();
 
@@ -437,7 +437,7 @@ class AcspMembershipControllerTest {
                         .header( "Eric-Authorised-Token-Permissions", tokenPermissions )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
-                .andExpect( status().isBadRequest() );
+                .andExpect( status().isForbidden() );
     }
 
     private static Stream<Arguments> membershipUpdateRoleSuccessScenarios(){
@@ -525,7 +525,7 @@ class AcspMembershipControllerTest {
 
     @ParameterizedTest
     @MethodSource( "membershipUpdateRoleFailureScenarios" )
-    void updateAcspMembershipForAcspAndIdWithUnprivilegedCallerReturnsBadRequestWhenAttemptingToUpdateRole( final String requestingUserMembershipId, final String targetUserMembershipId, final String userRole, final String tokenPermissions ) throws Exception {
+    void updateAcspMembershipForAcspAndIdWithUnprivilegedCallerReturnsForbiddenWhenAttemptingToUpdateRole( final String requestingUserMembershipId, final String targetUserMembershipId, final String userRole, final String tokenPermissions ) throws Exception {
         final var acspMembersDaos = testDataManager.fetchAcspMembersDaos( requestingUserMembershipId, targetUserMembershipId );
         final var requestUserId = acspMembersDaos.getFirst().getUserId();
 
@@ -544,7 +544,7 @@ class AcspMembershipControllerTest {
                         .header( "Eric-Authorised-Token-Permissions", tokenPermissions )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( String.format( "{\"user_role\":\"%s\"}", userRole ) ) )
-                .andExpect( status().isBadRequest() );
+                .andExpect( status().isForbidden() );
     }
 
     @Test

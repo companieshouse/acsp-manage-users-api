@@ -1,14 +1,13 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.RequestDetailsContext.getXRequestId;
 import static uk.gov.companieshouse.acsp.manage.users.utils.ParsingUtil.parseJsonTo;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
 import static uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil.APPLICATION_NAMESPACE;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
