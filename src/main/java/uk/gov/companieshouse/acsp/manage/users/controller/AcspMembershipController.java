@@ -1,5 +1,16 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
+import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.fetchRequestingUsersRole;
+import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.requestingUserCanManageMembership;
+import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.requestingUserIsActiveMemberOfAcsp;
+import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.RequestDetailsContext.isOAuth2Request;
+import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.UserContext.getLoggedUser;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.fetchRequestingUsersRole;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.getXRequestId;
+import static uk.gov.companieshouse.api.acspprofile.Status.CEASED;
+
+import java.util.Objects;
+import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,17 +31,6 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserStatusEnum;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
-
-import java.util.Objects;
-import java.util.Optional;
-
-import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.fetchRequestingUsersRole;
-import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.requestingUserIsActiveMemberOfAcsp;
-import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.requestingUserCanManageMembership;
-import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.UserContext.getLoggedUser;
-import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.RequestDetailsContext.getXRequestId;
-import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.RequestDetailsContext.isOAuth2Request;
-import static uk.gov.companieshouse.api.acspprofile.Status.CEASED;
 
 @RestController
 public class AcspMembershipController implements AcspMembershipInterface {
@@ -85,8 +85,8 @@ public class AcspMembershipController implements AcspMembershipInterface {
 
         if ( Objects.nonNull( userRole ) ){
             final var requestingUserIsNotPermittedToUpdateTargetUser = !requestingUserCanManageMembership( targetUsersRole );
-            final var requestingUserIsAdmin = UserRoleEnum.ADMIN.equals( fetchRequestingUsersRole() );
-            final var attemptingToChangeTargetUsersRoleToOwner = UserRoleEnum.OWNER.equals( userRole );
+            final var requestingUserIsAdmin = UserRoleEnum.ADMIN.getValue().equals( fetchRequestingUsersRole() );
+            final var attemptingToChangeTargetUsersRoleToOwner = UserRoleEnum.OWNER.getValue().equals( userRole );
             if ( requestingUserIsNotPermittedToUpdateTargetUser || ( requestingUserIsAdmin && attemptingToChangeTargetUsersRoleToOwner ) ){
                 LOG.errorContext( getXRequestId(), new Exception( String.format( "User %s is not permitted to change role of user %s to %s", requestingUserId, targetUserId, userRole.getValue() ) ), null );
                 throw new ForbiddenRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
@@ -139,7 +139,8 @@ public class AcspMembershipController implements AcspMembershipInterface {
         LOG.infoContext( xRequestId, String.format( "Successfully updated Acsp Membership with id: %s", membershipId ), null );
 
         if ( isOAuth2Request() && Objects.nonNull( userRole ) ){
-            final var requestingUserDisplayName = Optional.ofNullable( requestingUser.getDisplayName() ).orElse( requestingUser.getEmail() );
+          assert requestingUser != null;
+          final var requestingUserDisplayName = Optional.ofNullable( requestingUser.getDisplayName() ).orElse( requestingUser.getEmail() );
             final var targetUser = usersService.fetchUserDetails( membershipIdAssociation.getUserId() );
             emailService.sendYourRoleAtAcspHasChangedEmail( xRequestId, targetUser.getEmail(), requestingUserDisplayName, targetAcsp.getName(), userRole );
         }
