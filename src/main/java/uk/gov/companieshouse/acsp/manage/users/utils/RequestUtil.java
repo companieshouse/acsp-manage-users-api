@@ -29,6 +29,8 @@ public final class RequestUtil {
 
   private static final Logger LOGGER = LoggerFactory.getLogger( StaticPropertyUtil.APPLICATION_NAMESPACE );
 
+  private RequestUtil(){}
+
   public static boolean isOAuth2Request() {
     return getRequestDetails().getEricIdentityType().equals("oauth2");
   }

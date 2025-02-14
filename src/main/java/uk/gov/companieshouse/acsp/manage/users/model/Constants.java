@@ -4,6 +4,8 @@ import java.util.regex.Pattern;
 
 public final class Constants {
 
+  private Constants(){}
+
   public static final String ACSP_MEMBERS_READ = "acsp_members=read";
   public static final String KEY_ROLE = "KEY";
   public static final Pattern ACSP_NUMBER_PATTERN = Pattern.compile("(?<=^|\\s)acsp_number=([0-9A-Za-z-_]{0,32})(?=\\s|$)");

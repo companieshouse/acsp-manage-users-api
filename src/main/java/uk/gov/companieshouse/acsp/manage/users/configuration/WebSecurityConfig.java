@@ -29,16 +29,10 @@ import uk.gov.companieshouse.api.filter.CustomCorsFilter;
 @EnableWebSecurity
 public class WebSecurityConfig {
 
-    @Autowired
-    private UsersService usersService;
-
-    @Autowired
-    private AcspMembersService acspMembersService;
-
     private static final Supplier<List<String>> externalMethods = () -> List.of( GET.name() );
 
     @Bean
-    public SecurityFilterChain filterChain( final HttpSecurity http ) throws Exception {
+    public SecurityFilterChain filterChain( final HttpSecurity http, final UsersService usersService, final AcspMembersService acspMembersService ) throws Exception {
         http.cors( AbstractHttpConfigurer::disable )
                 .sessionManagement( s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS ) )
                 .csrf( AbstractHttpConfigurer::disable )

@@ -72,7 +72,12 @@ class UserAuthenticationFilterTest {
 
         Mockito.doThrow( new IllegalArgumentException( "Something odd happened here" ) ).when( usersService ).fetchUserDetails( user.getUserId() );
 
+        final var securityContext = Mockito.mock( SecurityContext.class );
+        SecurityContextHolder.setContext( securityContext );
+
         userAuthenticationFilter.doFilterInternal( request, response, filterChain );
+
+        Mockito.verify( securityContext, never() ).setAuthentication( any() );
     }
 
     private static Stream<Arguments> doFilterInternalWithoutEricIdentityDoesNotAddAnyRolesScenarios(){
