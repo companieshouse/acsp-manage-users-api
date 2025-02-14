@@ -2,16 +2,16 @@ package uk.gov.companieshouse.acsp.manage.users.service;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static uk.gov.companieshouse.acsp.manage.users.utils.ParsingUtil.parseJsonTo;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.getXRequestId;
 import static uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil.APPLICATION_NAMESPACE;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -22,7 +22,6 @@ import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.accounts.user.model.UsersList;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
-import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
 public class UsersService {

@@ -1,7 +1,7 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
 import static uk.gov.companieshouse.GenerateEtagUtil.generateEtag;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.getXRequestId;
 
 import java.time.LocalDateTime;
 import java.util.List;

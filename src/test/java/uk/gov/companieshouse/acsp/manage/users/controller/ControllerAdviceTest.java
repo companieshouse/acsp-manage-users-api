@@ -1,6 +1,7 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
 import java.util.Arrays;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -17,9 +18,9 @@ import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.configuration.InterceptorConfig;
 import uk.gov.companieshouse.acsp.manage.users.configuration.WebSecurityConfig;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
+import uk.gov.companieshouse.acsp.manage.users.exceptions.ForbiddenRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.interceptor.InterceptorHelper;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.EmailService;
@@ -32,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 @Tag( "unit-test" )
-@Import({InterceptorHelper.class, WebSecurityConfig.class})
+@Import(WebSecurityConfig.class)
 @WebMvcTest( AcspMembershipController.class )
 class ControllerAdviceTest {
 
@@ -76,54 +77,90 @@ class ControllerAdviceTest {
     @Test
     void testNotFoundRuntimeError() throws Exception {
         mockFetchUserDetailsFor( "TSU001" );
+        Mockito.doReturn( Optional.of( testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst() ) ).when( acspMemersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
         Mockito.doThrow( new NotFoundRuntimeException( "acsp-manage-users-api", "Couldn't find association" ) ).when( acspMemersService ).fetchMembership( any() );
 
         mockMvc.perform( get("/acsps/memberships/TS001")
                         .header( "X-Request-Id", "theId123" )
-                        .header( "ERIC-Identity", "TSU001") )
+                        .header( "ERIC-Identity", "TSU001")
+                        .header("ERIC-Identity-Type", "oauth2")
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "TS001" ) ) )
                 .andExpect( status().isNotFound() );
     }
 
     @Test
     void testBadRequestRuntimeError() throws Exception {
         mockFetchUserDetailsFor( "TSU001" );
+        Mockito.doReturn( Optional.of( testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst() ) ).when( acspMemersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
         Mockito.doThrow( new BadRequestRuntimeException( "Request was less than ideal" ) ).when( acspMemersService ).fetchMembership( any() );
 
         mockMvc.perform( get("/acsps/memberships/TS001")
                         .header( "X-Request-Id", "theId123" )
-                        .header( "ERIC-Identity", "TSU001") )
+                        .header( "ERIC-Identity", "TSU001")
+                        .header("ERIC-Identity-Type", "oauth2")
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "TS001" ) ) )
                 .andExpect( status().isBadRequest() );
     }
 
     @Test
     void testConstraintViolationError() throws Exception {
         mockFetchUserDetailsFor( "TSU001" );
+        Mockito.doReturn( Optional.of( testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst() ) ).when( acspMemersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
+
         mockMvc.perform( get("/acsps/memberships/$$$")
                         .header( "X-Request-Id", "theId123" )
-                        .header( "ERIC-Identity", "TSU001") )
+                        .header( "ERIC-Identity", "TSU001")
+                        .header("ERIC-Identity-Type", "oauth2")
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "TS001" ) ) )
                 .andExpect( status().isBadRequest() );
     }
 
     @Test
     void testOnInternalServerError() throws Exception {
         mockFetchUserDetailsFor( "TSU001" );
+        Mockito.doReturn( Optional.of( testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst() ) ).when( acspMemersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
         Mockito.doThrow( new NullPointerException( "Something was null, which shouldn't have been." ) ).when( acspMemersService ).fetchMembership( any() );
 
         mockMvc.perform( get("/acsps/memberships/TS001")
                         .header( "X-Request-Id", "theId123" )
-                        .header( "ERIC-Identity", "TSU001") )
+                        .header( "ERIC-Identity", "TSU001")
+                        .header("ERIC-Identity-Type", "oauth2")
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "TS001" ) ) )
                 .andExpect( status().isInternalServerError() );
     }
 
     @Test
     void testOnInternalServerErrorRuntimeException() throws Exception {
         mockFetchUserDetailsFor( "TSU001" );
+        Mockito.doReturn( Optional.of( testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst() ) ).when( acspMemersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
         Mockito.doThrow( new InternalServerErrorRuntimeException( "Problem" ) ).when( acspMemersService ).fetchMembership( any() );
 
         mockMvc.perform( get("/acsps/memberships/TS001")
                         .header( "X-Request-Id", "theId123" )
-                        .header( "ERIC-Identity", "TSU001") )
+                        .header( "ERIC-Identity", "TSU001")
+                        .header("ERIC-Identity-Type", "oauth2")
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "TS001" ) ) )
                 .andExpect( status().isInternalServerError() );
+    }
+
+    @Test
+    void testForbiddenRuntimeError() throws Exception {
+        mockFetchUserDetailsFor( "TSU001" );
+        Mockito.doReturn( Optional.of( testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst() ) ).when( acspMemersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
+        Mockito.doThrow( new ForbiddenRuntimeException( "Request was less than ideal" ) ).when( acspMemersService ).fetchMembership( any() );
+
+        mockMvc.perform( get("/acsps/memberships/TS001")
+                        .header( "X-Request-Id", "theId123" )
+                        .header( "ERIC-Identity", "TSU001")
+                        .header("ERIC-Identity-Type", "oauth2")
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "TS001" ) ) )
+                .andExpect( status().isForbidden() );
     }
 
 }

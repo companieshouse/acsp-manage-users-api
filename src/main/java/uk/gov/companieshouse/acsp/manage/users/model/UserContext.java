@@ -2,20 +2,16 @@ package uk.gov.companieshouse.acsp.manage.users.model;
 
 import uk.gov.companieshouse.api.accounts.user.model.User;
 
-public final class UserContext {
+public class UserContext extends RequestContext<User> {
 
-    private static final ThreadLocal<User> userContextThreadLocal = new ThreadLocal<>();
+    private static final UserContext INSTANCE = new UserContext();
 
-    public static User getLoggedUser() {
-        return  userContextThreadLocal.get();
+    private UserContext() {
+        super();
     }
 
-    public static void setLoggedUser(final User user) {
-
-        userContextThreadLocal.set(user);
+    public static UserContext getInstance() {
+        return INSTANCE;
     }
 
-    public static void clear(){
-        userContextThreadLocal.remove();
-    }
 }

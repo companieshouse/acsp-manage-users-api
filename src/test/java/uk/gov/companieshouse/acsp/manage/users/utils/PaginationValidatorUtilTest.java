@@ -1,12 +1,23 @@
 package uk.gov.companieshouse.acsp.manage.users.utils;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockHttpServletRequest;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
+import uk.gov.companieshouse.acsp.manage.users.model.RequestDataContext;
+import uk.gov.companieshouse.acsp.manage.users.model.RequestDetails;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class PaginationValidatorUtilTest {
+
+    @BeforeEach
+    void setup(){
+        final var request = new MockHttpServletRequest();
+        request.addHeader( "X-Request-Id", "theId123" );
+        RequestDataContext.getInstance().setRequestDetails( new RequestDetails( request ) );
+    }
 
     @Test
     void testValidateAndGetParamsWithValidParams() {

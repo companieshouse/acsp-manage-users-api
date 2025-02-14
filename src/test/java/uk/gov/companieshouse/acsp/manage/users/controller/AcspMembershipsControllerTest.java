@@ -22,7 +22,6 @@ import org.springframework.web.context.WebApplicationContext;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.configuration.WebSecurityConfig;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.interceptor.InterceptorHelper;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.EmailService;
@@ -43,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
 
 @WebMvcTest(AcspMembershipsController.class)
-@Import({InterceptorHelper.class, WebSecurityConfig.class})
+@Import(WebSecurityConfig.class)
 @Tag("unit-test")
 class AcspMembershipsControllerTest {
 
@@ -387,7 +386,7 @@ class AcspMembershipsControllerTest {
         }
 
         @Test
-        void addMemberForAcspWithLoggedStandardUserReturnsBadRequest() throws Exception {
+        void addMemberForAcspWithLoggedStandardUserReturnsForbidden() throws Exception {
             final var users = testDataManager.fetchUserDtos( "COMU007", "COMU001" );
             final var acspProfile = testDataManager.fetchAcspProfiles( "COMA001" ).getFirst();
             final var membership = testDataManager.fetchAcspMembersDaos( "COM007" ).getFirst();
@@ -405,11 +404,11 @@ class AcspMembershipsControllerTest {
                             .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM007" ) )
                             .contentType(MediaType.APPLICATION_JSON)
                             .content( "{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}" ) )
-                    .andExpect( status().isBadRequest() );
+                    .andExpect( status().isForbidden() );
         }
 
         @Test
-        void addMemberForAcspWithLoggedAdminUserAndNewOwnerUserReturnsBadRequest() throws Exception {
+        void addMemberForAcspWithLoggedAdminUserAndNewOwnerUserReturnsForbidden() throws Exception {
             final var users = testDataManager.fetchUserDtos( "COMU005", "COMU001" );
             final var acspProfile = testDataManager.fetchAcspProfiles( "COMA001" ).getFirst();
             final var membership = testDataManager.fetchAcspMembersDaos( "COM005" ).getFirst();
@@ -427,7 +426,7 @@ class AcspMembershipsControllerTest {
                             .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM005" ) )
                             .contentType(MediaType.APPLICATION_JSON)
                             .content( "{\"user_id\":\"COMU001\",\"user_role\":\"owner\"}" ) )
-                    .andExpect( status().isBadRequest() );
+                    .andExpect( status().isForbidden() );
         }
 
         @Test
