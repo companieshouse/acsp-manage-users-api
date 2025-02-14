@@ -86,6 +86,10 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal( final HttpServletRequest request, final HttpServletResponse response, final FilterChain filterChain ) {
 
         try {
+            if ( "/acsp-manage-users-api/healthcheck".equals( request.getRequestURI() ) ){
+                filterChain.doFilter( request, response );
+            }
+
             RequestDataContext.getInstance().setRequestDetails( new RequestDetails( request ) );
 
             final var userRole = fetchRequestingUsersSpringRole();
