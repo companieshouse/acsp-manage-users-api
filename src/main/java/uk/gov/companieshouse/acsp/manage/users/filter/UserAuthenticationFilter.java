@@ -88,6 +88,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         try {
             if ( "/acsp-manage-users-api/healthcheck".equals( request.getRequestURI() ) ){
                 filterChain.doFilter( request, response );
+                return;
             }
 
             RequestDataContext.getInstance().setRequestDetails( new RequestDetails( request ) );
