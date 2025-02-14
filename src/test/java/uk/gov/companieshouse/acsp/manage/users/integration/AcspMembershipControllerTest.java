@@ -159,10 +159,10 @@ class AcspMembershipControllerTest {
         final var response =
         mockMvc.perform( get( "/acsps/memberships/TS001" )
                         .header("X-Request-Id", "theId123")
-                        .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
+                        .header("Eric-identity", "TSU001")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
-                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) ) )
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "TS001" ) ) )
                 .andExpect( status().isOk() );
 
         final var acspMembership = parseResponseTo( response, AcspMembership.class );

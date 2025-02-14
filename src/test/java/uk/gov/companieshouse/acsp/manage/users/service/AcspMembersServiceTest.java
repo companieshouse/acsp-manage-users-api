@@ -19,7 +19,8 @@ import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipCollectionMappers;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
-import uk.gov.companieshouse.acsp.manage.users.model.RequestContext;
+import uk.gov.companieshouse.acsp.manage.users.model.RequestDataContext;
+import uk.gov.companieshouse.acsp.manage.users.model.RequestDetails;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
@@ -56,7 +57,7 @@ class AcspMembersServiceTest {
     void setup(){
         final var request = new MockHttpServletRequest();
         request.addHeader( "X-Request-Id", "theId123" );
-        RequestContext.setRequestDetails( request );
+        RequestDataContext.getInstance().setRequestDetails( new RequestDetails( request ) );
     }
 
     @Nested

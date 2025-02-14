@@ -4,7 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.model.RequestContext;
+import uk.gov.companieshouse.acsp.manage.users.model.RequestDataContext;
+import uk.gov.companieshouse.acsp.manage.users.model.RequestDetails;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -15,7 +16,7 @@ class PaginationValidatorUtilTest {
     void setup(){
         final var request = new MockHttpServletRequest();
         request.addHeader( "X-Request-Id", "theId123" );
-        RequestContext.setRequestDetails( request );
+        RequestDataContext.getInstance().setRequestDetails( new RequestDetails( request ) );
     }
 
     @Test

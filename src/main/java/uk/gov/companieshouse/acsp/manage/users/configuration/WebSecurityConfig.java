@@ -39,7 +39,6 @@ public class WebSecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain( final HttpSecurity http ) throws Exception {
-
         http.cors( AbstractHttpConfigurer::disable )
                 .sessionManagement( s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS ) )
                 .csrf( AbstractHttpConfigurer::disable )

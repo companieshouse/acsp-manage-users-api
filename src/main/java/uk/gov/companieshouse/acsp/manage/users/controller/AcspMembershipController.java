@@ -1,12 +1,11 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
-import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.fetchRequestingUsersRole;
-import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.requestingUserCanManageMembership;
-import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.EricAuthorisedTokenPermissionsContext.requestingUserIsActiveMemberOfAcsp;
-import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.RequestDetailsContext.isOAuth2Request;
-import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.UserContext.getLoggedUser;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.fetchRequestingUsersRole;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.fetchRequestingUsersAcspRole;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.fetchRequestingUsersActiveAcspNumber;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.getXRequestId;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.isOAuth2Request;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.requestingUserCanManageMembership;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.requestingUserIsActiveMemberOfAcsp;
 import static uk.gov.companieshouse.api.acspprofile.Status.CEASED;
 
 import java.util.Objects;
@@ -18,6 +17,7 @@ import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeExcep
 import uk.gov.companieshouse.acsp.manage.users.exceptions.ForbiddenRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
+import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.EmailService;
@@ -65,34 +65,12 @@ public class AcspMembershipController implements AcspMembershipInterface {
                 } );
         LOG.infoContext( xRequestId, String.format( "Successfully fetched membership with id: %s", membershipId ), null );
 
+        if ( isOAuth2Request() && !membership.getAcspNumber().equals( fetchRequestingUsersActiveAcspNumber() ) ){
+            LOG.errorContext( getXRequestId(), new Exception( String.format( "Requesting user is not an active member of Acsp %s", membership.getAcspNumber() ) ), null );
+            throw new ForbiddenRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
+        }
+
         return new ResponseEntity<>( membership, HttpStatus.OK );
-    }
-
-    private void throwForbiddenWhenActionIsNotPermittedByOAuth2User( final String requestingUserId, final AcspMembersDao membershipIdAssociation, final UserRoleEnum userRole, final UserStatusEnum userStatus ){
-        final var targetUserId = membershipIdAssociation.getUserId();
-        final var targetAcspNumber = membershipIdAssociation.getAcspNumber();
-        final var targetUsersRole = UserRoleEnum.fromValue( membershipIdAssociation.getUserRole() );
-
-        if ( !requestingUserIsActiveMemberOfAcsp( targetAcspNumber ) ){
-            LOG.errorContext( getXRequestId(), new Exception( String.format( "Could not find user %s's Acsp Membership at Acsp %s", requestingUserId, targetAcspNumber ) ), null );
-            throw new ForbiddenRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
-        }
-
-        if ( Objects.nonNull( userStatus ) && !requestingUserCanManageMembership( targetUsersRole ) ){
-            LOG.errorContext( getXRequestId(), new Exception( String.format( "User %s is not permitted to remove user %s", requestingUserId, targetUserId ) ), null );
-            throw new ForbiddenRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
-        }
-
-        if ( Objects.nonNull( userRole ) ){
-            final var requestingUserIsNotPermittedToUpdateTargetUser = !requestingUserCanManageMembership( targetUsersRole );
-            final var requestingUserIsAdmin = UserRoleEnum.ADMIN.getValue().equals( fetchRequestingUsersRole() );
-            final var attemptingToChangeTargetUsersRoleToOwner = UserRoleEnum.OWNER.getValue().equals( userRole );
-            if ( requestingUserIsNotPermittedToUpdateTargetUser || ( requestingUserIsAdmin && attemptingToChangeTargetUsersRoleToOwner ) ){
-                LOG.errorContext( getXRequestId(), new Exception( String.format( "User %s is not permitted to change role of user %s to %s", requestingUserId, targetUserId, userRole.getValue() ) ), null );
-                throw new ForbiddenRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
-            }
-        }
-
     }
 
     @Override
@@ -127,7 +105,7 @@ public class AcspMembershipController implements AcspMembershipInterface {
             throw new ForbiddenRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
         }
 
-        final var requestingUser = getLoggedUser();
+        final var requestingUser = UserContext.getInstance().getRequestDetails();
         final var requestingUserId = Optional.ofNullable( requestingUser ).map( User::getUserId ).orElse( null );
         if ( isOAuth2Request() ){
             throwForbiddenWhenActionIsNotPermittedByOAuth2User( requestingUserId, membershipIdAssociation, userRole, userStatus );
@@ -146,6 +124,33 @@ public class AcspMembershipController implements AcspMembershipInterface {
         }
 
         return new ResponseEntity<>( HttpStatus.OK );
+    }
+
+    private void throwForbiddenWhenActionIsNotPermittedByOAuth2User( final String requestingUserId, final AcspMembersDao membershipIdAssociation, final UserRoleEnum userRole, final UserStatusEnum userStatus ){
+        final var targetUserId = membershipIdAssociation.getUserId();
+        final var targetAcspNumber = membershipIdAssociation.getAcspNumber();
+        final var targetUsersRole = UserRoleEnum.fromValue( membershipIdAssociation.getUserRole() );
+
+        if ( !requestingUserIsActiveMemberOfAcsp( targetAcspNumber ) ){
+            LOG.errorContext( getXRequestId(), new Exception( String.format( "Could not find user %s's Acsp Membership at Acsp %s", requestingUserId, targetAcspNumber ) ), null );
+            throw new ForbiddenRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
+        }
+
+        if ( Objects.nonNull( userStatus ) && !requestingUserCanManageMembership( targetUsersRole ) ){
+            LOG.errorContext( getXRequestId(), new Exception( String.format( "User %s is not permitted to remove user %s", requestingUserId, targetUserId ) ), null );
+            throw new ForbiddenRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
+        }
+
+        if ( Objects.nonNull( userRole ) ){
+            final var requestingUserIsNotPermittedToUpdateTargetUser = !requestingUserCanManageMembership( targetUsersRole );
+            final var requestingUserIsAdmin = UserRoleEnum.ADMIN.equals( fetchRequestingUsersAcspRole() );
+            final var attemptingToChangeTargetUsersRoleToOwner = UserRoleEnum.OWNER.equals( userRole );
+            if ( requestingUserIsNotPermittedToUpdateTargetUser || ( requestingUserIsAdmin && attemptingToChangeTargetUsersRoleToOwner ) ){
+                LOG.errorContext( getXRequestId(), new Exception( String.format( "User %s is not permitted to change role of user %s to %s", requestingUserId, targetUserId, userRole.getValue() ) ), null );
+                throw new ForbiddenRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
+            }
+        }
+
     }
 
 }
