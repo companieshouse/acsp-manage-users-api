@@ -130,18 +130,20 @@ class AcspMembershipControllerTest {
 
     @Test
     void getAcspMembershipForAcspAndIdWithOAuth2Succeeds() throws Exception {
-        final var requestingUserDao = testDataManager.fetchAcspMembersDaos( "WIT004" ).getFirst();
+        final var requestingUserDao = testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst();
+        final var requestingUserDto = testDataManager.fetchAcspMembershipDtos( "TS001" ).getFirst();
 
-        mockFetchUserDetailsFor( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-        Mockito.doReturn( Optional.of( requestingUserDao ) ).when( acspMembersService ).fetchActiveAcspMembership( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
-        Mockito.doReturn( Optional.of( new AcspMembership().id( "TS001" ) ) ).when( acspMembersService ).fetchMembership( "TS001" );
+
+        mockFetchUserDetailsFor( "TSU001" );
+        Mockito.doReturn( Optional.of( requestingUserDao ) ).when( acspMembersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
+        Mockito.doReturn( Optional.of( requestingUserDto ) ).when( acspMembersService ).fetchMembership( "TS001" );
 
         mockMvc.perform( get( "/acsps/memberships/TS001" )
                         .header("X-Request-Id", "theId123")
-                        .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
+                        .header("Eric-identity", "TSU001")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
-                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) ) )
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "TS001" ) ) )
                 .andExpect( status().isOk() );
     }
 
