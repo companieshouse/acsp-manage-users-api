@@ -96,7 +96,7 @@ class UserAcspMembershipControllerIntegrationTest {
     }
 
     @Test
-    void getAcspMembershipsForUserIdWhoHasNoAcspMembershipsReturnsForbidden() throws Exception {
+    void getAcspMembershipsForUserIdWhoHasNoAcspMembershipsReturns200() throws Exception {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001", "TS002", "COM001", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "COM010", "COM011", "COM012", "COM013", "COM014", "COM015", "COM016" ) );
 
         mockFetchUserDetailsFor("COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008", "COMU009", "COMU010", "COMU011", "COMU012", "COMU013", "COMU014", "COMU015", "COMU016");
@@ -108,7 +108,7 @@ class UserAcspMembershipControllerIntegrationTest {
                 .header("ERIC-Identity-Type", "oauth2")
                 .header("ERIC-Authorised-Key-Roles", "*")
                 .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM001" ) ) )
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
     }
 
     @Test
