@@ -7,6 +7,7 @@ import static uk.gov.companieshouse.acsp.manage.users.model.Constants.ACSP_ADMIN
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.ACSP_OWNER_ROLE;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.ACSP_STANDARD_ROLE;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.ADMIN_WITH_ACSP_SEARCH_PRIVILEGE_ROLE;
+import static uk.gov.companieshouse.acsp.manage.users.model.Constants.BASIC_OAUTH_ROLE;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.KEY_ROLE;
 
 import java.util.List;
@@ -40,7 +41,7 @@ public class WebSecurityConfig {
                 .addFilterAfter( new UserAuthenticationFilter( usersService, acspMembersService ), CsrfFilter.class )
                 .authorizeHttpRequests( request -> request
                         .requestMatchers( GET, "/acsp-manage-users-api/healthcheck" ).permitAll()
-                        .requestMatchers( GET, "/user/acsps/memberships" ).hasAnyRole( ACSP_OWNER_ROLE, ACSP_ADMIN_ROLE, ACSP_STANDARD_ROLE )
+                        .requestMatchers( GET, "/user/acsps/memberships" ).hasAnyRole( BASIC_OAUTH_ROLE, ACSP_OWNER_ROLE, ACSP_ADMIN_ROLE, ACSP_STANDARD_ROLE )
                         .requestMatchers( POST, "/acsps/*/memberships" ).hasAnyRole( ACSP_OWNER_ROLE, ACSP_ADMIN_ROLE, KEY_ROLE )
                         .requestMatchers( PATCH, "/acsps/memberships/*" ).hasAnyRole( ACSP_OWNER_ROLE, ACSP_ADMIN_ROLE, KEY_ROLE )
                         .requestMatchers( GET, "/acsps/memberships/*" ).hasAnyRole( ACSP_OWNER_ROLE, ACSP_ADMIN_ROLE, ACSP_STANDARD_ROLE, KEY_ROLE )

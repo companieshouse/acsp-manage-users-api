@@ -10,6 +10,7 @@ import static uk.gov.companieshouse.acsp.manage.users.model.Constants.ACSP_OWNER
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.ACSP_SEARCH_ADMIN_SEARCH;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.ACSP_STANDARD_ROLE;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.ADMIN_WITH_ACSP_SEARCH_PRIVILEGE_ROLE;
+import static uk.gov.companieshouse.acsp.manage.users.model.Constants.BASIC_OAUTH_ROLE;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.KEY_ROLE;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.UNKNOWN;
 
@@ -98,7 +99,7 @@ public final class RequestUtil {
     if ( getRequestDetails().getEricAuthorisedRoles().contains(ACSP_SEARCH_ADMIN_SEARCH) ) {
       return ADMIN_WITH_ACSP_SEARCH_PRIVILEGE_ROLE;
     }
-    return UNKNOWN;
+    return BASIC_OAUTH_ROLE;
   }
 
   public static UserRoleEnum fetchRequestingUsersAcspRole() {

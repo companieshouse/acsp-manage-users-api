@@ -5,6 +5,7 @@ import static uk.gov.companieshouse.acsp.manage.users.model.Constants.ACSP_OWNER
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.ACSP_SEARCH_ADMIN_SEARCH;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.ACSP_STANDARD_ROLE;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.ADMIN_WITH_ACSP_SEARCH_PRIVILEGE_ROLE;
+import static uk.gov.companieshouse.acsp.manage.users.model.Constants.BASIC_OAUTH_ROLE;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.KEY;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.KEY_ROLE;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.fetchRequestingUsersAcspRole;
@@ -175,7 +176,7 @@ class RequestUtilTest {
                 Arguments.of( ERIC_AUTHORISED_TOKEN_PERMISSIONS, testDataManager.fetchTokenPermissions( "COM004" ), ACSP_ADMIN_ROLE ),
                 Arguments.of( ERIC_AUTHORISED_TOKEN_PERMISSIONS, testDataManager.fetchTokenPermissions( "COM007" ), ACSP_STANDARD_ROLE ),
                 Arguments.of( ERIC_AUTHORISED_ROLES, ACSP_SEARCH_ADMIN_SEARCH, ADMIN_WITH_ACSP_SEARCH_PRIVILEGE_ROLE ),
-                Arguments.of( "X-Request-Id", "theId123", UNKNOWN )
+                Arguments.of( "X-Request-Id", "theId123", BASIC_OAUTH_ROLE )
 
         );
     }

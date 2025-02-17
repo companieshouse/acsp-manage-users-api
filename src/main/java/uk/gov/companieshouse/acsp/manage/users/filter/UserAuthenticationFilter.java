@@ -1,6 +1,7 @@
 package uk.gov.companieshouse.acsp.manage.users.filter;
 
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.ADMIN_WITH_ACSP_SEARCH_PRIVILEGE_ROLE;
+import static uk.gov.companieshouse.acsp.manage.users.model.Constants.BASIC_OAUTH_ROLE;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.KEY;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.KEY_ROLE;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.UNKNOWN;
@@ -97,6 +98,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
             LOGGER.debugContext( getXRequestId(), "Determining Spring role...", null );
             final var springRole = switch ( userRole ){
+                case BASIC_OAUTH_ROLE -> isValidOAuth2Request( request ) ? BASIC_OAUTH_ROLE : UNKNOWN;
                 case KEY_ROLE -> isValidAPIKeyRequest( request ) ? KEY_ROLE : UNKNOWN;
                 case ADMIN_WITH_ACSP_SEARCH_PRIVILEGE_ROLE -> isValidOAuth2Request( request ) ? ADMIN_WITH_ACSP_SEARCH_PRIVILEGE_ROLE : UNKNOWN;
                 default -> isValidOAuth2Request( request ) && ericAuthorisedTokenPermissionsAreValid( acspMembersService, getEricIdentity() ) && requestingUserIsPermittedToRetrieveAcspData() ? userRole : UNKNOWN;

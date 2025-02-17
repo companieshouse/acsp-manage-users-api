@@ -8,6 +8,7 @@ public final class Constants {
 
   public static final String ACSP_MEMBERS_READ = "acsp_members=read";
   public static final String KEY_ROLE = "KEY";
+  public static final String BASIC_OAUTH_ROLE = "BASIC_OAUTH";
   public static final Pattern ACSP_NUMBER_PATTERN = Pattern.compile("(?<=^|\\s)acsp_number=([0-9A-Za-z-_]{0,32})(?=\\s|$)");
   public static final String ACSP_MEMBERS_OWNERS = "acsp_members_owners=create,update,delete";
   public static final String ACSP_MEMBERS_ADMINS = "acsp_members_admins=create,update,delete";
