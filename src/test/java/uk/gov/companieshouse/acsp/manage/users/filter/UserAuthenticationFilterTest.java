@@ -5,8 +5,6 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
 
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import java.io.IOException;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,7 +56,7 @@ class UserAuthenticationFilterTest {
     }
 
     @Test
-    void doFilterInternalDoesNotAddAnyRolesWhenUnhandledExceptionIsThrown() throws ServletException, IOException {
+    void doFilterInternalDoesNotAddAnyRolesWhenUnhandledExceptionIsThrown() {
         final var user = testDataManager.fetchUserDtos( "COMU002" ).getFirst();
         final var ericAuthorisedTokenPermissions = testDataManager.fetchTokenPermissions( "COM002" );
 
@@ -89,7 +87,7 @@ class UserAuthenticationFilterTest {
 
     @ParameterizedTest
     @MethodSource( "doFilterInternalWithoutEricIdentityDoesNotAddAnyRolesScenarios" )
-    void doFilterInternalWithoutEricIdentityDoesNotAddAnyRolesTests( final String ericIdentityType ) throws ServletException, IOException {
+    void doFilterInternalWithoutEricIdentityDoesNotAddAnyRolesTests( final String ericIdentityType ) {
         final var request = new MockHttpServletRequest();
         request.addHeader( "X-Request-Id", "theId123" );
         request.addHeader( "Eric-Identity-Type",ericIdentityType );
@@ -102,15 +100,11 @@ class UserAuthenticationFilterTest {
 
         userAuthenticationFilter.doFilterInternal( request, response, filterChain );
 
-        Mockito.verify( securityContext, never() ).setAuthentication( any() );
+        Mockito.verify( securityContext ).setAuthentication( argThat( springRoleWasAssigned( "ROLE_UNKNOWN" ) ) );
     }
 
-
-
-
-
     @Test
-    void doFilterInternalWithoutEricIdentityTypeDoesNotAddAnyRoles() throws ServletException, IOException {
+    void doFilterInternalWithoutEricIdentityTypeDoesNotAddAnyRoles() {
         final var request = new MockHttpServletRequest();
         request.addHeader( "X-Request-Id", "theId123" );
         request.addHeader( "Eric-Identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
@@ -123,11 +117,11 @@ class UserAuthenticationFilterTest {
 
         userAuthenticationFilter.doFilterInternal( request, response, filterChain );
 
-        Mockito.verify( securityContext, never() ).setAuthentication( any() );
+        Mockito.verify( securityContext ).setAuthentication( argThat( springRoleWasAssigned( "ROLE_UNKNOWN" ) ) );
     }
 
     @Test
-    void doFilterInternalWithMalformedEricIdentityTypeDoesNotAddAnyRoles() throws ServletException, IOException {
+    void doFilterInternalWithMalformedEricIdentityTypeDoesNotAddAnyRoles() {
         final var request = new MockHttpServletRequest();
         request.addHeader( "X-Request-Id", "theId123" );
         request.addHeader( "Eric-Identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
@@ -141,11 +135,11 @@ class UserAuthenticationFilterTest {
 
         userAuthenticationFilter.doFilterInternal( request, response, filterChain );
 
-        Mockito.verify( securityContext, never() ).setAuthentication( any() );
+        Mockito.verify( securityContext ).setAuthentication( argThat( springRoleWasAssigned( "ROLE_UNKNOWN" ) ) );
     }
 
     @Test
-    void doFilterInternalWithAPIKeyRequestWithoutEricAuthorisedKeyRolesDoesNotAddAnyRoles() throws ServletException, IOException {
+    void doFilterInternalWithAPIKeyRequestWithoutEricAuthorisedKeyRolesDoesNotAddAnyRoles() {
         final var request = new MockHttpServletRequest();
         request.addHeader( "X-Request-Id", "theId123" );
         request.addHeader( "Eric-Identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
@@ -158,11 +152,11 @@ class UserAuthenticationFilterTest {
 
         userAuthenticationFilter.doFilterInternal( request, response, filterChain );
 
-        Mockito.verify( securityContext, never() ).setAuthentication( any() );
+        Mockito.verify( securityContext ).setAuthentication( argThat( springRoleWasAssigned( "ROLE_UNKNOWN" ) ) );
     }
 
     @Test
-    void doFilterInternalWithNonexistentRequestingUserDoesNotAddAnyRoles() throws ServletException, IOException {
+    void doFilterInternalWithNonexistentRequestingUserDoesNotAddAnyRoles() {
         final var request = new MockHttpServletRequest();
         request.addHeader( "X-Request-Id", "theId123" );
         request.addHeader( "Eric-Identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
@@ -178,11 +172,11 @@ class UserAuthenticationFilterTest {
 
         userAuthenticationFilter.doFilterInternal( request, response, filterChain );
 
-        Mockito.verify( securityContext, never() ).setAuthentication( any() );
+        Mockito.verify( securityContext ).setAuthentication( argThat( springRoleWasAssigned( "ROLE_UNKNOWN" ) ) );
     }
 
     @Test
-    void doFilterInternalDoesNotAddAnyRolesWhenDatabaseIsOutOfSyncWithSession() throws ServletException, IOException {
+    void doFilterInternalDoesNotAddAnyRolesWhenDatabaseIsOutOfSyncWithSession() {
         final var user = testDataManager.fetchUserDtos( "COMU002" ).getFirst();
         final var membership = testDataManager.fetchAcspMembersDaos( "COM002" ).getFirst();
         final var ericAuthorisedTokenPermissions = testDataManager.fetchTokenPermissions( "COM004" );
@@ -203,35 +197,11 @@ class UserAuthenticationFilterTest {
 
         userAuthenticationFilter.doFilterInternal( request, response, filterChain );
 
-        Mockito.verify( securityContext, never() ).setAuthentication( any() );
+        Mockito.verify( securityContext ).setAuthentication( argThat( springRoleWasAssigned( "ROLE_UNKNOWN" ) ) );
     }
 
     @Test
-    void doFilterInternalDoesNotAddAnyRolesWhenReadPermissionsAreMissing() throws ServletException, IOException {
-        final var user = testDataManager.fetchUserDtos( "COMU002" ).getFirst();
-        final var membership = testDataManager.fetchAcspMembersDaos( "COM002" ).getFirst();
-
-        final var request = new MockHttpServletRequest();
-        request.addHeader( "X-Request-Id", "theId123" );
-        request.addHeader( "Eric-Identity", user.getUserId() );
-        request.addHeader( "Eric-Identity-Type","oauth2" );
-        request.addHeader( "Eric-Authorised-Token-Permissions", "acsp_number=COMA001 acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete" );
-        final var response = new MockHttpServletResponse();
-        final var filterChain = Mockito.mock( FilterChain.class );
-
-        Mockito.doReturn( user ).when( usersService ).fetchUserDetails( user.getUserId() );
-        Mockito.doReturn( Optional.of( membership ) ).when( acspMembersService ).fetchActiveAcspMembership( membership.getUserId(), membership.getAcspNumber() );
-
-        final var securityContext = Mockito.mock( SecurityContext.class );
-        SecurityContextHolder.setContext( securityContext );
-
-        userAuthenticationFilter.doFilterInternal( request, response, filterChain );
-
-        Mockito.verify( securityContext, never() ).setAuthentication( any() );
-    }
-
-    @Test
-    void doFilterInternalWithValidAPIKeyRequestAddsKeyRole() throws ServletException, IOException {
+    void doFilterInternalWithValidAPIKeyRequestAddsKeyRole() {
         final var request = new MockHttpServletRequest();
         request.addHeader( "X-Request-Id", "theId123" );
         request.addHeader( "Eric-Identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
@@ -249,7 +219,7 @@ class UserAuthenticationFilterTest {
     }
 
     @Test
-    void doFilterInternalWithValidAdminRequestAddsAdminRole() throws ServletException, IOException {
+    void doFilterInternalWithValidAdminRequestAddsAdminRole() {
         final var user = testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst();
 
         final var request = new MockHttpServletRequest();
@@ -290,7 +260,7 @@ class UserAuthenticationFilterTest {
 
     @ParameterizedTest
     @MethodSource( "doFilterInternalWithValidAcspRequestScenarios" )
-    void doFilterInternalWithValidAcspRequestTests( final User user, final AcspMembersDao membership, final String ericAuthorisedTokenPermissions, final String expectedOutcome ) throws ServletException, IOException {
+    void doFilterInternalWithValidAcspRequestTests( final User user, final AcspMembersDao membership, final String ericAuthorisedTokenPermissions, final String expectedOutcome ) {
         final var request = new MockHttpServletRequest();
         request.addHeader( "X-Request-Id", "theId123" );
         request.addHeader( "Eric-Identity", user.getUserId() );

@@ -1,23 +1,25 @@
 package uk.gov.companieshouse.acsp.manage.users.model;
 
-public class RequestContext<T>{
+import java.util.Objects;
+import uk.gov.companieshouse.acsp.manage.users.model.RequestContextData.RequestContextDataBuilder;
 
-    private final ThreadLocal<T> requestDetailsThreadLocal;
+public final class RequestContext {
 
-    RequestContext() {
-        requestDetailsThreadLocal = new ThreadLocal<>();
+    private static ThreadLocal<RequestContextData> requestContextDataThreadLocal;
+
+    private RequestContext(){}
+
+    public static void setRequestContext( final RequestContextData requestContext ){
+        requestContextDataThreadLocal = new ThreadLocal<>();
+        requestContextDataThreadLocal.set( requestContext );
     }
 
-    public void setRequestDetails( final T requestDetails ) {
-        requestDetailsThreadLocal.set(requestDetails);
+    public static RequestContextData getRequestContext(){
+        return Objects.nonNull( requestContextDataThreadLocal ) ? requestContextDataThreadLocal.get() : new RequestContextDataBuilder().build();
     }
 
-    public void clear() {
-        requestDetailsThreadLocal.remove();
-    }
-
-    public T getRequestDetails() {
-        return requestDetailsThreadLocal.get();
+    public static void clear(){
+        requestContextDataThreadLocal.remove();
     }
 
 }
