@@ -1,15 +1,26 @@
 package uk.gov.companieshouse.acsp.manage.users.filter;
 
-import static uk.gov.companieshouse.acsp.manage.users.model.Constants.ADMIN_WITH_ACSP_SEARCH_PRIVILEGE_ROLE;
-import static uk.gov.companieshouse.acsp.manage.users.model.Constants.BASIC_OAUTH_ROLE;
+import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.setRequestContext;
+import static uk.gov.companieshouse.acsp.manage.users.model.SpringRole.ADMIN_WITH_ACSP_SEARCH_PRIVILEGE_ROLE;
+import static uk.gov.companieshouse.acsp.manage.users.model.SpringRole.BASIC_OAUTH_ROLE;
+import static uk.gov.companieshouse.acsp.manage.users.model.SpringRole.KEY_ROLE;
+import static uk.gov.companieshouse.acsp.manage.users.model.SpringRole.UNKNOWN_ROLE;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getActiveAcspNumber;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getActiveAcspRole;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getAdminPrivileges;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getEricAuthorisedKeyRoles;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getEricIdentity;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getEricIdentityType;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getUser;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isOAuth2Request;
+import static uk.gov.companieshouse.acsp.manage.users.model.Constants.ACSP_SEARCH_ADMIN_SEARCH;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.KEY;
-import static uk.gov.companieshouse.acsp.manage.users.model.Constants.KEY_ROLE;
+import static uk.gov.companieshouse.acsp.manage.users.model.Constants.OAUTH2;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.UNKNOWN;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.ericAuthorisedTokenPermissionsAreValid;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.fetchRequestingUsersSpringRole;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.getEricIdentity;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.getXRequestId;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.requestingUserIsPermittedToRetrieveAcspData;
+import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_IDENTITY;
+import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_IDENTITY_TYPE;
+import static uk.gov.companieshouse.api.util.security.RequestUtils.getRequestHeader;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,15 +31,17 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.web.filter.OncePerRequestFilter;
-import uk.gov.companieshouse.acsp.manage.users.exceptions.ForbiddenRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.model.RequestDataContext;
-import uk.gov.companieshouse.acsp.manage.users.model.RequestDetails;
-import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
+import uk.gov.companieshouse.acsp.manage.users.model.RequestContextData;
+import uk.gov.companieshouse.acsp.manage.users.model.RequestContextData.RequestContextDataBuilder;
+import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
+import uk.gov.companieshouse.acsp.manage.users.model.RequestContext;
+import uk.gov.companieshouse.acsp.manage.users.model.SpringRole;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
-import uk.gov.companieshouse.api.util.security.AuthorisationUtil;
+import uk.gov.companieshouse.api.accounts.user.model.User;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 
@@ -43,78 +56,74 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         this.acspMembersService = acspMembersService;
     }
 
-    private boolean isValidAPIKeyRequest( final HttpServletRequest request ){
-        LOGGER.infoContext( getXRequestId(), "Checking if this is a valid API Key Request...", null );
-        final var ericIdentity = AuthorisationUtil.getAuthorisedIdentity( request );
-        final var ericIdentityType = AuthorisationUtil.getAuthorisedIdentityType( request );
-        final var hasInternalUserRole = AuthorisationUtil.hasInternalUserRole( request );
-        if ( Objects.nonNull( ericIdentity ) && KEY.equals( ericIdentityType ) && hasInternalUserRole ){
-            LOGGER.debugContext( getXRequestId(), "Confirmed this is a valid API Key Request.", null );
-            return true;
+    private RequestContextData buildRequestContextData( final HttpServletRequest request ){
+        User user = null;
+        if ( OAUTH2.equals( getRequestHeader( request, ERIC_IDENTITY_TYPE ) ) ){
+            try { user = usersService.fetchUserDetails( getRequestHeader( request, ERIC_IDENTITY ) ); }
+            catch ( NotFoundRuntimeException ignored ) {}
         }
-        LOGGER.debugContext( getXRequestId(), "Confirmed this is not a valid API Key Request.", null );
-        return false;
+
+        return new RequestContextDataBuilder()
+                .setXRequestId( request )
+                .setEricIdentity( request )
+                .setEricIdentityType( request )
+                .setEricAuthorisedKeyRoles( request )
+                .setActiveAcspNumber( request )
+                .setActiveAcspRole( request )
+                .setAdminPrivileges( request )
+                .setUser( user )
+                .build();
     }
 
-    private boolean isValidOAuth2Request( final HttpServletRequest request ){
-        LOGGER.infoContext( getXRequestId(), "Checking if this is a valid OAuth2 Request...", null );
-        if ( AuthorisationUtil.isOauth2User( request ) ){
-            try {
-                final var userDetails = usersService.fetchUserDetails(getEricIdentity() );
-                UserContext.getInstance().setRequestDetails( userDetails );
-                LOGGER.debugContext( getXRequestId(), "Confirmed this is a valid OAuth2 Request.", null );
-                return true;
-            } catch ( NotFoundRuntimeException exception ) {
-                LOGGER.debugContext( getXRequestId(), String.format( "Confirmed this is not a valid OAuth2 Request, because requesting user %s was not found.", getEricIdentity() ), null );
-                return false;
-            }
+    private SpringRole computeSpringRole(){
+        LOGGER.infoContext( getXRequestId(), "Checking if this is a valid API Key Request...", null );
+        final var isValidAPIKeyRequest = !getEricIdentity().equals( UNKNOWN ) && getEricIdentityType().equals( KEY ) && getEricAuthorisedKeyRoles().equals( "*" );
+        if ( isValidAPIKeyRequest ){
+            LOGGER.debugContext( getXRequestId(), "Confirmed this is a valid API Key Request.", null );
+            return KEY_ROLE;
         }
-        LOGGER.debugContext( getXRequestId(), "Confirmed this is not a valid OAuth2 Request.", null );
-        return false;
+        LOGGER.debugContext( getXRequestId(), "Confirmed this is not a valid API Key Request. Checking if this is a valid OAuth2 Request...", null );
+        final var isValidOAuth2Request = !getEricIdentity().equals( UNKNOWN ) && isOAuth2Request() && Objects.nonNull( getUser() );
+        if ( !isValidOAuth2Request ){
+            LOGGER.debugContext( getXRequestId(), "Confirmed this is not a valid OAuth2 Request.", null );
+            return UNKNOWN_ROLE;
+        }
+        LOGGER.debugContext( getXRequestId(), "Confirmed this is a valid OAuth2 Request.", null );
+
+        if ( !getActiveAcspNumber().equals( UNKNOWN ) ){
+            LOGGER.debugContext( getXRequestId(), "Confirmed this request is from an Acsp Member. Checking session validity...", null );
+            final var springRole = acspMembersService.fetchActiveAcspMembership( getEricIdentity(), getActiveAcspNumber() )
+                    .map( AcspMembersDao::getUserRole )
+                    .map( UserRoleEnum::fromValue )
+                    .filter( databaseUserRole -> databaseUserRole.equals( getActiveAcspRole() ) )
+                    .map( SpringRole::fromUserRoleEnum )
+                    .orElse( UNKNOWN_ROLE );
+            LOGGER.debugContext( getXRequestId(), springRole.equals( UNKNOWN_ROLE ) ? "Confirmed session is invalid." : "Confirmed session is valid.", null );
+           return springRole;
+        }
+
+        if ( getAdminPrivileges().contains( ACSP_SEARCH_ADMIN_SEARCH ) ){
+            LOGGER.debugContext( getXRequestId(), String.format( "Confirmed that this request has %s privilege.", ACSP_SEARCH_ADMIN_SEARCH ), null );
+            return ADMIN_WITH_ACSP_SEARCH_PRIVILEGE_ROLE;
+        }
+
+        return BASIC_OAUTH_ROLE;
     }
 
     private void setSpringRole( final String role ){
-        LOGGER.debugContext( getXRequestId(), String.format( "Adding Spring roles: %s", role ), null );
-
-        SecurityContextHolder
-          .getContext()
-          .setAuthentication(
-            new PreAuthenticatedAuthenticationToken( UNKNOWN, UNKNOWN,
-              Collections.singleton(new SimpleGrantedAuthority(String.format( "ROLE_%s", role ) )) ));
+        LOGGER.debugContext( getXRequestId(), String.format( "Adding Spring role: %s", role ), null );
+        SecurityContextHolder.getContext().setAuthentication( new PreAuthenticatedAuthenticationToken( UNKNOWN, UNKNOWN, Collections.singleton( new SimpleGrantedAuthority( String.format( "ROLE_%s", role ) ) ) ) );
     }
 
     @Override
     protected void doFilterInternal( final HttpServletRequest request, final HttpServletResponse response, final FilterChain filterChain ) {
-
         try {
-            if ( "/acsp-manage-users-api/healthcheck".equals( request.getRequestURI() ) ){
-                filterChain.doFilter( request, response );
-                return;
-            }
-
-            RequestDataContext.getInstance().setRequestDetails( new RequestDetails( request ) );
-
-            final var userRole = fetchRequestingUsersSpringRole();
-
-            LOGGER.debugContext( getXRequestId(), "Determining Spring role...", null );
-            final var springRole = switch ( userRole ){
-                case BASIC_OAUTH_ROLE -> isValidOAuth2Request( request ) ? BASIC_OAUTH_ROLE : UNKNOWN;
-                case KEY_ROLE -> isValidAPIKeyRequest( request ) ? KEY_ROLE : UNKNOWN;
-                case ADMIN_WITH_ACSP_SEARCH_PRIVILEGE_ROLE -> isValidOAuth2Request( request ) ? ADMIN_WITH_ACSP_SEARCH_PRIVILEGE_ROLE : UNKNOWN;
-                default -> isValidOAuth2Request( request ) && ericAuthorisedTokenPermissionsAreValid( acspMembersService, getEricIdentity() ) && requestingUserIsPermittedToRetrieveAcspData() ? userRole : UNKNOWN;
-            };
-            LOGGER.debugContext( getXRequestId(), String.format( "Spring role is %s", userRole ), null );
-
-            if ( UNKNOWN.equals( springRole ) ) {
-                throw new ForbiddenRuntimeException( "Invalid role" );
-            }
-            setSpringRole( springRole );
-
+            setRequestContext( buildRequestContextData( request ) );
+            setSpringRole( computeSpringRole().getValue() );
             filterChain.doFilter( request, response );
         } catch ( Exception exception ) {
             LOGGER.errorContext( getXRequestId(), exception, null );
-            RequestDataContext.getInstance().clear();
-            UserContext.getInstance().clear();
+            RequestContext.clear();
             response.setStatus( 403 );
         } finally {
             SecurityContextHolder.clearContext();

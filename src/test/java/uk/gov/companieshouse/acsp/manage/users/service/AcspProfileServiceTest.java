@@ -19,9 +19,9 @@ import reactor.core.publisher.Mono;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
+import uk.gov.companieshouse.acsp.manage.users.model.RequestContext;
+import uk.gov.companieshouse.acsp.manage.users.model.RequestContextData.RequestContextDataBuilder;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
-import uk.gov.companieshouse.acsp.manage.users.model.RequestDataContext;
-import uk.gov.companieshouse.acsp.manage.users.model.RequestDetails;
 import uk.gov.companieshouse.api.acspprofile.AcspProfile;
 
 @ExtendWith( MockitoExtension.class )
@@ -40,7 +40,7 @@ class AcspProfileServiceTest {
     void setup(){
         final var request = new MockHttpServletRequest();
         request.addHeader( "X-Request-Id", "theId123" );
-        RequestDataContext.getInstance().setRequestDetails( new RequestDetails( request ) );
+        RequestContext.setRequestContext( new RequestContextDataBuilder().setXRequestId( request ).build() );
     }
 
     private void mockWebClientSuccessResponse( final String uri, final Mono<String> jsonResponse ){

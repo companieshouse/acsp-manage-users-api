@@ -6,7 +6,6 @@ import org.springframework.stereotype.Controller;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.ForbiddenRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.EmailService;
@@ -28,13 +27,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.canManageMembership;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getUser;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isActiveMemberOfAcsp;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isOAuth2Request;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN;
 import static uk.gov.companieshouse.acsp.manage.users.model.ErrorCode.ERROR_CODE_1001;
 import static uk.gov.companieshouse.acsp.manage.users.model.ErrorCode.ERROR_CODE_1002;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.getXRequestId;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.isOAuth2Request;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.requestingUserCanManageMembership;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.requestingUserIsActiveMemberOfAcsp;
 
 @Controller
 public class AcspMembershipsController implements AcspMembershipsInterface {
@@ -81,9 +81,9 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
       throw new BadRequestRuntimeException( ERROR_CODE_1002.getCode() );
     }
 
-    final var requestingUser = UserContext.getInstance().getRequestDetails();
+    final var requestingUser = getUser();
     final var requestingUserId = Optional.ofNullable( requestingUser ).map( User::getUserId ).orElse( null );
-    if ( isOAuth2Request() && ( !requestingUserIsActiveMemberOfAcsp( acspNumber ) || !requestingUserCanManageMembership( targetUserRole ) ) ){
+    if ( isOAuth2Request() && ( !isActiveMemberOfAcsp( acspNumber ) || !canManageMembership( targetUserRole ) ) ){
         LOG.errorContext( xRequestId, new Exception( String.format( "User %s is not permitted to create %s membership", requestingUserId, targetUserRole.getValue() ) ), null );
         throw new ForbiddenRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
     }
