@@ -1,10 +1,10 @@
 package uk.gov.companieshouse.acsp.manage.users.utils;
 
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
+
 import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
-
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.getXRequestId;
 
 public class PaginationValidatorUtil {
 

@@ -1,11 +1,12 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getUser;
+
 import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.acsp_manage_users.api.UserAcspMembershipInterface;
@@ -31,7 +32,7 @@ public class UserAcspMembershipController implements UserAcspMembershipInterface
 
     LOG.infoContext( xRequestId, String.format( "Received request with user_id=%s, include_removed=%b", ericIdentity, includeRemoved ), null );
 
-    final var loggedUser = Optional.ofNullable( UserContext.getInstance().getRequestDetails() ).orElseThrow( ()-> new InternalServerErrorRuntimeException( String.format( "User not in context:%s",ericIdentity ) ) );
+    final var loggedUser = Optional.ofNullable( getUser() ).orElseThrow( ()-> new InternalServerErrorRuntimeException( String.format( "User not in context:%s",ericIdentity ) ) );
     LOG.debugContext( xRequestId, String.format( "Attempting to fetch memberships for user %s", loggedUser.getUserId() ), null );
     final var acspMemberships =
       acspMembersService.fetchAcspMemberships(loggedUser, includeRemoved);
