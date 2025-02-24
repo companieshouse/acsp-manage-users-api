@@ -165,7 +165,7 @@ class UserAuthenticationFilterTest {
         final var response = new MockHttpServletResponse();
         final var filterChain = Mockito.mock( FilterChain.class );
 
-        Mockito.doThrow( new NotFoundRuntimeException( "acsp-manage-users-api", "Could not find user" ) ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+        Mockito.doThrow( new NotFoundRuntimeException(  "Could not find user", new Exception( "Could not find user" ) ) ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
 
         final var securityContext = Mockito.mock( SecurityContext.class );
         SecurityContextHolder.setContext( securityContext );

@@ -1,7 +1,9 @@
 package uk.gov.companieshouse.acsp.manage.users.utils;
 
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.UNKNOWN;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.canManageMembership;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.canChangeRole;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.canCreateMembership;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.canRemoveMembership;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getActiveAcspNumber;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getActiveAcspRole;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getAdminPrivileges;
@@ -220,13 +222,17 @@ class RequestContextUtilTest {
         Assertions.assertTrue( isActiveMemberOfAcsp( "COMA001" ) );
     }
 
+
+
+
     @Test
     void canManageMembershipWithNullRoleThrowsNullPointerException(){
         final var request = new MockHttpServletRequest();
         final var ownerPermissions = testDataManager.fetchTokenPermissions( "COM002" );
         request.addHeader( "Eric-Authorised-Token-Permissions", ownerPermissions );
         RequestContext.setRequestContext( new RequestContextDataBuilder().setActiveAcspRole( request ).build() );
-        Assertions.assertThrows( NullPointerException.class, () -> canManageMembership( null ) );
+        Assertions.assertThrows( NullPointerException.class, () -> canCreateMembership( null ) );
+        Assertions.assertThrows( NullPointerException.class, () -> canRemoveMembership( null ) );
     }
 
     private static Stream<Arguments> canManageMembershipScenarios(){
@@ -257,7 +263,63 @@ class RequestContextUtilTest {
         final var request = new MockHttpServletRequest();
         request.addHeader( "Eric-Authorised-Token-Permissions", requestingUsersEricAuthorisedTokenPermissions );
         RequestContext.setRequestContext( new RequestContextDataBuilder().setActiveAcspRole( request ).build() );
-        Assertions.assertEquals( canManage, canManageMembership( targetRole ) );
+        Assertions.assertEquals( canManage, canCreateMembership( targetRole ) );
+        Assertions.assertEquals( canManage, canRemoveMembership( targetRole ) );
+    }
+
+    private static Stream<Arguments> canChangeRoleScenarios(){
+        final var ownerPermissions = testDataManager.fetchTokenPermissions( "COM002" );
+        final var adminPermissions = testDataManager.fetchTokenPermissions( "COM004" );
+        final var standardPermissions = testDataManager.fetchTokenPermissions( "COM007" );
+        final var noPermissions = "";
+
+        return Stream.of(
+                Arguments.of( ownerPermissions, OWNER, OWNER, true ),
+                Arguments.of( ownerPermissions, OWNER, ADMIN, true ),
+                Arguments.of( ownerPermissions, OWNER, STANDARD, true ),
+                Arguments.of( ownerPermissions, ADMIN, OWNER, true ),
+                Arguments.of( ownerPermissions, ADMIN, ADMIN, true ),
+                Arguments.of( ownerPermissions, ADMIN, STANDARD, true ),
+                Arguments.of( ownerPermissions, STANDARD, OWNER, true ),
+                Arguments.of( ownerPermissions, STANDARD, ADMIN, true ),
+                Arguments.of( ownerPermissions, STANDARD, STANDARD, true ),
+                Arguments.of( adminPermissions, OWNER, OWNER, false ),
+                Arguments.of( adminPermissions, OWNER, ADMIN, false ),
+                Arguments.of( adminPermissions, OWNER, STANDARD, false ),
+                Arguments.of( adminPermissions, ADMIN, OWNER, false ),
+                Arguments.of( adminPermissions, ADMIN, ADMIN, true ),
+                Arguments.of( adminPermissions, ADMIN, STANDARD, true ),
+                Arguments.of( adminPermissions, STANDARD, OWNER, false ),
+                Arguments.of( adminPermissions, STANDARD, ADMIN, true ),
+                Arguments.of( adminPermissions, STANDARD, STANDARD, true ),
+                Arguments.of( standardPermissions, OWNER, OWNER, false ),
+                Arguments.of( standardPermissions, OWNER, ADMIN, false ),
+                Arguments.of( standardPermissions, OWNER, STANDARD, false ),
+                Arguments.of( standardPermissions, ADMIN, OWNER, false ),
+                Arguments.of( standardPermissions, ADMIN, ADMIN, false ),
+                Arguments.of( standardPermissions, ADMIN, STANDARD, false ),
+                Arguments.of( standardPermissions, STANDARD, OWNER, false ),
+                Arguments.of( standardPermissions, STANDARD, ADMIN, false ),
+                Arguments.of( standardPermissions, STANDARD, STANDARD, false ),
+                Arguments.of( noPermissions, OWNER, OWNER, false ),
+                Arguments.of( noPermissions, OWNER, ADMIN, false ),
+                Arguments.of( noPermissions, OWNER, STANDARD, false ),
+                Arguments.of( noPermissions, ADMIN, OWNER, false ),
+                Arguments.of( noPermissions, ADMIN, ADMIN, false ),
+                Arguments.of( noPermissions, ADMIN, STANDARD, false ),
+                Arguments.of( noPermissions, STANDARD, OWNER, false ),
+                Arguments.of( noPermissions, STANDARD, ADMIN, false ),
+                Arguments.of( noPermissions, STANDARD, STANDARD, false )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource( "canChangeRoleScenarios" )
+    void canChangeRoleTests( final String requestingUsersEricAuthorisedTokenPermissions, final UserRoleEnum from, final UserRoleEnum to, final boolean canChange ){
+        final var request = new MockHttpServletRequest();
+        request.addHeader( "Eric-Authorised-Token-Permissions", requestingUsersEricAuthorisedTokenPermissions );
+        RequestContext.setRequestContext( new RequestContextDataBuilder().setActiveAcspRole( request ).build() );
+        Assertions.assertEquals( canChange, canChangeRole( from, to ) );
     }
 
 }

@@ -20,8 +20,10 @@ import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepositor
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
+import uk.gov.companieshouse.api.accounts.associations.model.Association.StatusEnum;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserStatusEnum;
@@ -365,7 +367,7 @@ class AcspMembersServiceIntegrationTest {
         final var updatedDao = acspMembersRepository.findById("TS001").get();
 
         Assertions.assertNotEquals(originalDao.getEtag(), updatedDao.getEtag());
-        Assertions.assertEquals(UserRoleEnum.STANDARD.getValue(), updatedDao.getUserRole());
+        Assertions.assertEquals(UserRoleEnum.STANDARD, updatedDao.getUserRole());
         Assertions.assertEquals(originalDao.getStatus(), updatedDao.getStatus());
         Assertions.assertEquals(originalDao.getRemovedAt(), updatedDao.getRemovedAt());
         Assertions.assertEquals(originalDao.getRemovedBy(), updatedDao.getRemovedBy());
@@ -396,7 +398,7 @@ class AcspMembersServiceIntegrationTest {
         final var updatedDao = acspMembersRepository.findById("TS001").get();
 
         Assertions.assertNotEquals(originalDao.getEtag(), updatedDao.getEtag());
-        Assertions.assertEquals(UserRoleEnum.STANDARD.getValue(), updatedDao.getUserRole());
+        Assertions.assertEquals(UserRoleEnum.STANDARD, updatedDao.getUserRole());
         Assertions.assertEquals(UserStatusEnum.REMOVED.getValue(), updatedDao.getStatus());
         Assertions.assertNotEquals(originalDao.getRemovedAt(), updatedDao.getRemovedAt());
         Assertions.assertEquals("TSU002", updatedDao.getRemovedBy());
@@ -411,7 +413,7 @@ class AcspMembersServiceIntegrationTest {
         final var updatedDao = acspMembersRepository.findById("TS001").get();
 
         Assertions.assertNotEquals(originalDao.getEtag(), updatedDao.getEtag());
-        Assertions.assertEquals(UserRoleEnum.STANDARD.getValue(), updatedDao.getUserRole());
+        Assertions.assertEquals(UserRoleEnum.STANDARD, updatedDao.getUserRole());
         Assertions.assertEquals(UserStatusEnum.REMOVED.getValue(), updatedDao.getStatus());
         Assertions.assertNotEquals(originalDao.getRemovedAt(), updatedDao.getRemovedAt());
         Assertions.assertNull(updatedDao.getRemovedBy());

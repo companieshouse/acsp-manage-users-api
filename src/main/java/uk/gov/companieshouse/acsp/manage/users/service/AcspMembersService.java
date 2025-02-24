@@ -120,9 +120,7 @@ public class AcspMembersService {
 
     final var numRecordsUpdated = acspMembersRepository.updateAcspMembership(membershipId, update);
     if (numRecordsUpdated == 0) {
-      LOG.errorContext( getXRequestId(), new Exception( String.format("Failed to update Acsp Membership with id: %s", membershipId) ), null );
-      throw new InternalServerErrorRuntimeException(
-          String.format("Failed to update Acsp Membership %s", membershipId));
+      throw new InternalServerErrorRuntimeException(String.format("Failed to update Acsp Membership %s", membershipId), new Exception( String.format("Failed to update Acsp Membership with id: %s", membershipId) ));
     }
   }
 

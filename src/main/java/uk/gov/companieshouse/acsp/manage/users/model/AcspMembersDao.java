@@ -9,6 +9,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 
 @Document( "acsp_members" )
 public class AcspMembersDao {
@@ -82,8 +84,8 @@ public class AcspMembersDao {
         this.userId = userId;
     }
 
-    public String getUserRole() {
-        return userRole;
+    public UserRoleEnum getUserRole() {
+        return UserRoleEnum.fromValue( userRole );
     }
 
     public void setUserRole(String userRole) {

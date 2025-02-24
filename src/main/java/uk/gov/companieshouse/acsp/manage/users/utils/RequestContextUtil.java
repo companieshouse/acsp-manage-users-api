@@ -61,11 +61,23 @@ public final class RequestContextUtil {
         return getActiveAcspNumber().equals( acspNumber );
     }
 
-    public static boolean canManageMembership( final UserRoleEnum role ){
+    private static boolean canManageMembership( final UserRoleEnum role ){
         return switch ( role ){
             case OWNER -> OWNER.equals( getActiveAcspRole() );
             case ADMIN, STANDARD -> OWNER.equals( getActiveAcspRole() ) || ADMIN.equals( getActiveAcspRole() );
         };
     }
 
-}
+    public static boolean canCreateMembership( final UserRoleEnum role ){
+        return canManageMembership( role );
+    }
+
+    public static boolean canRemoveMembership( final UserRoleEnum role ){
+        return canManageMembership( role );
+    }
+
+    public static boolean canChangeRole( final UserRoleEnum from, final UserRoleEnum to ) {
+        return canManageMembership( from ) && canManageMembership( to );
+    }
+
+    }

@@ -63,7 +63,7 @@ class AcspMembersRepositoryIntegrationTest {
         final var result = acspMembersRepository.findAllNotRemovedByAcspNumberAndUserRole( "COMA001", UserRoleEnum.ADMIN.getValue(), PageRequest.of( 0, 10 ) );
 
         assertEquals( 2, result.getTotalElements() );
-        assertTrue( result.getContent().stream().allMatch( member -> member.getAcspNumber().equals( "COMA001" ) && member.getUserRole().equals( UserRoleEnum.ADMIN.getValue() ) && member.getRemovedBy() == null ) ) ;
+        assertTrue( result.getContent().stream().allMatch( member -> member.getAcspNumber().equals( "COMA001" ) && member.getUserRole().equals( UserRoleEnum.ADMIN ) && member.getRemovedBy() == null ) ) ;
     }
 
     @Test
@@ -73,7 +73,7 @@ class AcspMembersRepositoryIntegrationTest {
         final var result = acspMembersRepository.findAllByAcspNumberAndUserRole( "COMA001", UserRoleEnum.ADMIN.getValue(), PageRequest.of(0, 10) );
 
         assertEquals( 3, result.getTotalElements() );
-        assertTrue( result.getContent().stream().allMatch( member -> member.getAcspNumber().equals( "COMA001" ) && member.getUserRole().equals( UserRoleEnum.ADMIN.getValue() ) ) );
+        assertTrue( result.getContent().stream().allMatch( member -> member.getAcspNumber().equals( "COMA001" ) && member.getUserRole().equals( UserRoleEnum.ADMIN ) ) );
     }
 
     @Test
@@ -167,7 +167,7 @@ class AcspMembersRepositoryIntegrationTest {
     void updateAcspMembershipPerformsUpdate(){
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001" ) );
         Assertions.assertEquals( 1, acspMembersRepository.updateAcspMembership( "TS001", new Update().set( "user_role", "standard" ) ) );
-        Assertions.assertEquals( "standard", acspMembersRepository.findById( "TS001" ).get().getUserRole() );
+        Assertions.assertEquals( UserRoleEnum.STANDARD, acspMembersRepository.findById( "TS001" ).get().getUserRole() );
     }
 
     @AfterEach

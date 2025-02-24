@@ -41,12 +41,10 @@ public class AcspProfileService {
                 .onErrorMap( throwable -> {
                     if ( throwable instanceof WebClientResponseException exception ){
                         if ( NOT_FOUND.equals( exception.getStatusCode() ) ){
-                            LOG.errorContext( xRequestId, String.format( "Could not find profile for Acsp id: %s", acspNumber ), exception, null );
-                            return new NotFoundRuntimeException( APPLICATION_NAMESPACE, "Failed to find Acsp Profile" );
+                            return new NotFoundRuntimeException( "Failed to find Acsp Profile", exception );
                         }
                     }
-                    LOG.errorContext( xRequestId, String.format( "Failed to retrieve profile for Acsp id: %s", acspNumber ), (Exception) throwable, null );
-                    throw new InternalServerErrorRuntimeException( "Failed to retrieve Acsp Profile" );
+                    throw new InternalServerErrorRuntimeException( "Failed to retrieve Acsp Profile", (Exception) throwable );
                 } )
                 .doOnSubscribe( onSubscribe -> LOG.infoContext( xRequestId, String.format( "Sending request to acsp-profile-data-api: GET /authorised-corporate-service-providers/{acsp_number}. Attempting to retrieve acsp: %s", acspNumber ), null ) )
                 .doFinally( signalType -> LOG.infoContext( xRequestId, String.format( "Finished request to acsp-profile-data-api for acsp: %s.", acspNumber ), null ) );

@@ -343,6 +343,7 @@ class AcspMembershipControllerTest {
         Mockito.doReturn( testDataManager.fetchUserDtos( "WITU002" ).getFirst() ).when( usersService ).fetchUserDetails( "WITU002" );
         Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( "WIT003" );
         Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( "WITU002", "WITA001" );
+        Mockito.doReturn( testDataManager.fetchAcspProfiles( "WITA001" ).getFirst() ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT003" )
                         .header("X-Request-Id", "theId123")
@@ -382,6 +383,7 @@ class AcspMembershipControllerTest {
         Mockito.doReturn( Optional.of( acspMemberDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( "COM002" );
         Mockito.doReturn( 2 ).when( acspMembersService ).fetchNumberOfActiveOwners( "COMA001" );
         Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "COMA001" );
+        Mockito.doReturn( testDataManager.fetchAcspProfiles( "COMA001" ).getFirst() ).when( acspProfileService ).fetchAcspProfile( "COMA001" );
 
         mockMvc.perform( patch( "/acsps/memberships/COM002" )
                         .header("X-Request-Id", "theId123")
@@ -459,7 +461,8 @@ class AcspMembershipControllerTest {
         Mockito.doReturn( Optional.of( acspMembersDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( "WIT002" );
         Mockito.doReturn( 2 ).when( acspMembersService ).fetchNumberOfActiveOwners( "WITA001" );
         Mockito.doReturn( Optional.of( acspMembersDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( "WITU001", "WITA001" );
-        Mockito.doThrow( new NotFoundRuntimeException( "acsp-manage-users-api", "Not found" ) ).when( usersService ).fetchUserDetails( "WITU002" );
+        Mockito.doThrow( new NotFoundRuntimeException( "Not found", new Exception( "Not found" ) ) ).when( usersService ).fetchUserDetails( "WITU002" );
+        Mockito.doReturn( testDataManager.fetchAcspProfiles( "WITA001" ).getFirst() ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT002" )
                         .header("X-Request-Id", "theId123")
@@ -480,7 +483,7 @@ class AcspMembershipControllerTest {
         Mockito.doReturn( Optional.of( acspMembersDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( "WIT002" );
         Mockito.doReturn( 2 ).when( acspMembersService ).fetchNumberOfActiveOwners( "WITA001" );
         Mockito.doReturn( Optional.of( acspMembersDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( "WITU001", "WITA001" );
-        Mockito.doThrow( new NotFoundRuntimeException( "acsp-manage-users-api", "Not found" ) ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
+        Mockito.doThrow( new NotFoundRuntimeException( "acsp-manage-users-api", new Exception( "Not found" ) ) ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT002" )
                         .header("X-Request-Id", "theId123")
@@ -526,6 +529,7 @@ class AcspMembershipControllerTest {
         Mockito.doReturn( Optional.of( acspMembersDaos.getLast() ) ).when( acspMembersService ).fetchMembershipDao( "COM004" );
         Mockito.doReturn( 2 ).when( acspMembersService ).fetchNumberOfActiveOwners( "COMA001" );
         Mockito.doReturn( Optional.of( acspMembersDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "COMA001" );
+        Mockito.doReturn( testDataManager.fetchAcspProfiles( "COMA001" ).getFirst() ).when( acspProfileService ).fetchAcspProfile( "COMA001" );
 
         mockMvc.perform( patch( "/acsps/memberships/COM004" )
                         .header("X-Request-Id", "theId123")

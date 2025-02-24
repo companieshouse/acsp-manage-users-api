@@ -48,7 +48,6 @@ public abstract class AcspMembershipMapper {
         acspMembership.setAcspStatus( AcspStatusEnum.fromValue( acspProfile.getStatus().getValue() ) );
     }
 
-    @Mapping( target = "userRole", expression = "java(AcspMembership.UserRoleEnum.fromValue(acspMembersDao.getUserRole()))" )
     @Mapping( target = "membershipStatus", expression = "java(AcspMembership.MembershipStatusEnum.fromValue(acspMembersDao.getStatus()))" )
     public abstract AcspMembership daoToDto( final AcspMembersDao acspMembersDao, @Context final User user, @Context final AcspProfile acspProfile );
 

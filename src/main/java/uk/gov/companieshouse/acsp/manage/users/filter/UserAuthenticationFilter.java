@@ -94,7 +94,6 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             LOGGER.debugContext( getXRequestId(), "Confirmed this request is from an Acsp Member. Checking session validity...", null );
             final var springRole = acspMembersService.fetchActiveAcspMembership( getEricIdentity(), getActiveAcspNumber() )
                     .map( AcspMembersDao::getUserRole )
-                    .map( UserRoleEnum::fromValue )
                     .filter( databaseUserRole -> databaseUserRole.equals( getActiveAcspRole() ) )
                     .map( SpringRole::fromUserRoleEnum )
                     .orElse( UNKNOWN_ROLE );

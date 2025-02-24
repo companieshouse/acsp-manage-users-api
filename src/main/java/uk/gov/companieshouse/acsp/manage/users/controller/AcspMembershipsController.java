@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.canManageMembership;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.canCreateMembership;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getUser;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isActiveMemberOfAcsp;
@@ -64,28 +64,26 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
     try {
       targetUser = usersService.fetchUserDetails( targetUserId );
     } catch ( NotFoundRuntimeException exception ) {
-      throw new BadRequestRuntimeException( ERROR_CODE_1001.getCode() );
+      throw new BadRequestRuntimeException( ERROR_CODE_1001.getCode(), exception );
     }
 
     AcspProfile acspProfile;
     try {
       acspProfile = acspProfileService.fetchAcspProfile( acspNumber );
     } catch ( NotFoundRuntimeException exception ) {
-      throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
+      throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN, exception );
     }
 
     LOG.debugContext( xRequestId, String.format( "Attempting to fetch memberships for user with id %s", targetUserId ), null );
     final var memberships = acspMembersService.fetchAcspMembershipDaos( targetUserId, false );
     if ( !memberships.isEmpty() ) {
-      LOG.errorContext( xRequestId, new Exception( String.format( "%s user already has an active Acsp membership", targetUserId ) ), null );
-      throw new BadRequestRuntimeException( ERROR_CODE_1002.getCode() );
+      throw new BadRequestRuntimeException( ERROR_CODE_1002.getCode(), new Exception( String.format( "%s user already has an active Acsp membership", targetUserId ) ) );
     }
 
     final var requestingUser = getUser();
     final var requestingUserId = Optional.ofNullable( requestingUser ).map( User::getUserId ).orElse( null );
-    if ( isOAuth2Request() && ( !isActiveMemberOfAcsp( acspNumber ) || !canManageMembership( targetUserRole ) ) ){
-        LOG.errorContext( xRequestId, new Exception( String.format( "User %s is not permitted to create %s membership", requestingUserId, targetUserRole.getValue() ) ), null );
-        throw new ForbiddenRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
+    if ( isOAuth2Request() && ( !isActiveMemberOfAcsp( acspNumber ) || !canCreateMembership( targetUserRole ) ) ){
+        throw new ForbiddenRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN, new Exception( String.format( "User %s is not permitted to create %s membership", requestingUserId, targetUserRole.getValue() ) ) );
     }
 
     LOG.debugContext( xRequestId, String.format( "Attempting to create membership for user %s and Acsp %s", targetUserId, acspNumber  ), null );
@@ -110,8 +108,7 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
       final RequestBodyLookup requestBody) {
 
     if (Objects.isNull(requestBody.getUserEmail())) {
-      LOG.errorContext( requestId, new Exception( "User email was not provided." ), null );
-      throw new BadRequestRuntimeException(PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN);
+      throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN, new Exception( "User email was not provided." ));
     }
     final var userEmail = requestBody.getUserEmail();
 
@@ -120,13 +117,7 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
     final var usersList =
         Optional.ofNullable(usersService.searchUserDetails(List.of(userEmail)))
             .filter(users -> !users.isEmpty())
-            .orElseThrow(
-                () -> {
-                  LOG.errorContext( requestId, new Exception( String.format("User %s was not found", userEmail) ), null );
-                  return new NotFoundRuntimeException(
-                      StaticPropertyUtil.APPLICATION_NAMESPACE,
-                      PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN);
-                });
+            .orElseThrow( () -> new NotFoundRuntimeException(PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN, new Exception( String.format("User %s was not found", userEmail) ) ) );
     final var user = usersList.getFirst();
 
     acspProfileService.fetchAcspProfile(acspNumber);
@@ -161,8 +152,7 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
             .orElse(true);
 
     if (!roleIsValid) {
-      LOG.errorContext( requestId, new Exception( String.format("Role was invalid: %s", role) ), null);
-      throw new BadRequestRuntimeException(PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN);
+      throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN, new Exception( String.format( "Role was invalid: %s", role ) ) );
     }
 
     final var paginationParams =

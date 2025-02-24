@@ -389,6 +389,8 @@ class AcspMembershipControllerTest {
 
         acspMembersRepository.insert( acspMembersDaos );
         Mockito.doReturn( testDataManager.fetchUserDtos( requestUserId ).getFirst() ).when( usersService ).fetchUserDetails( requestUserId );
+        Mockito.doReturn( testDataManager.fetchAcspProfiles( originalDao.getAcspNumber() ).getFirst() ).when( acspProfileService ).fetchAcspProfile( originalDao.getAcspNumber() );
+
 
         mockMvc.perform( patch( String.format( "/acsps/memberships/%s", targetUserMembershipId ) )
                         .header("X-Request-Id", "theId123")
@@ -487,7 +489,7 @@ class AcspMembershipControllerTest {
 
         final var updatedDao = acspMembersRepository.findById( targetUserMembershipId ).get();
         Assertions.assertNotEquals( originalDao.getEtag(), updatedDao.getEtag() );
-        Assertions.assertEquals( userRole, updatedDao.getUserRole() );
+        Assertions.assertEquals( UserRoleEnum.fromValue( userRole ), updatedDao.getUserRole() );
         Assertions.assertEquals( originalDao.getStatus(), updatedDao.getStatus() );
         Assertions.assertEquals( originalDao.getRemovedAt(), updatedDao.getRemovedAt() );
         Assertions.assertEquals( originalDao.getRemovedBy(), updatedDao.getRemovedBy() );
@@ -569,7 +571,7 @@ class AcspMembershipControllerTest {
 
         final var updatedDao = acspMembersRepository.findById( "WIT002" ).get();
         Assertions.assertNotEquals( originalDao.getEtag(), updatedDao.getEtag() );
-        Assertions.assertEquals( UserRoleEnum.STANDARD.getValue(), updatedDao.getUserRole() );
+        Assertions.assertEquals( UserRoleEnum.STANDARD, updatedDao.getUserRole() );
         Assertions.assertEquals( UserStatusEnum.REMOVED.getValue(), updatedDao.getStatus() );
         Assertions.assertNotEquals( originalDao.getRemovedAt(), updatedDao.getRemovedAt() );
         Assertions.assertEquals( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", updatedDao.getRemovedBy() );
@@ -581,6 +583,7 @@ class AcspMembershipControllerTest {
 
         acspMembersRepository.insert( acspMembersDaos );
         Mockito.doReturn( testDataManager.fetchUserDtos( "COMU001" ).getFirst() ).when( usersService ).fetchUserDetails( "COMU001" );
+        Mockito.doReturn( testDataManager.fetchAcspProfiles( "COMA001" ).getFirst() ).when( acspProfileService ).fetchAcspProfile( "COMA001" );
 
         mockMvc.perform( patch( "/acsps/memberships/COM004" )
                         .header("X-Request-Id", "theId123")

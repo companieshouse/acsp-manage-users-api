@@ -138,7 +138,7 @@ class AcspMembershipsControllerIntegrationTest {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
             mockFetchUserDetailsFor("COMU002" );
-            Mockito.doThrow(new NotFoundRuntimeException("acsp-manage-users-api", "Was not found")).when(
+            Mockito.doThrow(new NotFoundRuntimeException( "Was not found", new Exception( "Was not found" ))).when(
                     acspProfileService).fetchAcspProfile("919191");
 
             mockMvc.perform(get("/acsps/919191/memberships")
@@ -289,7 +289,7 @@ class AcspMembershipsControllerIntegrationTest {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
             mockFetchUserDetailsFor("COMU002" );
-            Mockito.doThrow(new NotFoundRuntimeException("acsp-manage-users-api", "Was not found")).when(
+            Mockito.doThrow(new NotFoundRuntimeException( "Was not found", new Exception( "Was not found" ))).when(
                   acspProfileService).fetchAcspProfile("NONEXISTENT");
 
           mockMvc.perform(post("/acsps/NONEXISTENT/memberships/lookup")
@@ -573,7 +573,7 @@ class AcspMembershipsControllerIntegrationTest {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
             mockFetchUserDetailsFor("COMU002" );
-            Mockito.doThrow( new NotFoundRuntimeException( "", "" ) ).when(acspProfileService).fetchAcspProfile( "TSA001" );
+            Mockito.doThrow( new NotFoundRuntimeException( "", new Exception( "" ) ) ).when(acspProfileService).fetchAcspProfile( "TSA001" );
 
             mockMvc.perform( post( "/acsps/TSA001/memberships" )
                             .header( "X-Request-Id", "theId123" )
@@ -591,7 +591,7 @@ class AcspMembershipsControllerIntegrationTest {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
             mockFetchUserDetailsFor("COMU002" );
-            Mockito.doThrow( new NotFoundRuntimeException( "", "" ) ).when( usersService ).fetchUserDetails( "COMU001" );
+            Mockito.doThrow( new NotFoundRuntimeException( "", new Exception( "" ) ) ).when( usersService ).fetchUserDetails( "COMU001" );
 
             mockMvc.perform( post( "/acsps/TSA001/memberships" )
                             .header( "X-Request-Id", "theId123" )

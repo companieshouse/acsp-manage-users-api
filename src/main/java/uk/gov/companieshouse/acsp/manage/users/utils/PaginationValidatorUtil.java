@@ -32,13 +32,11 @@ public class PaginationValidatorUtil {
     int validatedItemsPerPage = (itemsPerPage == null) ? DEFAULT_ITEMS_PER_PAGE : itemsPerPage;
 
     if (validatedPageIndex < 0) {
-      LOG.errorContext( getXRequestId(), new Exception( "pageIndex was less than 0" ), null );
-      throw new BadRequestRuntimeException("Please check the request and try again");
+      throw new BadRequestRuntimeException("Please check the request and try again", new Exception( "pageIndex was less than 0" ));
     }
 
     if (validatedItemsPerPage <= 0) {
-      LOG.errorContext(getXRequestId(), new Exception( "itemsPerPage was less than or equal to 0" ), null );
-      throw new BadRequestRuntimeException("Please check the request and try again");
+      throw new BadRequestRuntimeException("Please check the request and try again", new Exception( "itemsPerPage was less than or equal to 0" ));
     }
 
     return new PaginationParams(validatedPageIndex, validatedItemsPerPage);
