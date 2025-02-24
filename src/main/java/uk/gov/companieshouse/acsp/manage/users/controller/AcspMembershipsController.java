@@ -4,7 +4,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.exceptions.ForbiddenRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.model.UserContext;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
@@ -28,18 +27,19 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static uk.gov.companieshouse.acsp.manage.users.model.Constants.PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN;
 import static uk.gov.companieshouse.acsp.manage.users.model.ErrorCode.ERROR_CODE_1001;
 import static uk.gov.companieshouse.acsp.manage.users.model.ErrorCode.ERROR_CODE_1002;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.getXRequestId;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.isOAuth2Request;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.requestingUserCanManageMembership;
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.requestingUserIsActiveMemberOfAcsp;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.*;
 
 @Controller
 public class AcspMembershipsController implements AcspMembershipsInterface {
 
   private static final Logger LOG = LoggerFactory.getLogger( StaticPropertyUtil.APPLICATION_NAMESPACE );
+
+  private static final String PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN = "Please check the request and try again";
+  private static final String ACSP_NUMBER_KEY = "acspNumber";
+  private static final String REQUEST_ID_KEY = "requestId";
+
   private final UsersService usersService;
   private final AcspProfileService acspProfileService;
   private final AcspMembersService acspMembersService;
@@ -81,11 +81,11 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
       throw new BadRequestRuntimeException( ERROR_CODE_1002.getCode() );
     }
 
-    final var requestingUser = UserContext.getInstance().getRequestDetails();
+    final var requestingUser = UserContext.getLoggedUser();
     final var requestingUserId = Optional.ofNullable( requestingUser ).map( User::getUserId ).orElse( null );
-    if ( isOAuth2Request() && ( !requestingUserIsActiveMemberOfAcsp( acspNumber ) || !requestingUserCanManageMembership( targetUserRole ) ) ){
+    if ( isOAuth2Request() && ( !requestingUserIsActiveMemberOfAcsp( acspNumber ) || !requestingUserIsPermittedToCreateMembershipWith( targetUserRole ) ) ){
         LOG.errorContext( xRequestId, new Exception( String.format( "User %s is not permitted to create %s membership", requestingUserId, targetUserRole.getValue() ) ), null );
-        throw new ForbiddenRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
+        throw new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN );
     }
 
     LOG.debugContext( xRequestId, String.format( "Attempting to create membership for user %s and Acsp %s", targetUserId, acspNumber  ), null );

@@ -1,7 +1,6 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -13,14 +12,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.mock.web.MockHttpServletRequest;
 import uk.gov.companieshouse.acsp.manage.users.common.ComparisonUtils;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipCollectionMappers;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
-import uk.gov.companieshouse.acsp.manage.users.model.RequestDataContext;
-import uk.gov.companieshouse.acsp.manage.users.model.RequestDetails;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
@@ -52,13 +48,6 @@ class AcspMembersServiceTest {
     private static final TestDataManager testDataManager = TestDataManager.getInstance();
 
     private static final ComparisonUtils comparisonUtils = new ComparisonUtils();
-
-    @BeforeEach
-    void setup(){
-        final var request = new MockHttpServletRequest();
-        request.addHeader( "X-Request-Id", "theId123" );
-        RequestDataContext.getInstance().setRequestDetails( new RequestDetails( request ) );
-    }
 
     @Nested
     class FetchAcspMemberships {
