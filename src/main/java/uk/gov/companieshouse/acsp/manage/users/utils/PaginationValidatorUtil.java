@@ -4,7 +4,7 @@ import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeExcep
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 
-import static uk.gov.companieshouse.acsp.manage.users.utils.RequestUtil.getXRequestId;
+import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
 
 public class PaginationValidatorUtil {
 

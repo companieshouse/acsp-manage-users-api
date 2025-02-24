@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.BadRequestRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.exceptions.ForbiddenRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
@@ -128,23 +127,6 @@ public class ControllerAdvice extends ResponseEntityExceptionHandler {
 
         errors.addError( Err.invalidBodyBuilderWithLocation( ACSP_MANAGE_USERS_API ).withError( exception.getMessage() ).build() );
 
-        return errors;
-    }
-
-    @ExceptionHandler( ForbiddenRuntimeException.class )
-    @ResponseStatus( HttpStatus.FORBIDDEN )
-    @ResponseBody
-    public Errors onForbiddenRuntimeException( final ForbiddenRuntimeException exception, final HttpServletRequest request ) {
-        final var xRequestId = request.getHeader( X_REQUEST_ID );
-
-        Map<String, Object> contextMap = new HashMap<>();
-        contextMap.put( "url", request.getRequestURL().toString() );
-        contextMap.put( QUERY_PARAMETERS, request.getQueryString() != null ? "?" + request.getQueryString() : "" );
-
-        LOG.errorContext( xRequestId, exception.getMessage(), null, contextMap );
-
-        final var errors = new Errors();
-        errors.addError( Err.serviceErrBuilder().withError( exception.getMessage() ).build() );
         return errors;
     }
 }

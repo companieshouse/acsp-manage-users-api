@@ -20,6 +20,7 @@ import org.springframework.web.context.WebApplicationContext;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.configuration.WebSecurityConfig;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
+import uk.gov.companieshouse.acsp.manage.users.interceptor.InterceptorHelper;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.EmailService;
@@ -40,7 +41,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AcspMembershipController.class)
-@Import(WebSecurityConfig.class)
+@Import({InterceptorHelper.class,WebSecurityConfig.class})
 @Tag("unit-test")
 class AcspMembershipControllerTest {
 
@@ -130,20 +131,18 @@ class AcspMembershipControllerTest {
 
     @Test
     void getAcspMembershipForAcspAndIdWithOAuth2Succeeds() throws Exception {
-        final var requestingUserDao = testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst();
-        final var requestingUserDto = testDataManager.fetchAcspMembershipDtos( "TS001" ).getFirst();
+        final var requestingUserDao = testDataManager.fetchAcspMembersDaos( "WIT004" ).getFirst();
 
-
-        mockFetchUserDetailsFor( "TSU001" );
-        Mockito.doReturn( Optional.of( requestingUserDao ) ).when( acspMembersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
-        Mockito.doReturn( Optional.of( requestingUserDto ) ).when( acspMembersService ).fetchMembership( "TS001" );
+        mockFetchUserDetailsFor( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+        Mockito.doReturn( Optional.of( requestingUserDao ) ).when( acspMembersService ).fetchActiveAcspMembership( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
+        Mockito.doReturn( Optional.of( new AcspMembership().id( "TS001" ) ) ).when( acspMembersService ).fetchMembership( "TS001" );
 
         mockMvc.perform( get( "/acsps/memberships/TS001" )
                         .header("X-Request-Id", "theId123")
-                        .header("Eric-identity", "TSU001")
+                        .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
-                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "TS001" ) ) )
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) ) )
                 .andExpect( status().isOk() );
     }
 
@@ -261,7 +260,7 @@ class AcspMembershipControllerTest {
     }
 
     @Test
-    void updateAcspMembershipForAcspAndIdWithOAuth2ReturnsForbiddenWhenAttemptingToRemoveLastOwner() throws Exception {
+    void updateAcspMembershipForAcspAndIdWithOAuth2ReturnsBadRequestWhenAttemptingToRemoveLastOwner() throws Exception {
         final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT004" ).getFirst();
 
         Mockito.doReturn( Optional.of( acspMemberDaos ) ).when( acspMembersService ).fetchActiveAcspMembership( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
@@ -278,11 +277,11 @@ class AcspMembershipControllerTest {
                         .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
-                .andExpect( status().isForbidden() );
+                .andExpect( status().isBadRequest() );
     }
 
     @Test
-    void updateAcspMembershipForAcspAndIdWithApiKeyAndActiveAcspReturnsForbiddenWhenAttemptingToRemoveLastOwner() throws Exception {
+    void updateAcspMembershipForAcspAndIdWithApiKeyAndActiveAcspReturnsBadRequestWhenAttemptingToRemoveLastOwner() throws Exception {
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
         Mockito.doReturn( Optional.of( testDataManager.fetchAcspMembersDaos( "WIT004" ).getFirst() ) ).when( acspMembersService ).fetchMembershipDao( "WIT004" );
         Mockito.doReturn( testDataManager.fetchAcspProfiles( "WITA001" ).getFirst() ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
@@ -296,7 +295,7 @@ class AcspMembershipControllerTest {
                         .header( "Eric-Authorised-Token-Permissions", "" )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_status\":\"removed\"}" ) )
-                .andExpect( status().isForbidden() );
+                .andExpect( status().isBadRequest() );
     }
 
     @Test
@@ -336,7 +335,7 @@ class AcspMembershipControllerTest {
     }
 
     @Test
-    void updateAcspMembershipForAcspAndIdWithAdminCallerAndUserRoleSetToOwnerInRequestBodyReturnsForbidden() throws Exception {
+    void updateAcspMembershipForAcspAndIdWithAdminCallerAndUserRoleSetToOwnerInRequestBodyReturnsBadRequest() throws Exception {
         final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "WIT002", "WIT003" );
 
         Mockito.doReturn( Optional.of( acspMemberDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( "WITU002", "WITA001" );
@@ -352,11 +351,11 @@ class AcspMembershipControllerTest {
                         .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT002" ) )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_role\":\"owner\"}" ) )
-                .andExpect( status().isForbidden() );
+                .andExpect( status().isBadRequest() );
     }
 
     @Test
-    void updateAcspMembershipForAcspAndIdWithStandardCallerReturnsForbidden() throws Exception {
+    void updateAcspMembershipForAcspAndIdWithStandardCallerReturnsBadRequest() throws Exception {
         final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "XME004", "XME002" );
 
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
@@ -371,11 +370,11 @@ class AcspMembershipControllerTest {
                         .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "XME004" ) )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_role\":\"standard\"}" ) )
-                .andExpect( status().isForbidden() );
+                .andExpect( status().isBadRequest() );
     }
 
     @Test
-    void updateAcspMembershipForAcspAndIdWithAdminCallerAndOwnerTargetReturnsForbidden() throws Exception {
+    void updateAcspMembershipForAcspAndIdWithAdminCallerAndOwnerTargetReturnsBadRequest() throws Exception {
         final var acspMemberDaos = testDataManager.fetchAcspMembersDaos( "COM004", "COM002" );
 
         Mockito.doReturn( testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst() ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
@@ -391,7 +390,7 @@ class AcspMembershipControllerTest {
                         .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM004" ) )
                         .contentType( MediaType.APPLICATION_JSON )
                         .content( "{\"user_role\":\"standard\"}" ) )
-                .andExpect( status().isForbidden() );
+                .andExpect( status().isBadRequest() );
     }
 
 
