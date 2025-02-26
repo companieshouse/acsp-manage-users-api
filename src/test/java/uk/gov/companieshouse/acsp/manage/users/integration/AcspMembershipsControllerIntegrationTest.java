@@ -18,9 +18,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
-import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAStandardMemberEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAnAdminMemberEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAnOwnerMemberEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAStandardMemberEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAnAdminMemberEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAnOwnerMemberEmailData;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
@@ -48,7 +48,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
-import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.*;
+import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.*;
 
 @AutoConfigureMockMvc
 @SpringBootTest
@@ -138,7 +138,7 @@ class AcspMembershipsControllerIntegrationTest {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
             mockFetchUserDetailsFor("COMU002" );
-            Mockito.doThrow(new NotFoundRuntimeException("acsp-manage-users-api", "Was not found")).when(
+            Mockito.doThrow(new NotFoundRuntimeException( "Was not found", new Exception( "Was not found" ))).when(
                     acspProfileService).fetchAcspProfile("919191");
 
             mockMvc.perform(get("/acsps/919191/memberships")
@@ -289,7 +289,7 @@ class AcspMembershipsControllerIntegrationTest {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
             mockFetchUserDetailsFor("COMU002" );
-            Mockito.doThrow(new NotFoundRuntimeException("acsp-manage-users-api", "Was not found")).when(
+            Mockito.doThrow(new NotFoundRuntimeException( "Was not found", new Exception( "Was not found" ))).when(
                   acspProfileService).fetchAcspProfile("NONEXISTENT");
 
           mockMvc.perform(post("/acsps/NONEXISTENT/memberships/lookup")
@@ -573,7 +573,7 @@ class AcspMembershipsControllerIntegrationTest {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
             mockFetchUserDetailsFor("COMU002" );
-            Mockito.doThrow( new NotFoundRuntimeException( "", "" ) ).when(acspProfileService).fetchAcspProfile( "TSA001" );
+            Mockito.doThrow( new NotFoundRuntimeException( "", new Exception( "" ) ) ).when(acspProfileService).fetchAcspProfile( "TSA001" );
 
             mockMvc.perform( post( "/acsps/TSA001/memberships" )
                             .header( "X-Request-Id", "theId123" )
@@ -591,7 +591,7 @@ class AcspMembershipsControllerIntegrationTest {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
             mockFetchUserDetailsFor("COMU002" );
-            Mockito.doThrow( new NotFoundRuntimeException( "", "" ) ).when( usersService ).fetchUserDetails( "COMU001" );
+            Mockito.doThrow( new NotFoundRuntimeException( "", new Exception( "" ) ) ).when( usersService ).fetchUserDetails( "COMU001" );
 
             mockMvc.perform( post( "/acsps/TSA001/memberships" )
                             .header( "X-Request-Id", "theId123" )

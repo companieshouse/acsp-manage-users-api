@@ -78,7 +78,7 @@ class ControllerAdviceTest {
     void testNotFoundRuntimeError() throws Exception {
         mockFetchUserDetailsFor( "TSU001" );
         Mockito.doReturn( Optional.of( testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst() ) ).when( acspMemersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
-        Mockito.doThrow( new NotFoundRuntimeException( "acsp-manage-users-api", "Couldn't find association" ) ).when( acspMemersService ).fetchMembership( any() );
+        Mockito.doThrow( new NotFoundRuntimeException( "Couldn't find association", new Exception( "Couldn't find association" ) ) ).when( acspMemersService ).fetchMembership( any() );
 
         mockMvc.perform( get("/acsps/memberships/TS001")
                         .header( "X-Request-Id", "theId123" )
@@ -93,7 +93,7 @@ class ControllerAdviceTest {
     void testBadRequestRuntimeError() throws Exception {
         mockFetchUserDetailsFor( "TSU001" );
         Mockito.doReturn( Optional.of( testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst() ) ).when( acspMemersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
-        Mockito.doThrow( new BadRequestRuntimeException( "Request was less than ideal" ) ).when( acspMemersService ).fetchMembership( any() );
+        Mockito.doThrow( new BadRequestRuntimeException( "Request was less than ideal", new Exception( "Request was less than ideal" ) ) ).when( acspMemersService ).fetchMembership( any() );
 
         mockMvc.perform( get("/acsps/memberships/TS001")
                         .header( "X-Request-Id", "theId123" )
@@ -137,7 +137,7 @@ class ControllerAdviceTest {
     void testOnInternalServerErrorRuntimeException() throws Exception {
         mockFetchUserDetailsFor( "TSU001" );
         Mockito.doReturn( Optional.of( testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst() ) ).when( acspMemersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
-        Mockito.doThrow( new InternalServerErrorRuntimeException( "Problem" ) ).when( acspMemersService ).fetchMembership( any() );
+        Mockito.doThrow( new InternalServerErrorRuntimeException( "Problem", new Exception( "Problem" ) ) ).when( acspMemersService ).fetchMembership( any() );
 
         mockMvc.perform( get("/acsps/memberships/TS001")
                         .header( "X-Request-Id", "theId123" )
@@ -152,7 +152,7 @@ class ControllerAdviceTest {
     void testForbiddenRuntimeError() throws Exception {
         mockFetchUserDetailsFor( "TSU001" );
         Mockito.doReturn( Optional.of( testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst() ) ).when( acspMemersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
-        Mockito.doThrow( new ForbiddenRuntimeException( "Request was less than ideal" ) ).when( acspMemersService ).fetchMembership( any() );
+        Mockito.doThrow( new ForbiddenRuntimeException( "Request was less than ideal", new Exception( "Request was less than ideal" ) ) ).when( acspMemersService ).fetchMembership( any() );
 
         mockMvc.perform( get("/acsps/memberships/TS001")
                         .header( "X-Request-Id", "theId123" )

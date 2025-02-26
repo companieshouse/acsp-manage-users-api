@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 
 @Document( "acsp_members" )
 public class AcspMembersDao {
@@ -54,108 +55,166 @@ public class AcspMembersDao {
     @Version
     private Integer version;
 
-    public AcspMembersDao(){
-        // Empty constructor
-    }
+    public AcspMembersDao(){}
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
+    public void setId( final String id ){
         this.id = id;
     }
 
-    public String getAcspNumber() {
-        return acspNumber;
+    public AcspMembersDao id( final String id ){
+        setId( id );
+        return this;
     }
 
-    public void setAcspNumber(String acspNumber) {
+    public String getId(){
+        return id;
+    }
+
+    public void setAcspNumber( final String acspNumber ){
         this.acspNumber = acspNumber;
     }
 
-    public String getUserId() {
-        return userId;
+    public AcspMembersDao acspNumber( final String acspNumber ){
+        setAcspNumber( acspNumber );
+        return this;
     }
 
-    public void setUserId(String userId) {
+    public String getAcspNumber(){
+        return acspNumber;
+    }
+
+    public void setUserId( final String userId ) {
         this.userId = userId;
     }
 
-    public String getUserRole() {
-        return userRole;
+    public AcspMembersDao userId( final String userId ){
+        setUserId( userId );
+        return this;
     }
 
-    public void setUserRole(String userRole) {
+    public String getUserId(){
+        return userId;
+    }
+
+    public void setUserRole( final String userRole ) {
         this.userRole = userRole;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public AcspMembersDao userRole( final String userRole ){
+        setUserRole( userRole );
+        return this;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public UserRoleEnum getUserRole(){
+        return UserRoleEnum.fromValue( userRole );
+    }
+
+    public void setCreatedAt( final LocalDateTime createdAt ){
         this.createdAt = createdAt;
     }
 
-    public LocalDateTime getAddedAt() {
-        return addedAt;
+    public AcspMembersDao createdAt( final LocalDateTime createdAt ){
+        setCreatedAt( createdAt );
+        return this;
     }
 
-    public void setAddedAt(LocalDateTime addedAt) {
+    public LocalDateTime getCreatedAt(){
+        return createdAt;
+    }
+
+    public void setAddedAt( final LocalDateTime addedAt ){
         this.addedAt = addedAt;
     }
 
-    public String getAddedBy() {
-        return addedBy;
+    public AcspMembersDao addedAt( final LocalDateTime addedAt ){
+        setAddedAt( addedAt );
+        return this;
     }
 
-    public void setAddedBy(String addedBy) {
+    public LocalDateTime getAddedAt(){
+        return addedAt;
+    }
+
+    public void setAddedBy( final String addedBy ) {
         this.addedBy = addedBy;
     }
 
-    public LocalDateTime getRemovedAt() {
-        return removedAt;
+    public AcspMembersDao addedBy( final String addedBy ){
+        setAddedBy( addedBy );
+        return this;
     }
 
-    public void setRemovedAt(LocalDateTime removedAt) {
+    public String getAddedBy(){
+        return addedBy;
+    }
+
+    public void setRemovedAt( final LocalDateTime removedAt ) {
         this.removedAt = removedAt;
     }
 
-    public String getRemovedBy() {
-        return removedBy;
+    public AcspMembersDao removedAt( final LocalDateTime removedAt ){
+        setRemovedAt( removedAt );
+        return this;
     }
 
-    public void setRemovedBy(String removedBy) {
+    public LocalDateTime getRemovedAt(){
+        return removedAt;
+    }
+
+    public void setRemovedBy( final String removedBy ) {
         this.removedBy = removedBy;
     }
 
-    public String getEtag() {
-        return etag;
+    public AcspMembersDao removedBy( final String removedBy ){
+        setRemovedBy( removedBy );
+        return this;
     }
 
-    public void setEtag(String etag) {
+    public String getRemovedBy(){
+        return removedBy;
+    }
+
+    public void setEtag( final String etag ){
         this.etag = etag;
     }
 
-    public Integer getVersion() {
-        return version;
+    public AcspMembersDao etag( final String etag ){
+        setEtag( etag );
+        return this;
     }
 
-    public void setVersion(Integer version) {
+    public String getEtag(){
+        return etag;
+    }
+
+    public void setVersion( final Integer version ){
         this.version = version;
     }
 
-    public String getStatus() {
-        return status;
+    public AcspMembersDao version( final Integer version ){
+        setVersion( version );
+        return this;
     }
 
-    public void setStatus(String status) {
+    public Integer getVersion(){
+        return version;
+    }
+
+    public void setStatus( final String status ){
         this.status = status;
     }
 
+    public AcspMembersDao status( final String status ){
+        setStatus( status );
+        return this;
+    }
+
+    public String getStatus(){
+        return status;
+    }
+
     @Override
-    public String toString() {
+    public String toString(){
         return "AcspMembersDao{" +
                 "id='" + id + '\'' +
                 ", acspNumber='" + acspNumber + '\'' +

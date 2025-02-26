@@ -1,4 +1,4 @@
-package uk.gov.companieshouse.acsp.manage.users.model;
+package uk.gov.companieshouse.acsp.manage.users.model.enums;
 
 public enum MessageType {
 

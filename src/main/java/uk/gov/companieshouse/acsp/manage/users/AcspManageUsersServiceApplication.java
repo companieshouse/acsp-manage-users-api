@@ -10,12 +10,12 @@ public class AcspManageUsersServiceApplication {
 
     StaticPropertyUtil staticPropertyUtil;
     @Autowired
-    public AcspManageUsersServiceApplication(StaticPropertyUtil staticPropertyUtil) {
+    public AcspManageUsersServiceApplication( final StaticPropertyUtil staticPropertyUtil ) {
         this.staticPropertyUtil = staticPropertyUtil;
     }
 
-    public static void main(String[] args) {
-        SpringApplication.run(AcspManageUsersServiceApplication.class, args);
+    public static void main( String[] args ) {
+        SpringApplication.run( AcspManageUsersServiceApplication.class, args );
     }
 
 }

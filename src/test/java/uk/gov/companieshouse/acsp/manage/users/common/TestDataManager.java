@@ -856,7 +856,7 @@ public class TestDataManager {
                 .acspNumber( acspMembersDao.getAcspNumber() )
                 .acspName( acspProfile.getName() )
                 .acspStatus( AcspStatusEnum.fromValue( acspProfile.getStatus().toString() ) )
-                .userRole( UserRoleEnum.fromValue( acspMembersDao.getUserRole() ) )
+                .userRole( acspMembersDao.getUserRole() )
                 .membershipStatus( MembershipStatusEnum.fromValue( acspMembersDao.getStatus() ) )
                 .addedAt( localDateTimeToOffsetDateTime( acspMembersDao.getAddedAt() ) )
                 .addedBy( acspMembersDao.getAddedBy() )
@@ -885,8 +885,8 @@ public class TestDataManager {
 
         final var permittedActions =
         switch ( membershipDao.getUserRole() ){
-            case "owner" -> "acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete";
-            case "admin" -> "acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete";
+            case OWNER -> "acsp_members_owners=create,update,delete acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete";
+            case ADMIN -> "acsp_members_admins=create,update,delete acsp_members_standard=create,update,delete";
             default -> "";
         };
 
