@@ -29,5 +29,4 @@ class ParsingUtilTest {
         Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> ParsingUtil.parseJsonTo( User.class ).apply( "}{" ) );
     }
 
-
 }
