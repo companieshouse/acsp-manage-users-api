@@ -1,6 +1,6 @@
 package uk.gov.companieshouse.acsp.manage.users.utils;
 
-import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.getRequestContext;
+import static uk.gov.companieshouse.acsp.manage.users.model.context.RequestContext.getRequestContext;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.OAUTH2;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.UNKNOWN;
 import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum.ADMIN;
@@ -9,7 +9,7 @@ import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.U
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.function.Function;
-import uk.gov.companieshouse.acsp.manage.users.model.RequestContextData;
+import uk.gov.companieshouse.acsp.manage.users.model.context.RequestContextData;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 

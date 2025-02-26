@@ -31,8 +31,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
-import uk.gov.companieshouse.acsp.manage.users.model.RequestContext;
-import uk.gov.companieshouse.acsp.manage.users.model.RequestContextData.RequestContextDataBuilder;
+import uk.gov.companieshouse.acsp.manage.users.model.context.RequestContext;
+import uk.gov.companieshouse.acsp.manage.users.model.context.RequestContextData.RequestContextDataBuilder;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 
 @ExtendWith( MockitoExtension.class )

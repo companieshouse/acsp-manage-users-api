@@ -12,18 +12,16 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.mock.web.MockHttpServletRequest;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.model.RequestContext;
-import uk.gov.companieshouse.acsp.manage.users.model.RequestContextData.RequestContextDataBuilder;
+import uk.gov.companieshouse.acsp.manage.users.model.context.RequestContext;
+import uk.gov.companieshouse.acsp.manage.users.model.context.RequestContextData.RequestContextDataBuilder;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipCollectionMappers;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
-import uk.gov.companieshouse.api.accounts.associations.model.Association.StatusEnum;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
-import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserStatusEnum;
@@ -89,7 +87,7 @@ class AcspMembersServiceIntegrationTest {
 
             Mockito.doReturn( List.of( acspMembershipDto ) ).when( acspMembershipCollectionMappers ).daoToDto( anyList(), eq( user ), isNull() );
 
-            final var acspMembershipsList = acspMembersService.fetchAcspMemberships(user, true);
+            final var acspMembershipsList = acspMembersService.fetchMemberships(user, true,null);
 
             assertEquals(1, acspMembershipsList.getItems().size() );
             assertTrue( acspMembershipsList.getItems().stream().anyMatch( m -> m.getAcspNumber().equals( "COMA001" ) ) );
@@ -106,7 +104,7 @@ class AcspMembersServiceIntegrationTest {
 
             Mockito.doReturn( List.of( acspMembershipDto ) ).when( acspMembershipCollectionMappers ).daoToDto( anyList(), eq( user ), isNull() );
 
-            final var acspMembershipsList = acspMembersService.fetchAcspMemberships(user, false);
+            final var acspMembershipsList = acspMembersService.fetchMemberships(user, false,null);
 
             assertEquals(1, acspMembershipsList.getItems().size() );
             assertTrue( acspMembershipsList.getItems().stream().anyMatch( m -> m.getAcspNumber().equals( "COMA001" ) ) );
@@ -116,7 +114,7 @@ class AcspMembersServiceIntegrationTest {
         void
         fetchAcspMembershipsReturnsAcspMembershipsListWithEmptyListIfNoMembershipsAndIncludeRemovedTrue() {
             final var user = testDataManager.fetchUserDtos( "TSU001" ).getFirst();
-            final var acspMembershipsList = acspMembersService.fetchAcspMemberships( user, true );
+            final var acspMembershipsList = acspMembersService.fetchMemberships( user, true, null );
 
             assertTrue( acspMembershipsList.getItems().isEmpty() );
         }
@@ -125,7 +123,7 @@ class AcspMembersServiceIntegrationTest {
         void
         fetchAcspMembershipsReturnsAcspMembershipsListWithEmptyListIfNoMembershipsAndIncludeRemovedFalse() {
             final var user = testDataManager.fetchUserDtos( "TSU001" ).getFirst();
-            final var acspMembershipsList = acspMembersService.fetchAcspMemberships( user, false );
+            final var acspMembershipsList = acspMembersService.fetchMemberships( user, false, null );
             assertTrue( acspMembershipsList.getItems().isEmpty() );
         }
     }
@@ -143,7 +141,7 @@ class AcspMembersServiceIntegrationTest {
 
             Mockito.doReturn( new AcspMembershipsList().items( acspMembershipDtos ) ).when( acspMembershipCollectionMappers ).daoToDto( any( Page.class ), isNull(), any( AcspProfile.class ) );
 
-             final var acspMembershipsList = acspMembersService.findAllByAcspNumberAndRole( "COMA001", acspProfile, "standard", true, 0, 10 );
+             final var acspMembershipsList = acspMembersService.fetchMembershipsForAcspNumberAndRole( acspProfile, "standard", true, 0, 10 );
 
             assertTrue( acspMembershipsList.getItems().stream().allMatch( m -> m.getUserRole() == AcspMembership.UserRoleEnum.STANDARD ) );
         }
@@ -158,7 +156,7 @@ class AcspMembersServiceIntegrationTest {
 
             Mockito.doReturn( new AcspMembershipsList().items( acspMembershipDtos ) ).when( acspMembershipCollectionMappers ).daoToDto( any( Page.class ), isNull(), any( AcspProfile.class ) );
 
-            final var acspMembershipsList = acspMembersService.findAllByAcspNumberAndRole( "COMA001", acspProfile, "standard", false, 0, 10 );
+            final var acspMembershipsList = acspMembersService.fetchMembershipsForAcspNumberAndRole( acspProfile, "standard", false, 0, 10 );
 
             assertTrue( acspMembershipsList.getItems().stream().allMatch( m -> m.getUserRole() == AcspMembership.UserRoleEnum.STANDARD ) );
         }
@@ -173,7 +171,7 @@ class AcspMembersServiceIntegrationTest {
 
             Mockito.doReturn( new AcspMembershipsList().items( acspMembershipDtos ) ).when( acspMembershipCollectionMappers ).daoToDto( any( Page.class ), isNull(), any( AcspProfile.class ) );
 
-            final var acspMembershipsList = acspMembersService.findAllByAcspNumberAndRole( "COMA001", acspProfile, null, true, 0, 10 );
+            final var acspMembershipsList = acspMembersService.fetchMembershipsForAcspNumberAndRole(  acspProfile, null, true, 0, 10 );
 
             assertFalse( acspMembershipsList.getItems().isEmpty() );
         }
@@ -188,7 +186,7 @@ class AcspMembersServiceIntegrationTest {
 
             Mockito.doReturn( new AcspMembershipsList().items( acspMembershipDtos ) ).when( acspMembershipCollectionMappers ).daoToDto( any( Page.class ), isNull(), any( AcspProfile.class ) );
 
-            final var acspMembershipsList = acspMembersService.findAllByAcspNumberAndRole( "COMA001", acspProfile, null, false, 0, 10 );
+            final var acspMembershipsList = acspMembersService.fetchMembershipsForAcspNumberAndRole( acspProfile, null, false, 0, 10 );
 
             assertFalse( acspMembershipsList.getItems().isEmpty() );
         }
@@ -199,7 +197,7 @@ class AcspMembersServiceIntegrationTest {
 
             Mockito.doReturn( new AcspMembershipsList().items( List.of() ) ).when( acspMembershipCollectionMappers ).daoToDto( any( Page.class ), isNull(), any( AcspProfile.class ) );
 
-            final var acspMembershipsList = acspMembersService.findAllByAcspNumberAndRole( "NON_EXISTENT", acspProfile, null, true, 0, 10 );
+            final var acspMembershipsList = acspMembersService.fetchMembershipsForAcspNumberAndRole( acspProfile, null, true, 0, 10 );
 
             assertTrue(acspMembershipsList.getItems().isEmpty());
         }
@@ -238,7 +236,7 @@ class AcspMembersServiceIntegrationTest {
         @Test
         void fetchAcspMemberships_WithoutRemovedMemberships_ReturnsEmptyList() {
             final var user = testDataManager.fetchUserDtos( "COMU003" ).getFirst();
-            final var acspMembersList = acspMembersService.fetchAcspMemberships( user, false, "COMA001" );
+            final var acspMembersList = acspMembersService.fetchMemberships( user, false, "COMA001" );
 
             assertTrue( acspMembersList.getItems().isEmpty() );
         }
@@ -253,7 +251,7 @@ class AcspMembersServiceIntegrationTest {
 
             Mockito.doReturn( acspMembershipDtos ).when( acspMembershipCollectionMappers ).daoToDto( anyList(), any( User.class ), isNull() );
 
-            final var acspMembersList = acspMembersService.fetchAcspMemberships( user, true, "COMA001" );
+            final var acspMembersList = acspMembersService.fetchMemberships( user, true, "COMA001" );
             final var acspMembership = acspMembersList.getItems().getFirst();
 
             assertEquals( "COMA001", acspMembership.getAcspNumber() );
@@ -270,7 +268,7 @@ class AcspMembersServiceIntegrationTest {
 
             Mockito.doReturn( acspMembershipDtos ).when( acspMembershipCollectionMappers ).daoToDto( anyList(), any( User.class ), isNull() );
 
-            final var acspMembershipsList = acspMembersService.fetchAcspMemberships( user, true, "COMA001" );
+            final var acspMembershipsList = acspMembersService.fetchMemberships( user, true, "COMA001" );
             final var acspMembership = acspMembershipsList.getItems().getFirst();
 
             assertEquals( "COMA001", acspMembership.getAcspNumber() );
@@ -332,8 +330,8 @@ class AcspMembersServiceIntegrationTest {
     }
 
     @Test
-    void updateMembershipWithNullMembershipIdThrowsIllegalArgumentException() {
-        Assertions.assertThrows( IllegalArgumentException.class, () -> acspMembersService.updateMembership( null, UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" ) );
+    void updateMembershipWithNullMembershipIdThrowsInternalServerErrorRuntimeException() {
+        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspMembersService.updateMembership( null, UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" ) );
     }
 
     @Test
@@ -432,7 +430,7 @@ class AcspMembersServiceIntegrationTest {
 
             Mockito.doReturn( acspMembershipDto ).when( acspMembershipCollectionMappers ).daoToDto( any( AcspMembersDao.class), any(), any() );
 
-            final var acspMembership = acspMembersService.addAcspMembership( userDto, acspProfile, "TSA001", AcspMembership.UserRoleEnum.OWNER, null );
+            final var acspMembership = acspMembersService.createMembership( userDto, acspProfile, AcspMembership.UserRoleEnum.OWNER, null );
 
             assertEquals( userDto.getUserId(), acspMembership.getUserId() );
             assertEquals( userDto.getEmail(), acspMembership.getUserEmail() );

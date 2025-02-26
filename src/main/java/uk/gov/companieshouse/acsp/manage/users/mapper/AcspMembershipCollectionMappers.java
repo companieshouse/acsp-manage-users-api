@@ -21,7 +21,8 @@ import java.util.stream.Collectors;
 @Mapper( componentModel = "spring" )
 public abstract class AcspMembershipCollectionMappers extends AcspMembershipMapper {
 
-
+    private static final String PAGINATION_URL_TEMPLATE =  "%s?page_index=%d&items_per_page=%d";
+    private static final String END_POINT_URL_TEMPLATE = "/acsps/%s/memberships";
 
     private AcspMembershipsList enrichWithMetadata( final Page<AcspMembership> page, final String endpointUrl ) {
         final var pageIndex = page.getNumber();

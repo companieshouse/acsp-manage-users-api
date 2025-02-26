@@ -1,4 +1,4 @@
-package uk.gov.companieshouse.acsp.manage.users.model;
+package uk.gov.companieshouse.acsp.manage.users.model.enums;
 
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 

@@ -17,6 +17,7 @@ import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfig
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import reactor.core.publisher.Mono;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.configuration.WebSecurityConfig;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
@@ -38,6 +39,8 @@ import java.util.stream.Stream;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum.OWNER;
+import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum.STANDARD;
 
 @WebMvcTest(AcspMembershipController.class)
 @Import(WebSecurityConfig.class)
@@ -396,13 +399,6 @@ class AcspMembershipControllerTest {
                 .andExpect( status().isForbidden() );
     }
 
-
-
-
-
-
-
-
     @Test
     void updateAcspMembershipForAcspAndIdWithOAuth2RequestAndUserRoleAndWithoutDisplayNameSendsNotification() throws Exception {
         final var acspMembersDaos = testDataManager.fetchAcspMembersDaos( "WIT004", "WIT002" );
@@ -413,6 +409,7 @@ class AcspMembershipControllerTest {
         Mockito.doReturn( Optional.of( acspMembersDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
         Mockito.doReturn( testDataManager.fetchUserDtos( "WITU002" ).getFirst() ).when( usersService ).fetchUserDetails( "WITU002" );
         Mockito.doReturn( testDataManager.fetchAcspProfiles( "WITA001" ).getFirst() ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
+        Mockito.doReturn( Mono.empty() ).when( emailService ).sendYourRoleAtAcspHasChangedEmail( "yennefer@witcher.com", "demo@ch.gov.uk", "Witcher", OWNER );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT002" )
                         .header("X-Request-Id", "theId123")
@@ -424,8 +421,8 @@ class AcspMembershipControllerTest {
                         .content( "{\"user_role\":\"owner\"}" ) )
                 .andExpect( status().isOk() );
 
-        Mockito.verify( acspMembersService ).updateMembership( "WIT002", null, UserRoleEnum.OWNER, "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-        Mockito.verify( emailService ).sendYourRoleAtAcspHasChangedEmail( "theId123", "yennefer@witcher.com", "demo@ch.gov.uk", "Witcher", UserRoleEnum.OWNER );
+        Mockito.verify( acspMembersService ).updateMembership( "WIT002", null, OWNER, "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+        Mockito.verify( emailService ).sendYourRoleAtAcspHasChangedEmail( "yennefer@witcher.com", "demo@ch.gov.uk", "Witcher", OWNER );
     }
 
     @Test
@@ -438,6 +435,7 @@ class AcspMembershipControllerTest {
         Mockito.doReturn( Optional.of( acspMembersDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( "WITU001", "WITA001" );
         Mockito.doReturn( testDataManager.fetchUserDtos( "WITU002" ).getFirst() ).when( usersService ).fetchUserDetails( "WITU002" );
         Mockito.doReturn( testDataManager.fetchAcspProfiles( "WITA001" ).getFirst() ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
+        Mockito.doReturn( Mono.empty() ).when( emailService ).sendYourRoleAtAcspHasChangedEmail( "yennefer@witcher.com", "Geralt of Rivia", "Witcher", STANDARD );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT002" )
                         .header("X-Request-Id", "theId123")
@@ -450,7 +448,7 @@ class AcspMembershipControllerTest {
                 .andExpect( status().isOk() );
 
         Mockito.verify( acspMembersService ).updateMembership( "WIT002", null, UserRoleEnum.STANDARD, "WITU001" );
-        Mockito.verify( emailService ).sendYourRoleAtAcspHasChangedEmail( "theId123", "yennefer@witcher.com", "Geralt of Rivia", "Witcher", UserRoleEnum.STANDARD );
+        Mockito.verify( emailService ).sendYourRoleAtAcspHasChangedEmail(  "yennefer@witcher.com", "Geralt of Rivia", "Witcher", UserRoleEnum.STANDARD );
     }
 
     @Test
@@ -506,6 +504,7 @@ class AcspMembershipControllerTest {
         Mockito.doReturn( Optional.of( acspMembersDaos.getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
         Mockito.doReturn( testDataManager.fetchUserDtos( "WITU002" ).getFirst() ).when( usersService ).fetchUserDetails( "WITU002" );
         Mockito.doReturn( testDataManager.fetchAcspProfiles( "WITA001" ).getFirst() ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
+        Mockito.doReturn( Mono.empty() ).when( emailService ).sendYourRoleAtAcspHasChangedEmail( "yennefer@witcher.com", "demo@ch.gov.uk", "Witcher", STANDARD );
 
         mockMvc.perform( patch( "/acsps/memberships/WIT002" )
                         .header("X-Request-Id", "theId123")
@@ -518,7 +517,7 @@ class AcspMembershipControllerTest {
                 .andExpect( status().isOk() );
 
         Mockito.verify( acspMembersService ).updateMembership( "WIT002", UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-        Mockito.verify( emailService ).sendYourRoleAtAcspHasChangedEmail( "theId123", "yennefer@witcher.com", "demo@ch.gov.uk", "Witcher", UserRoleEnum.STANDARD );
+        Mockito.verify( emailService ).sendYourRoleAtAcspHasChangedEmail( "yennefer@witcher.com", "demo@ch.gov.uk", "Witcher", UserRoleEnum.STANDARD );
     }
 
     @Test

@@ -1,9 +1,9 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static uk.gov.companieshouse.acsp.manage.users.utils.LoggingUtil.LOGGER;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
 import static uk.gov.companieshouse.acsp.manage.users.utils.ParsingUtil.parseJsonTo;
-import static uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil.APPLICATION_NAMESPACE;
 
 import java.time.Duration;
 import java.util.Map;
@@ -18,15 +18,11 @@ import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRun
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.api.acspprofile.AcspProfile;
-import uk.gov.companieshouse.logging.Logger;
-import uk.gov.companieshouse.logging.LoggerFactory;
 
 @Service
 public class AcspProfileService {
 
     private final WebClient acspWebClient;
-
-    private static final Logger LOG = LoggerFactory.getLogger( APPLICATION_NAMESPACE );
 
     public AcspProfileService( @Qualifier( "acspWebClient" ) final WebClient acspWebClient ) {
         this.acspWebClient = acspWebClient;
@@ -39,25 +35,22 @@ public class AcspProfileService {
                 .bodyToMono( String.class )
                 .map( parseJsonTo( AcspProfile.class ) )
                 .onErrorMap( throwable -> {
-                    if ( throwable instanceof WebClientResponseException exception ){
-                        if ( NOT_FOUND.equals( exception.getStatusCode() ) ){
-                            return new NotFoundRuntimeException( "Failed to find Acsp Profile", exception );
-                        }
+                    if ( throwable instanceof WebClientResponseException exception && NOT_FOUND.equals( exception.getStatusCode() ) ){
+                        return new NotFoundRuntimeException( "Failed to find Acsp Profile", exception );
                     }
                     throw new InternalServerErrorRuntimeException( "Failed to retrieve Acsp Profile", (Exception) throwable );
                 } )
-                .doOnSubscribe( onSubscribe -> LOG.infoContext( xRequestId, String.format( "Sending request to acsp-profile-data-api: GET /authorised-corporate-service-providers/{acsp_number}. Attempting to retrieve acsp: %s", acspNumber ), null ) )
-                .doFinally( signalType -> LOG.infoContext( xRequestId, String.format( "Finished request to acsp-profile-data-api for acsp: %s.", acspNumber ), null ) );
+                .doOnSubscribe( onSubscribe -> LOGGER.infoContext( xRequestId, String.format( "Sending request to acsp-profile-data-api: GET /authorised-corporate-service-providers/{acsp_number}. Attempting to retrieve acsp: %s", acspNumber ), null ) )
+                .doFinally( signalType -> LOGGER.infoContext( xRequestId, String.format( "Finished request to acsp-profile-data-api for acsp: %s.", acspNumber ), null ) );
     }
 
     public AcspProfile fetchAcspProfile( final String acspNumber ){
-        final var xRequestId = getXRequestId();
-        return toFetchAcspProfileRequest( acspNumber, xRequestId ).block( Duration.ofSeconds( 20L ) );
+        return toFetchAcspProfileRequest( acspNumber, getXRequestId() ).block( Duration.ofSeconds( 20L ) );
     }
 
-    public Map<String, AcspProfile> fetchAcspProfiles( final Stream<AcspMembersDao> acspMembers ) {
+    public Map<String, AcspProfile> fetchAcspProfiles( final Stream<AcspMembersDao> memberships ) {
         final var xRequestId = getXRequestId();
-        return Flux.fromStream( acspMembers )
+        return Flux.fromStream( memberships )
                 .map( AcspMembersDao::getAcspNumber )
                 .distinct()
                 .flatMap( acspNumber -> toFetchAcspProfileRequest( acspNumber, xRequestId ) )

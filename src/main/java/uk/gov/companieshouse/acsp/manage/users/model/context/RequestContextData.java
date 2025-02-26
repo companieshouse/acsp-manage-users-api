@@ -1,10 +1,6 @@
-package uk.gov.companieshouse.acsp.manage.users.model;
+package uk.gov.companieshouse.acsp.manage.users.model.context;
 
-import static uk.gov.companieshouse.acsp.manage.users.model.Constants.ACSP_MEMBERS_ADMINS;
-import static uk.gov.companieshouse.acsp.manage.users.model.Constants.ACSP_MEMBERS_OWNERS;
-import static uk.gov.companieshouse.acsp.manage.users.model.Constants.ACSP_MEMBERS_READ_PERMISSION;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.UNKNOWN;
-import static uk.gov.companieshouse.acsp.manage.users.model.Constants.X_REQUEST_ID;
 import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_KEY_ROLES;
 import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_ROLES;
 import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_TOKEN_PERMISSIONS;
@@ -33,6 +29,11 @@ public class RequestContextData {
     private final UserRoleEnum activeAcspRole;
     private final HashSet<String> adminPrivileges;
     private final User user;
+
+    private static final String ACSP_MEMBERS_OWNERS = "acsp_members_owners=create,update,delete";
+    private static final String ACSP_MEMBERS_ADMINS = "acsp_members_admins=create,update,delete";
+    private static final String ACSP_MEMBERS_READ_PERMISSION = "acsp_members=read";
+    private static final String X_REQUEST_ID = "X-Request-Id";
 
     protected RequestContextData( final String xRequestId, final String ericIdentity, final String ericIdentityType, final String ericAuthorisedKeyRoles, final String activeAcspNumber, final UserRoleEnum activeAcspRole, final HashSet<String> adminPrivileges, final User user ){
         this.xRequestId = xRequestId;
@@ -87,6 +88,8 @@ public class RequestContextData {
         private UserRoleEnum activeAcspRole;
         private User user;
 
+        private static final Pattern ACSP_NUMBER_PATTERN = Pattern.compile( "(?<=^|\\s)acsp_number=([0-9A-Za-z-_]{0,32})(?=\\s|$)" );
+
         public RequestContextDataBuilder setXRequestId( final HttpServletRequest request ){
             xRequestId = Optional.ofNullable( getRequestHeader( request, X_REQUEST_ID ) ).orElse( UNKNOWN );
             return this;
@@ -109,7 +112,7 @@ public class RequestContextData {
 
         public RequestContextDataBuilder setActiveAcspNumber( final HttpServletRequest request ){
             activeAcspNumber = Optional.ofNullable( getRequestHeader( request, ERIC_AUTHORISED_TOKEN_PERMISSIONS ) )
-                    .map( Pattern.compile( "(?<=^|\\s)acsp_number=([0-9A-Za-z-_]{0,32})(?=\\s|$)" )::matcher )
+                    .map( ACSP_NUMBER_PATTERN::matcher )
                     .map( matcher -> matcher.find() ? matcher.group( 1 ) : null )
                     .orElse( UNKNOWN );
             return this;

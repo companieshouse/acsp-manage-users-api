@@ -1,10 +1,11 @@
 package uk.gov.companieshouse.acsp.manage.users.filter;
 
-import static uk.gov.companieshouse.acsp.manage.users.model.RequestContext.setRequestContext;
-import static uk.gov.companieshouse.acsp.manage.users.model.SpringRole.ADMIN_WITH_ACSP_SEARCH_PRIVILEGE_ROLE;
-import static uk.gov.companieshouse.acsp.manage.users.model.SpringRole.BASIC_OAUTH_ROLE;
-import static uk.gov.companieshouse.acsp.manage.users.model.SpringRole.KEY_ROLE;
-import static uk.gov.companieshouse.acsp.manage.users.model.SpringRole.UNKNOWN_ROLE;
+import static uk.gov.companieshouse.acsp.manage.users.model.context.RequestContext.setRequestContext;
+import static uk.gov.companieshouse.acsp.manage.users.model.enums.SpringRole.ADMIN_WITH_ACSP_SEARCH_PRIVILEGE_ROLE;
+import static uk.gov.companieshouse.acsp.manage.users.model.enums.SpringRole.BASIC_OAUTH_ROLE;
+import static uk.gov.companieshouse.acsp.manage.users.model.enums.SpringRole.KEY_ROLE;
+import static uk.gov.companieshouse.acsp.manage.users.model.enums.SpringRole.UNKNOWN_ROLE;
+import static uk.gov.companieshouse.acsp.manage.users.utils.LoggingUtil.LOGGER;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getActiveAcspNumber;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getActiveAcspRole;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getAdminPrivileges;
@@ -14,8 +15,6 @@ import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.g
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getUser;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isOAuth2Request;
-import static uk.gov.companieshouse.acsp.manage.users.model.Constants.ACSP_SEARCH_ADMIN_SEARCH;
-import static uk.gov.companieshouse.acsp.manage.users.model.Constants.KEY;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.OAUTH2;
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.UNKNOWN;
 import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_IDENTITY;
@@ -32,24 +31,23 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.web.filter.OncePerRequestFilter;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.model.RequestContextData;
-import uk.gov.companieshouse.acsp.manage.users.model.RequestContextData.RequestContextDataBuilder;
+import uk.gov.companieshouse.acsp.manage.users.model.context.RequestContextData;
+import uk.gov.companieshouse.acsp.manage.users.model.context.RequestContextData.RequestContextDataBuilder;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
-import uk.gov.companieshouse.acsp.manage.users.model.RequestContext;
-import uk.gov.companieshouse.acsp.manage.users.model.SpringRole;
+import uk.gov.companieshouse.acsp.manage.users.model.context.RequestContext;
+import uk.gov.companieshouse.acsp.manage.users.model.enums.SpringRole;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
-import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.accounts.user.model.User;
-import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
-import uk.gov.companieshouse.logging.Logger;
-import uk.gov.companieshouse.logging.LoggerFactory;
 
 public class UserAuthenticationFilter extends OncePerRequestFilter {
 
     private final UsersService usersService;
     private final AcspMembersService acspMembersService;
-    private static final Logger LOGGER = LoggerFactory.getLogger( StaticPropertyUtil.APPLICATION_NAMESPACE );
+
+    private static final String ACSP_SEARCH_ADMIN_SEARCH = "/admin/acsp/search";
+    private static final String KEY = "key";
+
 
     public UserAuthenticationFilter( final UsersService usersService, final AcspMembersService acspMembersService ){
         this.usersService = usersService;

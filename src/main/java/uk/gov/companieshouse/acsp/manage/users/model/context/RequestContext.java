@@ -1,7 +1,7 @@
-package uk.gov.companieshouse.acsp.manage.users.model;
+package uk.gov.companieshouse.acsp.manage.users.model.context;
 
 import java.util.Objects;
-import uk.gov.companieshouse.acsp.manage.users.model.RequestContextData.RequestContextDataBuilder;
+import uk.gov.companieshouse.acsp.manage.users.model.context.RequestContextData.RequestContextDataBuilder;
 
 public final class RequestContext {
 

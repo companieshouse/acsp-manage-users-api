@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.acsp.manage.users.integration;
 
+import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
@@ -39,7 +40,7 @@ class AcspMembersRepositoryIntegrationTest {
     void findAllNotRemovedByAcspNumberReturnsNotRemovedMembersForGivenAcspNumber() {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos("COM001", "COM002", "COM003", "COM004", "COM005", "COM006" ) );
 
-        final var result = acspMembersRepository.findAllNotRemovedByAcspNumber("COMA001", PageRequest.of( 0, 10 ) ).getContent();
+        final var result = acspMembersRepository.fetchActiveMembershipsForAcspNumber("COMA001", PageRequest.of( 0, 10 ) ).getContent();
 
         assertEquals( 3, result.size() );
         assertTrue( result.stream().allMatch( member -> member.getAcspNumber().equals("COMA001" ) ) );
@@ -50,7 +51,7 @@ class AcspMembersRepositoryIntegrationTest {
     void findAllByAcspNumberReturnsAllMembersForGivenAcspNumber() {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM001", "COM002", "COM003", "COM004", "COM005", "COM006" ) );
 
-        final var result = acspMembersRepository.findAllByAcspNumber( "COMA001", PageRequest.of(0, 10) );
+        final var result = acspMembersRepository.fetchActiveAndRemovedMembershipsForAcspNumber( "COMA001", PageRequest.of(0, 10) );
 
         assertEquals( 6, result.getTotalElements() );
         assertTrue( result.getContent().stream().allMatch( member -> member.getAcspNumber().equals("COMA001" ) ) );
@@ -60,7 +61,7 @@ class AcspMembersRepositoryIntegrationTest {
     void findAllNotRemovedByAcspNumberAndUserRoleReturnsNotRemovedMembersForGivenAcspNumberAndUserRole() {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM001", "COM002", "COM003", "COM004", "COM005", "COM006" ) );
 
-        final var result = acspMembersRepository.findAllNotRemovedByAcspNumberAndUserRole( "COMA001", UserRoleEnum.ADMIN.getValue(), PageRequest.of( 0, 10 ) );
+        final var result = acspMembersRepository.fetchActiveMembershipsForAcspNumberAndUserRole( "COMA001", UserRoleEnum.ADMIN.getValue(), PageRequest.of( 0, 10 ) );
 
         assertEquals( 2, result.getTotalElements() );
         assertTrue( result.getContent().stream().allMatch( member -> member.getAcspNumber().equals( "COMA001" ) && member.getUserRole().equals( UserRoleEnum.ADMIN ) && member.getRemovedBy() == null ) ) ;
@@ -70,7 +71,7 @@ class AcspMembersRepositoryIntegrationTest {
     void findAllByAcspNumberAndUserRoleReturnsAllMembersForGivenAcspNumberAndUserRole() {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos("COM001", "COM002", "COM003", "COM004", "COM005", "COM006" ) );
 
-        final var result = acspMembersRepository.findAllByAcspNumberAndUserRole( "COMA001", UserRoleEnum.ADMIN.getValue(), PageRequest.of(0, 10) );
+        final var result = acspMembersRepository.fetchActiveAndRemovedMembershipsForAcspNumberAndUserRole( "COMA001", UserRoleEnum.ADMIN.getValue(), PageRequest.of(0, 10) );
 
         assertEquals( 3, result.getTotalElements() );
         assertTrue( result.getContent().stream().allMatch( member -> member.getAcspNumber().equals( "COMA001" ) && member.getUserRole().equals( UserRoleEnum.ADMIN ) ) );
@@ -80,7 +81,7 @@ class AcspMembersRepositoryIntegrationTest {
     void fetchAllAcspMembersByUserIdReturnsAllAcspMembersForProvidedUserId() {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM001", "COM002", "COM003", "NF002", "TS002" ) );
 
-        final var result = acspMembersRepository.fetchAllAcspMembersByUserId( "TSU002" );
+        final var result = acspMembersRepository.fetchActiveAndRemovedMembershipsForUserId( "TSU002" );
 
         assertEquals( 2, result.size() );
         assertTrue( result.stream().anyMatch( elem -> elem.getId().equals( "NF002" ) && elem.getUserId().equals( "TSU002" ) && elem.getStatus().equals( MembershipStatusEnum.ACTIVE.getValue() ) ) );
@@ -91,7 +92,7 @@ class AcspMembersRepositoryIntegrationTest {
     void fetchActiveAcspMembersByUserIdReturnsActiveAcspMembersForProvidedUserId() {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM001", "COM002", "COM003", "NF002", "TS002" ) );
 
-        final var result = acspMembersRepository.fetchActiveAcspMembersByUserId( "TSU002" );
+        final var result = acspMembersRepository.fetchActiveMembershipForUserId( "TSU002" ).map( List::of ).orElse( List.of() );
 
         assertEquals( 1, result.size() );
         assertTrue( result.stream().anyMatch( elem -> elem.getId().equals( "NF002" ) && elem.getUserId().equals( "TSU002" ) && elem.getStatus().equals( MembershipStatusEnum.ACTIVE.getValue() ) ) );
@@ -101,20 +102,10 @@ class AcspMembersRepositoryIntegrationTest {
     void fetchAllAcspMembersByUserIdAndAcspNumberReturnsRemovedAcspMembersForProvidedUserIdAndAcspNumber() {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM001", "COM002", "COM003", "NF002", "TS002" ) );
 
-        final var result = acspMembersRepository.fetchAllAcspMembersByUserIdAndAcspNumber( "COMU001", "COMA001" );
+        final var result = acspMembersRepository.fetchActiveAndRemovedMemberships( "COMU001", "COMA001" );
 
         assertEquals( 1, result.size() );
         assertTrue( result.stream().anyMatch( member -> member.getId().equals( "COM001" ) && member.getUserId().equals( "COMU001" ) && member.getAcspNumber().equals( "COMA001" ) && member.getStatus().equals( MembershipStatusEnum.REMOVED.getValue() ) ) );
-    }
-
-    @Test
-    void fetchActiveAcspMembersByUserIdAndAcspNumberReturnsActiveAcspMembersForProvidedUserIdAndAcspNumber() {
-        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM001", "COM002", "COM003", "NF002", "TS002" ) );
-
-        final var result = acspMembersRepository.fetchActiveAcspMembersByUserIdAndAcspNumber( "COMU002", "COMA001" );
-
-        assertEquals( 1, result.size() );
-        assertTrue( result.stream().anyMatch( member -> member.getId().equals( "COM002" ) && member.getUserId().equals( "COMU002" ) && member.getAcspNumber().equals( "COMA001" ) && member.getStatus().equals( MembershipStatusEnum.ACTIVE.getValue() ) ) );
     }
 
     @Test
@@ -132,23 +123,23 @@ class AcspMembersRepositoryIntegrationTest {
 
     @Test
     void fetchActiveAcspMembershipWithNullOrMalformedOrNonexistentUserIdOrAcspNumberReturnsEmptyOptional(){
-        Assertions.assertFalse( acspMembersRepository.fetchActiveAcspMembership( null, "TSA001" ).isPresent() );
-        Assertions.assertFalse( acspMembersRepository.fetchActiveAcspMembership( "£££", "TSA001" ).isPresent() );
-        Assertions.assertFalse( acspMembersRepository.fetchActiveAcspMembership( "TSU001", null ).isPresent() );
-        Assertions.assertFalse( acspMembersRepository.fetchActiveAcspMembership( "TSU001", "£££" ).isPresent() );
-        Assertions.assertFalse( acspMembersRepository.fetchActiveAcspMembership( "TSU001", "TSA001" ).isPresent() );
+        Assertions.assertFalse( acspMembersRepository.fetchActiveMembership( null, "TSA001" ).isPresent() );
+        Assertions.assertFalse( acspMembersRepository.fetchActiveMembership( "£££", "TSA001" ).isPresent() );
+        Assertions.assertFalse( acspMembersRepository.fetchActiveMembership( "TSU001", null ).isPresent() );
+        Assertions.assertFalse( acspMembersRepository.fetchActiveMembership( "TSU001", "£££" ).isPresent() );
+        Assertions.assertFalse( acspMembersRepository.fetchActiveMembership( "TSU001", "TSA001" ).isPresent() );
     }
 
     @Test
     void fetchActiveAcspMembershipAppliedToInactiveMembershipReturnsEmptyOptional(){
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS002" ) );
-        Assertions.assertFalse( acspMembersRepository.fetchActiveAcspMembership( "TSU002", "TSA001" ).isPresent() );
+        Assertions.assertFalse( acspMembersRepository.fetchActiveMembership( "TSU002", "TSA001" ).isPresent() );
     }
 
     @Test
     void fetchActiveAcspMembershipRetrievesMembership(){
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001" ) );
-        Assertions.assertEquals( "TS001", acspMembersRepository.fetchActiveAcspMembership( "TSU001", "TSA001" ).get().getId() );
+        Assertions.assertEquals( "TS001", acspMembersRepository.fetchActiveMembership( "TSU001", "TSA001" ).get().getId() );
     }
 
     @Test
