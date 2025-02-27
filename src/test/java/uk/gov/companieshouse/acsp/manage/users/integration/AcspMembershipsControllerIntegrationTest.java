@@ -15,15 +15,15 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
-import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
-import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAStandardMemberEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAnAdminMemberEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAnOwnerMemberEmailData;
-import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
-import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
-import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
+import uk.gov.companieshouse.acsp.manage.users.testresources.TestDataManager;
+import uk.gov.companieshouse.acsp.manage.users.common.model.exceptions.NotFoundRuntimeException;
+import uk.gov.companieshouse.acsp.manage.users.membership.StorageModel;
+import uk.gov.companieshouse.acsp.manage.users.email.model.added.ConfirmYouAreAStandardMemberEmailData;
+import uk.gov.companieshouse.acsp.manage.users.email.model.added.ConfirmYouAreAnAdminMemberEmailData;
+import uk.gov.companieshouse.acsp.manage.users.email.model.added.ConfirmYouAreAnOwnerMemberEmailData;
+import uk.gov.companieshouse.acsp.manage.users.membership.Storage;
+import uk.gov.companieshouse.acsp.manage.users.ascpprofile.AcspProfileService;
+import uk.gov.companieshouse.acsp.manage.users.user.UsersService;
 import uk.gov.companieshouse.api.accounts.user.model.UsersList;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
@@ -47,8 +47,8 @@ import static org.mockito.Mockito.times;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
-import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.*;
+import static uk.gov.companieshouse.acsp.manage.users.testresources.ParsingUtils.parseResponseTo;
+import static uk.gov.companieshouse.acsp.manage.users.email.model.MessageType.*;
 
 @AutoConfigureMockMvc
 @SpringBootTest
@@ -69,7 +69,7 @@ class AcspMembershipsControllerIntegrationTest {
     private AcspProfileService acspProfileService;
 
     @Autowired
-    private AcspMembersRepository acspMembersRepository;
+    private Storage acspMembersRepository;
 
     private static final TestDataManager testDataManager = TestDataManager.getInstance();
 
@@ -772,7 +772,7 @@ class AcspMembershipsControllerIntegrationTest {
 
     @AfterEach
     public void after() {
-        mongoTemplate.dropCollection(AcspMembersDao.class);
+        mongoTemplate.dropCollection(StorageModel.class);
     }
 
 }
