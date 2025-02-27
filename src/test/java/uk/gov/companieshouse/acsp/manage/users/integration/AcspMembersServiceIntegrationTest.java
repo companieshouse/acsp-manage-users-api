@@ -10,16 +10,16 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.mock.web.MockHttpServletRequest;
-import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
-import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.model.context.RequestContext;
-import uk.gov.companieshouse.acsp.manage.users.model.context.RequestContextData.RequestContextDataBuilder;
-import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipCollectionMappers;
-import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
-import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
-import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
-import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
-import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
+import uk.gov.companieshouse.acsp.manage.users.membership.MembershipService;
+import uk.gov.companieshouse.acsp.manage.users.testresources.TestDataManager;
+import uk.gov.companieshouse.acsp.manage.users.common.model.exceptions.InternalServerErrorRuntimeException;
+import uk.gov.companieshouse.acsp.manage.users.membership.transformer.CollectionTransformer;
+import uk.gov.companieshouse.acsp.manage.users.common.model.context.RequestContext;
+import uk.gov.companieshouse.acsp.manage.users.common.model.context.RequestContextData.RequestContextDataBuilder;
+import uk.gov.companieshouse.acsp.manage.users.membership.StorageModel;
+import uk.gov.companieshouse.acsp.manage.users.membership.Storage;
+import uk.gov.companieshouse.acsp.manage.users.ascpprofile.AcspProfileService;
+import uk.gov.companieshouse.acsp.manage.users.user.UsersService;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
@@ -43,13 +43,13 @@ class AcspMembersServiceIntegrationTest {
     private MongoTemplate mongoTemplate;
 
     @Autowired
-    private AcspMembersService acspMembersService;
+    private MembershipService acspMembersService;
 
     @Autowired
-    private AcspMembersRepository acspMembersRepository;
+    private Storage acspMembersRepository;
 
     @MockBean
-    private AcspMembershipCollectionMappers acspMembershipCollectionMappers;
+    private CollectionTransformer acspMembershipCollectionMappers;
 
     @MockBean
     private UsersService usersService;
@@ -220,7 +220,8 @@ class AcspMembersServiceIntegrationTest {
         void fetchMembershipRetrievesMembership() {
             acspMembersRepository.insert(testDataManager.fetchAcspMembersDaos("TS001"));
 
-            Mockito.doReturn(new AcspMembership().id("TS001")).when(acspMembershipCollectionMappers).daoToDto(any(AcspMembersDao.class), any(), any());
+            Mockito.doReturn(new AcspMembership().id("TS001")).when(acspMembershipCollectionMappers).daoToDto(any(
+                    StorageModel.class), any(), any());
 
             Mockito.doReturn(testDataManager.fetchUserDtos("TSU001").getFirst()).when(usersService).fetchUserDetails("TSU001");
             Mockito.doReturn(testDataManager.fetchAcspProfiles("TSA001").getFirst()).when(
@@ -428,7 +429,7 @@ class AcspMembersServiceIntegrationTest {
             final var userDto = testDataManager.fetchUserDtos( "TSU001" ).getFirst();
             final var acspProfile = testDataManager.fetchAcspProfiles( "TSA001" ).getFirst();
 
-            Mockito.doReturn( acspMembershipDto ).when( acspMembershipCollectionMappers ).daoToDto( any( AcspMembersDao.class), any(), any() );
+            Mockito.doReturn( acspMembershipDto ).when( acspMembershipCollectionMappers ).daoToDto( any( StorageModel.class), any(), any() );
 
             final var acspMembership = acspMembersService.createMembership( userDto, acspProfile, AcspMembership.UserRoleEnum.OWNER, null );
 
@@ -443,6 +444,6 @@ class AcspMembersServiceIntegrationTest {
 
     @AfterEach
     public void after() {
-        mongoTemplate.dropCollection(AcspMembersDao.class);
+        mongoTemplate.dropCollection(StorageModel.class);
     }
 }

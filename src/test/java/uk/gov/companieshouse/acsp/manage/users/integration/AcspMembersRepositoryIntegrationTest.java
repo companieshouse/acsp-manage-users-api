@@ -11,10 +11,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Update;
-import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
-import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
-import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
-import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
+import uk.gov.companieshouse.acsp.manage.users.testresources.TestDataManager;
+import uk.gov.companieshouse.acsp.manage.users.membership.StorageModel;
+import uk.gov.companieshouse.acsp.manage.users.membership.Storage;
+import uk.gov.companieshouse.acsp.manage.users.common.utils.StaticPropertyUtil;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 
@@ -29,7 +29,7 @@ class AcspMembersRepositoryIntegrationTest {
     private MongoTemplate mongoTemplate;
 
     @Autowired
-    private AcspMembersRepository acspMembersRepository;
+    private Storage acspMembersRepository;
 
     @MockBean
     private StaticPropertyUtil staticPropertyUtil;
@@ -163,7 +163,7 @@ class AcspMembersRepositoryIntegrationTest {
 
     @AfterEach
     public void after() {
-        mongoTemplate.dropCollection( AcspMembersDao.class );
+        mongoTemplate.dropCollection( StorageModel.class );
     }
 
 }

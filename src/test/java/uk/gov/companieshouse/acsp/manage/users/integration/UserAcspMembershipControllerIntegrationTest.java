@@ -12,11 +12,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.web.servlet.MockMvc;
-import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
-import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
-import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
-import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
-import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
+import uk.gov.companieshouse.acsp.manage.users.testresources.TestDataManager;
+import uk.gov.companieshouse.acsp.manage.users.membership.StorageModel;
+import uk.gov.companieshouse.acsp.manage.users.membership.Storage;
+import uk.gov.companieshouse.acsp.manage.users.ascpprofile.AcspProfileService;
+import uk.gov.companieshouse.acsp.manage.users.user.UsersService;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
 import uk.gov.companieshouse.email_producer.EmailProducer;
 import uk.gov.companieshouse.email_producer.factory.KafkaProducerFactory;
@@ -26,7 +26,7 @@ import java.util.Arrays;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
+import static uk.gov.companieshouse.acsp.manage.users.testresources.ParsingUtils.parseResponseTo;
 
 @AutoConfigureMockMvc
 @ExtendWith(MockitoExtension.class)
@@ -47,7 +47,7 @@ class UserAcspMembershipControllerIntegrationTest {
     private AcspProfileService acspProfileService;
 
     @Autowired
-    private AcspMembersRepository acspMembersRepository;
+    private Storage acspMembersRepository;
 
     @MockBean
     private EmailProducer emailProducer;
@@ -137,7 +137,7 @@ class UserAcspMembershipControllerIntegrationTest {
 
     @AfterEach
     public void after() {
-        mongoTemplate.dropCollection(AcspMembersDao.class);
+        mongoTemplate.dropCollection(StorageModel.class);
     }
 
 }
