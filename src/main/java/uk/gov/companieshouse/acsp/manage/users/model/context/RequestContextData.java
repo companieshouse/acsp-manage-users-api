@@ -1,6 +1,7 @@
 package uk.gov.companieshouse.acsp.manage.users.model.context;
 
 import static uk.gov.companieshouse.acsp.manage.users.model.Constants.UNKNOWN;
+import static uk.gov.companieshouse.acsp.manage.users.model.Constants.X_REQUEST_ID;
 import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_KEY_ROLES;
 import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_ROLES;
 import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_TOKEN_PERMISSIONS;
@@ -33,7 +34,6 @@ public class RequestContextData {
     private static final String ACSP_MEMBERS_OWNERS = "acsp_members_owners=create,update,delete";
     private static final String ACSP_MEMBERS_ADMINS = "acsp_members_admins=create,update,delete";
     private static final String ACSP_MEMBERS_READ_PERMISSION = "acsp_members=read";
-    private static final String X_REQUEST_ID = "X-Request-Id";
 
     protected RequestContextData( final String xRequestId, final String ericIdentity, final String ericIdentityType, final String ericAuthorisedKeyRoles, final String activeAcspNumber, final UserRoleEnum activeAcspRole, final HashSet<String> adminPrivileges, final User user ){
         this.xRequestId = xRequestId;

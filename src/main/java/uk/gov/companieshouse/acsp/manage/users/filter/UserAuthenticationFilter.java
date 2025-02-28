@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.acsp.manage.users.filter;
 
+import static uk.gov.companieshouse.acsp.manage.users.model.Constants.X_REQUEST_ID;
 import static uk.gov.companieshouse.acsp.manage.users.model.context.RequestContext.setRequestContext;
 import static uk.gov.companieshouse.acsp.manage.users.model.enums.SpringRole.ADMIN_WITH_ACSP_SEARCH_PRIVILEGE_ROLE;
 import static uk.gov.companieshouse.acsp.manage.users.model.enums.SpringRole.BASIC_OAUTH_ROLE;
@@ -57,8 +58,11 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
     private RequestContextData buildRequestContextData( final HttpServletRequest request ){
         User user = null;
         if ( OAUTH2.equals( getRequestHeader( request, ERIC_IDENTITY_TYPE ) ) ){
-            try { user = usersService.fetchUserDetails( getRequestHeader( request, ERIC_IDENTITY ) ); }
-            catch ( NotFoundRuntimeException ignored ) {}
+            try {
+                user = usersService.fetchUserDetails( getRequestHeader( request, ERIC_IDENTITY ) );
+            } catch ( NotFoundRuntimeException exception ) {
+                LOGGER.debugContext( getRequestHeader( request, X_REQUEST_ID ), String.format( "Unable to find user %s", getRequestHeader( request, ERIC_IDENTITY ) ), null );
+            }
         }
 
         return new RequestContextDataBuilder()
@@ -75,36 +79,38 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
     private SpringRole computeSpringRole(){
         LOGGER.infoContext( getXRequestId(), "Checking if this is a valid API Key Request...", null );
-        final var isValidAPIKeyRequest = !getEricIdentity().equals( UNKNOWN ) && getEricIdentityType().equals( KEY ) && getEricAuthorisedKeyRoles().equals( "*" );
-        if ( isValidAPIKeyRequest ){
-            LOGGER.debugContext( getXRequestId(), "Confirmed this is a valid API Key Request.", null );
+        if ( isValidAPIKeyRequest() ) {
             return KEY_ROLE;
         }
         LOGGER.debugContext( getXRequestId(), "Confirmed this is not a valid API Key Request. Checking if this is a valid OAuth2 Request...", null );
-        final var isValidOAuth2Request = !getEricIdentity().equals( UNKNOWN ) && isOAuth2Request() && Objects.nonNull( getUser() );
-        if ( !isValidOAuth2Request ){
-            LOGGER.debugContext( getXRequestId(), "Confirmed this is not a valid OAuth2 Request.", null );
+        if ( !isValidOAuth2Request() ) {
             return UNKNOWN_ROLE;
         }
         LOGGER.debugContext( getXRequestId(), "Confirmed this is a valid OAuth2 Request.", null );
-
         if ( !getActiveAcspNumber().equals( UNKNOWN ) ){
-            LOGGER.debugContext( getXRequestId(), "Confirmed this request is from an Acsp Member. Checking session validity...", null );
-            final var springRole = acspMembersService.fetchActiveAcspMembership( getEricIdentity(), getActiveAcspNumber() )
-                    .map( AcspMembersDao::getUserRole )
-                    .filter( databaseUserRole -> databaseUserRole.equals( getActiveAcspRole() ) )
-                    .map( SpringRole::fromUserRoleEnum )
-                    .orElse( UNKNOWN_ROLE );
-            LOGGER.debugContext( getXRequestId(), springRole.equals( UNKNOWN_ROLE ) ? "Confirmed session is invalid." : "Confirmed session is valid.", null );
-           return springRole;
+            return getAcspMemberRole();
         }
-
-        if ( getAdminPrivileges().contains( ACSP_SEARCH_ADMIN_SEARCH ) ){
-            LOGGER.debugContext( getXRequestId(), String.format( "Confirmed that this request has %s privilege.", ACSP_SEARCH_ADMIN_SEARCH ), null );
+        if ( getAdminPrivileges().contains( ACSP_SEARCH_ADMIN_SEARCH ) ) {
             return ADMIN_WITH_ACSP_SEARCH_PRIVILEGE_ROLE;
         }
-
         return BASIC_OAUTH_ROLE;
+    }
+
+    private boolean isValidAPIKeyRequest() {
+        return !getEricIdentity().equals( UNKNOWN ) && getEricIdentityType().equals( KEY ) && getEricAuthorisedKeyRoles().equals( "*" );
+    }
+
+    private boolean isValidOAuth2Request() {
+        return !getEricIdentity().equals( UNKNOWN ) && isOAuth2Request() && Objects.nonNull( getUser() );
+    }
+
+    private SpringRole getAcspMemberRole() {
+        LOGGER.debugContext( getXRequestId(), "Confirmed this request is from an Acsp Member. Checking session validity...", null );
+        return acspMembersService.fetchActiveAcspMembership( getEricIdentity(), getActiveAcspNumber() )
+                .map( AcspMembersDao::getUserRole )
+                .filter( databaseUserRole -> databaseUserRole.equals( getActiveAcspRole() ) )
+                .map( SpringRole::fromUserRoleEnum )
+                .orElse( UNKNOWN_ROLE );
     }
 
     private void setSpringRole( final String role ){
