@@ -21,9 +21,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
-import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChangedToAdminEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChangedToOwnerEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChangedToStandardEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChanged.YourRoleAtAcspHasChangedToAdminEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChanged.YourRoleAtAcspHasChangedToOwnerEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChanged.YourRoleAtAcspHasChangedToStandardEmailData;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
@@ -48,7 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.localDateTimeToNormalisedString;
 import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.reduceTimestampResolution;
 import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
-import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.*;
+import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.*;
 
 @AutoConfigureMockMvc
 @SpringBootTest
@@ -389,6 +389,8 @@ class AcspMembershipControllerTest {
 
         acspMembersRepository.insert( acspMembersDaos );
         Mockito.doReturn( testDataManager.fetchUserDtos( requestUserId ).getFirst() ).when( usersService ).fetchUserDetails( requestUserId );
+        Mockito.doReturn( testDataManager.fetchAcspProfiles( originalDao.getAcspNumber() ).getFirst() ).when( acspProfileService ).fetchAcspProfile( originalDao.getAcspNumber() );
+
 
         mockMvc.perform( patch( String.format( "/acsps/memberships/%s", targetUserMembershipId ) )
                         .header("X-Request-Id", "theId123")
@@ -487,7 +489,7 @@ class AcspMembershipControllerTest {
 
         final var updatedDao = acspMembersRepository.findById( targetUserMembershipId ).get();
         Assertions.assertNotEquals( originalDao.getEtag(), updatedDao.getEtag() );
-        Assertions.assertEquals( userRole, updatedDao.getUserRole() );
+        Assertions.assertEquals( UserRoleEnum.fromValue( userRole ), updatedDao.getUserRole() );
         Assertions.assertEquals( originalDao.getStatus(), updatedDao.getStatus() );
         Assertions.assertEquals( originalDao.getRemovedAt(), updatedDao.getRemovedAt() );
         Assertions.assertEquals( originalDao.getRemovedBy(), updatedDao.getRemovedBy() );
@@ -569,7 +571,7 @@ class AcspMembershipControllerTest {
 
         final var updatedDao = acspMembersRepository.findById( "WIT002" ).get();
         Assertions.assertNotEquals( originalDao.getEtag(), updatedDao.getEtag() );
-        Assertions.assertEquals( UserRoleEnum.STANDARD.getValue(), updatedDao.getUserRole() );
+        Assertions.assertEquals( UserRoleEnum.STANDARD, updatedDao.getUserRole() );
         Assertions.assertEquals( UserStatusEnum.REMOVED.getValue(), updatedDao.getStatus() );
         Assertions.assertNotEquals( originalDao.getRemovedAt(), updatedDao.getRemovedAt() );
         Assertions.assertEquals( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", updatedDao.getRemovedBy() );
@@ -581,6 +583,7 @@ class AcspMembershipControllerTest {
 
         acspMembersRepository.insert( acspMembersDaos );
         Mockito.doReturn( testDataManager.fetchUserDtos( "COMU001" ).getFirst() ).when( usersService ).fetchUserDetails( "COMU001" );
+        Mockito.doReturn( testDataManager.fetchAcspProfiles( "COMA001" ).getFirst() ).when( acspProfileService ).fetchAcspProfile( "COMA001" );
 
         mockMvc.perform( patch( "/acsps/memberships/COM004" )
                         .header("X-Request-Id", "theId123")
