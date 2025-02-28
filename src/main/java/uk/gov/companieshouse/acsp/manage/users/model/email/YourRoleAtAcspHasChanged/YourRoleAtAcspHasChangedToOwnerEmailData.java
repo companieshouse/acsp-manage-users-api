@@ -1,6 +1,6 @@
-package uk.gov.companieshouse.acsp.manage.users.model.email;
+package uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChanged;
 
-import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_OWNER_MESSAGE_TYPE;
+import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_OWNER_MESSAGE_TYPE;
 
 public class YourRoleAtAcspHasChangedToOwnerEmailData extends YourRoleAtAcspHasChangedEmailData {
 

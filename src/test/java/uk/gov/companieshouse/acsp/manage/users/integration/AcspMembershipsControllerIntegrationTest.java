@@ -18,9 +18,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
-import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAStandardMemberEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAnAdminMemberEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAnOwnerMemberEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAStandardMemberEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAnAdminMemberEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAnOwnerMemberEmailData;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
@@ -48,7 +48,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
-import static uk.gov.companieshouse.acsp.manage.users.model.MessageType.*;
+import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.*;
 
 @AutoConfigureMockMvc
 @SpringBootTest
@@ -138,7 +138,7 @@ class AcspMembershipsControllerIntegrationTest {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
             mockFetchUserDetailsFor("COMU002" );
-            Mockito.doThrow(new NotFoundRuntimeException("acsp-manage-users-api", "Was not found")).when(
+            Mockito.doThrow(new NotFoundRuntimeException( "Was not found", new Exception( "Was not found" ))).when(
                     acspProfileService).fetchAcspProfile("919191");
 
             mockMvc.perform(get("/acsps/919191/memberships")
@@ -289,7 +289,7 @@ class AcspMembershipsControllerIntegrationTest {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
             mockFetchUserDetailsFor("COMU002" );
-            Mockito.doThrow(new NotFoundRuntimeException("acsp-manage-users-api", "Was not found")).when(
+            Mockito.doThrow(new NotFoundRuntimeException( "Was not found", new Exception( "Was not found" ))).when(
                   acspProfileService).fetchAcspProfile("NONEXISTENT");
 
           mockMvc.perform(post("/acsps/NONEXISTENT/memberships/lookup")
@@ -573,7 +573,7 @@ class AcspMembershipsControllerIntegrationTest {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
             mockFetchUserDetailsFor("COMU002" );
-            Mockito.doThrow( new NotFoundRuntimeException( "", "" ) ).when(acspProfileService).fetchAcspProfile( "TSA001" );
+            Mockito.doThrow( new NotFoundRuntimeException( "", new Exception( "" ) ) ).when(acspProfileService).fetchAcspProfile( "TSA001" );
 
             mockMvc.perform( post( "/acsps/TSA001/memberships" )
                             .header( "X-Request-Id", "theId123" )
@@ -591,7 +591,7 @@ class AcspMembershipsControllerIntegrationTest {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
             mockFetchUserDetailsFor("COMU002" );
-            Mockito.doThrow( new NotFoundRuntimeException( "", "" ) ).when( usersService ).fetchUserDetails( "COMU001" );
+            Mockito.doThrow( new NotFoundRuntimeException( "", new Exception( "" ) ) ).when( usersService ).fetchUserDetails( "COMU001" );
 
             mockMvc.perform( post( "/acsps/TSA001/memberships" )
                             .header( "X-Request-Id", "theId123" )
@@ -607,8 +607,7 @@ class AcspMembershipsControllerIntegrationTest {
         static Stream<Arguments> addMemberForAcspWithUserIdWithIncorrectPermissionsTestData(){
             return Stream.of(
                     Arguments.of( "COMU002", "{\"user_id\":\"COMU002\",\"user_role\":\"standard\"}", testDataManager.fetchTokenPermissions( "COM002" ) ),
-                    Arguments.of( "COMU007", "{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}", testDataManager.fetchTokenPermissions( "COM007" ) ),
-                    Arguments.of( "COMU005", "{\"user_id\":\"COMU001\",\"user_role\":\"owner\"}", testDataManager.fetchTokenPermissions( "COM005" ) )
+                    Arguments.of( "COMU005", "{\"user_id\":\"COMU002\",\"user_role\":\"owner\"}", testDataManager.fetchTokenPermissions( "COM005" ) )
             );
         }
 
@@ -629,6 +628,23 @@ class AcspMembershipsControllerIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content( requestBody ) )
                     .andExpect( status().isBadRequest() );
+        }
+
+        @Test
+        void addMemberForAcspWithStandardUserReturnsForbidden() throws Exception {
+            acspMembersRepository.insert(testDataManager.fetchAcspMembersDaos("COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "NEI003"));
+            mockFetchUserDetailsFor("COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008", "COMU009", "NEIU003");
+            mockFetchAcspProfilesFor("COMA001");
+
+            mockMvc.perform( post( "/acsps/COMA001/memberships" )
+                            .header("X-Request-Id", "theId123" )
+                            .header("Eric-identity", "COMU007" )
+                            .header("ERIC-Identity-Type", "oauth2" )
+                            .header("ERIC-Authorised-Key-Roles", "*" )
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM007" ) )
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content( "{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}" ) )
+                    .andExpect( status().isForbidden() );
         }
 
         @Test

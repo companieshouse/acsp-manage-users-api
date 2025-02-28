@@ -63,3 +63,4 @@ The remainder of this section lists the endpoints that are available in this Mic
 | GET    | /user/acsps/memberships                 | This endpoint can be used to retrieve ACSPs that are associated with the user in session.                                                                    | [LLD - getAcspMembershipsForUserId](https://companieshouse.atlassian.net/wiki/spaces/IDV/pages/4743102710/LLD+-+GET+user+acsps+memberships)                  |
 | POST   | /acsps/{acsp_number}/memberships/lookup | This endpoint can be used to fetch associations for a given user and ACSP.                                                                                   | [LLD - findMembershipsForUserAndAcsp](https://companieshouse.atlassian.net/wiki/spaces/IDV/pages/4753293316/LLD+-+POST+acsps+acsp_number+memberships+lookup) |
 
+

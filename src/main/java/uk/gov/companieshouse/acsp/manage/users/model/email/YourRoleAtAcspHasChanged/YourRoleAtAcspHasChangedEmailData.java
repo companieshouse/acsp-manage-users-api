@@ -1,44 +1,48 @@
-package uk.gov.companieshouse.acsp.manage.users.model.email;
+package uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChanged;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
-public abstract class ConfirmYouAreAMemberEmailData extends BaseEmailData<ConfirmYouAreAMemberEmailData> {
+import java.util.Objects;
+import uk.gov.companieshouse.acsp.manage.users.model.email.BaseEmailData;
 
-    private String addedBy;
+public abstract class YourRoleAtAcspHasChangedEmailData extends
+        BaseEmailData<YourRoleAtAcspHasChangedEmailData> {
+
+    private String editedBy;
 
     private String acspName;
 
     private String signinUrl;
 
-    protected ConfirmYouAreAMemberEmailData(){}
+    protected YourRoleAtAcspHasChangedEmailData(){}
 
-    protected ConfirmYouAreAMemberEmailData( final String to, final String addedBy, final String acspName, final String signinUrl ){
+    protected YourRoleAtAcspHasChangedEmailData( final String to, final String editedBy, final String acspName, final String signinUrl ) {
         setTo( to );
-        this.addedBy = addedBy;
+        this.editedBy = editedBy;
         this.acspName = acspName;
         this.signinUrl = signinUrl;
         setSubject();
     }
 
-    public void setAddedBy( final String addedBy ) {
-        this.addedBy = addedBy;
+    public void setEditedBy( final String editedBy ) {
+        this.editedBy = editedBy;
     }
 
-    public ConfirmYouAreAMemberEmailData addedBy( final String addedBy ){
-        setAddedBy( addedBy );
+    public YourRoleAtAcspHasChangedEmailData editedBy( final String editedBy ) {
+        setEditedBy( editedBy );
         return this;
     }
 
-    public String getAddedBy() {
-        return addedBy;
+    public String getEditedBy() {
+        return editedBy;
     }
 
     public void setAcspName( final String acspName ) {
         this.acspName = acspName;
     }
 
-    public ConfirmYouAreAMemberEmailData acspName( final String acspName ){
+    public YourRoleAtAcspHasChangedEmailData acspName( final String acspName ){
         setAcspName( acspName );
         return this;
     }
@@ -51,7 +55,7 @@ public abstract class ConfirmYouAreAMemberEmailData extends BaseEmailData<Confir
         this.signinUrl = signinUrl;
     }
 
-    public ConfirmYouAreAMemberEmailData signinUrl( final String signinUrl ){
+    public YourRoleAtAcspHasChangedEmailData signinUrl( final String signinUrl ){
         setSigninUrl( signinUrl );
         return this;
     }
@@ -61,13 +65,16 @@ public abstract class ConfirmYouAreAMemberEmailData extends BaseEmailData<Confir
     }
 
     @Override
-    protected ConfirmYouAreAMemberEmailData self(){
+    protected YourRoleAtAcspHasChangedEmailData self(){
         return this;
     }
 
     @Override
     public void setSubject(){
-        setSubject( "You have been added to a Companies House authorised agent" );
+        if ( Objects.isNull( acspName ) ){
+            throw new NullPointerException( "acspName cannot be null" );
+        }
+        setSubject( String.format( "Your role for %s has changed", acspName ) );
     }
 
     @Override
@@ -76,12 +83,12 @@ public abstract class ConfirmYouAreAMemberEmailData extends BaseEmailData<Confir
             return true;
         }
 
-        if ( !( o instanceof ConfirmYouAreAMemberEmailData that ) ) {
+        if ( !( o instanceof YourRoleAtAcspHasChangedEmailData that ) ) {
             return false;
         }
 
         return new EqualsBuilder()
-                .append( getAddedBy(), that.getAddedBy() )
+                .append( getEditedBy(), that.getEditedBy() )
                 .append( getAcspName(), that.getAcspName() )
                 .append( getTo(), that.getTo() )
                 .append( getSubject(), that.getSubject() )
@@ -92,7 +99,7 @@ public abstract class ConfirmYouAreAMemberEmailData extends BaseEmailData<Confir
     @Override
     public int hashCode() {
         return new HashCodeBuilder( 17, 37 )
-                .append( getAddedBy() )
+                .append( getEditedBy() )
                 .append( getAcspName() )
                 .append( getTo() )
                 .append( getSubject() )
@@ -102,8 +109,8 @@ public abstract class ConfirmYouAreAMemberEmailData extends BaseEmailData<Confir
 
     @Override
     public String toString() {
-        return "ConfirmYouAreAMemberEmailData{" +
-                "addedBy='" + addedBy + '\'' +
+        return "YourRoleAtAcspHasChangedEmailData{" +
+                "editedBy='" + editedBy + '\'' +
                 ", acspName='" + acspName + '\'' +
                 ", to='" + getTo() + '\'' +
                 ", subject='" + getSubject() + '\'' +
