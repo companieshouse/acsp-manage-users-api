@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,12 +15,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
+import uk.gov.companieshouse.acsp.manage.users.model.context.RequestContext;
+import uk.gov.companieshouse.acsp.manage.users.model.context.RequestContextData.RequestContextDataBuilder;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 
@@ -34,6 +38,13 @@ class UsersServiceTest {
     private UsersService usersService;
 
     private static final TestDataManager testDataManager = TestDataManager.getInstance();
+
+    @BeforeEach
+    void setup(){
+        final var request = new MockHttpServletRequest();
+        request.addHeader( "X-Request-Id", "theId123" );
+        RequestContext.setRequestContext( new RequestContextDataBuilder().setXRequestId( request ).build() );
+    }
 
     private void mockWebClientSuccessResponse( final String uri, final Mono<String> jsonResponse ){
         final var requestHeadersUriSpec = Mockito.mock( WebClient.RequestHeadersUriSpec.class );

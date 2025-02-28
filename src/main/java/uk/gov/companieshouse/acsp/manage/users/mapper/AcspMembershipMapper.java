@@ -26,6 +26,7 @@ public abstract class AcspMembershipMapper {
 
     private static final String DEFAULT_DISPLAY_NAME = "Not Provided";
 
+
     protected OffsetDateTime localDateTimeToOffsetDateTime( final LocalDateTime localDateTime ) {
         return Objects.isNull( localDateTime ) ? null : OffsetDateTime.of( localDateTime, ZoneOffset.UTC );
     }
@@ -48,7 +49,6 @@ public abstract class AcspMembershipMapper {
         acspMembership.setAcspStatus( AcspStatusEnum.fromValue( acspProfile.getStatus().getValue() ) );
     }
 
-    @Mapping( target = "userRole", expression = "java(AcspMembership.UserRoleEnum.fromValue(acspMembersDao.getUserRole()))" )
     @Mapping( target = "membershipStatus", expression = "java(AcspMembership.MembershipStatusEnum.fromValue(acspMembersDao.getStatus()))" )
     public abstract AcspMembership daoToDto( final AcspMembersDao acspMembersDao, @Context final User user, @Context final AcspProfile acspProfile );
 

@@ -6,11 +6,11 @@ import static uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil.A
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 
-public class BadRequestRuntimeException extends RuntimeException {
+public class ForbiddenRuntimeException extends RuntimeException {
 
     private static final Logger LOG = LoggerFactory.getLogger( APPLICATION_NAMESPACE );
 
-    public BadRequestRuntimeException( final String exceptionMessage, final Exception loggingMessage ) {
+    public ForbiddenRuntimeException( final String exceptionMessage, final Exception loggingMessage ) {
         super( exceptionMessage );
         LOG.errorContext( getXRequestId(), loggingMessage, null );
     }

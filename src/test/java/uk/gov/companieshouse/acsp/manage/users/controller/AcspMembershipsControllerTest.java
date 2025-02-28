@@ -19,10 +19,10 @@ import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfig
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import reactor.core.publisher.Mono;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.configuration.WebSecurityConfig;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
-import uk.gov.companieshouse.acsp.manage.users.interceptor.InterceptorHelper;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.EmailService;
@@ -36,14 +36,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
+import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum.STANDARD;
 
 @WebMvcTest(AcspMembershipsController.class)
-@Import({InterceptorHelper.class, WebSecurityConfig.class})
+@Import(WebSecurityConfig.class)
 @Tag("unit-test")
 class AcspMembershipsControllerTest {
 
@@ -92,7 +94,7 @@ class AcspMembershipsControllerTest {
             mockFetchUserDetailsFor( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
             Mockito.doReturn( Optional.of( requestingUserDao ) ).when( acspMembersService ).fetchActiveAcspMembership( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
             Mockito.doReturn( acspProfile ).when(acspProfileService).fetchAcspProfile("COMA001");
-            Mockito.doReturn( new AcspMembershipsList() ).when( acspMembersService ).findAllByAcspNumberAndRole( "COMA001", acspProfile, "owner", false, 0, 15 );
+            Mockito.doReturn( new AcspMembershipsList() ).when( acspMembersService ).fetchMembershipsForAcspNumberAndRole( acspProfile, "owner", false, 0, 15 );
 
             final var response =
             mockMvc.perform( get( "/acsps/COMA001/memberships?include_removed=false&role=owner&page_index=0&items_per_page=15" )
@@ -116,7 +118,7 @@ class AcspMembershipsControllerTest {
             mockFetchUserDetailsFor( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
             Mockito.doReturn( Optional.of( requestingUserDao ) ).when( acspMembersService ).fetchActiveAcspMembership( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
             Mockito.doReturn( acspProfile ).when(acspProfileService).fetchAcspProfile("COMA001");
-            Mockito.doReturn( new AcspMembershipsList() ).when( acspMembersService ).findAllByAcspNumberAndRole( "COMA001", acspProfile, "owner", false, 0, 15 );
+            Mockito.doReturn( new AcspMembershipsList() ).when( acspMembersService ).fetchMembershipsForAcspNumberAndRole( acspProfile, "owner", false, 0, 15 );
 
             mockMvc.perform( get( "/acsps/COMA001/memberships?include_removed=false&role=invalid_role&page_index=0&items_per_page=15" )
                             .header("X-Request-Id", "theId123")
@@ -135,7 +137,7 @@ class AcspMembershipsControllerTest {
             mockFetchUserDetailsFor( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
             Mockito.doReturn( Optional.of( requestingUserDao ) ).when( acspMembersService ).fetchActiveAcspMembership( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
             Mockito.doReturn( acspProfile ).when(acspProfileService).fetchAcspProfile("COMA001");
-            Mockito.doReturn( new AcspMembershipsList() ).when( acspMembersService ).findAllByAcspNumberAndRole( "COMA001", acspProfile, null, true, 0, 20 );
+            Mockito.doReturn( new AcspMembershipsList() ).when( acspMembersService ).fetchMembershipsForAcspNumberAndRole( acspProfile, null, true, 0, 20 );
 
             final var response =
                     mockMvc.perform( get( "/acsps/COMA001/memberships?include_removed=true&page_index=0&items_per_page=20" )
@@ -167,7 +169,7 @@ class AcspMembershipsControllerTest {
             Mockito.doReturn( Optional.of( requestingUserDao ) ).when( acspMembersService ).fetchActiveAcspMembership( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
             Mockito.doReturn( usersList ).when( usersService ).searchUserDetails( List.of( "buzz.lightyear@toystory.com" ) );
             Mockito.doReturn( acspProfile ).when(acspProfileService).fetchAcspProfile( "COMA001" );
-            Mockito.doReturn( new AcspMembershipsList() ).when( acspMembersService ).fetchAcspMemberships( user, false, "COMA001" );
+            Mockito.doReturn( new AcspMembershipsList() ).when( acspMembersService ).fetchMemberships( user, false, "COMA001" );
 
             final var response =
             mockMvc.perform( post( "/acsps/COMA001/memberships/lookup?include_removed=false" )
@@ -334,7 +336,7 @@ class AcspMembershipsControllerTest {
 
             mockFetchUserDetailsFor( "COMU002" );
             Mockito.doReturn( Optional.of( requestingUserDao ) ).when( acspMembersService ).fetchActiveAcspMembership( "COMU002", "COMA001" );
-            Mockito.doThrow( new NotFoundRuntimeException( "", "" ) ).when(acspProfileService).fetchAcspProfile( "TSA001" );
+            Mockito.doThrow( new NotFoundRuntimeException( "", new Exception( "" ) ) ).when(acspProfileService).fetchAcspProfile( "TSA001" );
 
             mockMvc.perform( post( "/acsps/TSA001/memberships" )
                             .header( "X-Request-Id", "theId123" )
@@ -353,7 +355,7 @@ class AcspMembershipsControllerTest {
 
             mockFetchUserDetailsFor( "COMU002" );
             Mockito.doReturn( Optional.of( requestingUserDao ) ).when( acspMembersService ).fetchActiveAcspMembership( "COMU002", "COMA001" );
-            Mockito.doThrow( new NotFoundRuntimeException( "", "" ) ).when( usersService ).fetchUserDetails( "COMU001" );
+            Mockito.doThrow( new NotFoundRuntimeException( "", new Exception( "" ) ) ).when( usersService ).fetchUserDetails( "COMU001" );
 
             mockMvc.perform( post( "/acsps/TSA001/memberships" )
                             .header( "X-Request-Id", "theId123" )
@@ -373,7 +375,7 @@ class AcspMembershipsControllerTest {
 
             mockFetchUserDetailsFor( "COMU002" );
             Mockito.doReturn( Optional.of( requestingUserDao ) ).when( acspMembersService ).fetchActiveAcspMembership( "COMU002", "COMA001" );
-            Mockito.doReturn( requestingUser ).when( acspMembersService ).fetchAcspMembershipDaos( "COMU002", false );
+            Mockito.doReturn( requestingUser ).when( acspMembersService ).fetchMembershipDaos( "COMU002", false );
 
             mockMvc.perform( post( "/acsps/COMA001/memberships" )
                             .header("X-Request-Id", "theId123")
@@ -387,7 +389,7 @@ class AcspMembershipsControllerTest {
         }
 
         @Test
-        void addMemberForAcspWithLoggedStandardUserReturnsBadRequest() throws Exception {
+        void addMemberForAcspWithLoggedStandardUserReturnsForbidden() throws Exception {
             final var users = testDataManager.fetchUserDtos( "COMU007", "COMU001" );
             final var acspProfile = testDataManager.fetchAcspProfiles( "COMA001" ).getFirst();
             final var membership = testDataManager.fetchAcspMembersDaos( "COM007" ).getFirst();
@@ -405,11 +407,11 @@ class AcspMembershipsControllerTest {
                             .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM007" ) )
                             .contentType(MediaType.APPLICATION_JSON)
                             .content( "{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}" ) )
-                    .andExpect( status().isBadRequest() );
+                    .andExpect( status().isForbidden() );
         }
 
         @Test
-        void addMemberForAcspWithLoggedAdminUserAndNewOwnerUserReturnsBadRequest() throws Exception {
+        void addMemberForAcspWithLoggedAdminUserAndNewOwnerUserReturnsForbidden() throws Exception {
             final var users = testDataManager.fetchUserDtos( "COMU005", "COMU001" );
             final var acspProfile = testDataManager.fetchAcspProfiles( "COMA001" ).getFirst();
             final var membership = testDataManager.fetchAcspMembersDaos( "COM005" ).getFirst();
@@ -427,7 +429,7 @@ class AcspMembershipsControllerTest {
                             .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM005" ) )
                             .contentType(MediaType.APPLICATION_JSON)
                             .content( "{\"user_id\":\"COMU001\",\"user_role\":\"owner\"}" ) )
-                    .andExpect( status().isBadRequest() );
+                    .andExpect( status().isForbidden() );
         }
 
         @Test
@@ -438,8 +440,9 @@ class AcspMembershipsControllerTest {
             Mockito.doReturn( testDataManager.fetchUserDtos( "TSU001" ).getFirst() ).when( usersService ).fetchUserDetails( "TSU001" );
             Mockito.doReturn( targetUserData ).when( usersService ).fetchUserDetails( "COMU001" );
             Mockito.doReturn( targetAcspProfile ).when(acspProfileService).fetchAcspProfile( "TSA001" );
-            Mockito.doReturn( List.of() ).when( acspMembersService ).fetchAcspMembershipDaos( "COMU001", false );
+            Mockito.doReturn( List.of() ).when( acspMembersService ).fetchMembershipDaos( "COMU001", false );
             Mockito.doReturn( Optional.of( testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst() ) ).when( acspMembersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
+            Mockito.doReturn( Mono.empty() ).when( emailService ).sendConfirmYouAreAMemberEmail( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", STANDARD );
 
             mockMvc.perform( post("/acsps/TSA001/memberships")
                             .header("X-Request-Id", "theId123")
@@ -451,7 +454,7 @@ class AcspMembershipsControllerTest {
                             .content( "{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}" ) )
                     .andExpect( status().isCreated() );
 
-            Mockito.verify( acspMembersService ).addAcspMembership( targetUserData, targetAcspProfile, "TSA001", UserRoleEnum.STANDARD,"TSU001" );
+            Mockito.verify( acspMembersService ).createMembership( targetUserData, targetAcspProfile, STANDARD,"TSU001" );
         }
 
     }
@@ -460,7 +463,7 @@ class AcspMembershipsControllerTest {
         return Stream.of(
                 Arguments.of( UserRoleEnum.OWNER ),
                 Arguments.of( UserRoleEnum.ADMIN ),
-                Arguments.of( UserRoleEnum.STANDARD )
+                Arguments.of( STANDARD )
         );
     }
 
@@ -474,8 +477,9 @@ class AcspMembershipsControllerTest {
         Mockito.doReturn( users.getFirst() ).when( usersService ).fetchUserDetails( "TSU001" );
         Mockito.doReturn( users.getLast() ).when( usersService ).fetchUserDetails( "COMU001" );
         Mockito.doReturn( acsp ).when( acspProfileService ).fetchAcspProfile( "TSA001" );
-        Mockito.doReturn( List.of() ).when( acspMembersService ).fetchAcspMembershipDaos( "COMU001", false );
+        Mockito.doReturn( List.of() ).when( acspMembersService ).fetchMembershipDaos( "COMU001", false );
         Mockito.doReturn( Optional.of( requestingUsersMembership ) ).when( acspMembersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
+        Mockito.doReturn( Mono.empty() ).when( emailService ).sendConfirmYouAreAMemberEmail( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", role );
 
         mockMvc.perform( post("/acsps/TSA001/memberships")
                         .header("X-Request-Id", "theId123")
@@ -488,11 +492,11 @@ class AcspMembershipsControllerTest {
                 .andExpect( status().isCreated() );
 
         if ( UserRoleEnum.OWNER.equals( role ) ) {
-            Mockito.verify( emailService ).sendConfirmYouAreAMemberEmail( "theId123", "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", UserRoleEnum.OWNER );
+            Mockito.verify( emailService ).sendConfirmYouAreAMemberEmail("jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", UserRoleEnum.OWNER );
         } else if ( UserRoleEnum.ADMIN.equals( role ) ) {
-            Mockito.verify( emailService ).sendConfirmYouAreAMemberEmail( "theId123", "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", UserRoleEnum.ADMIN );
-        } else if ( UserRoleEnum.STANDARD.equals( role ) ) {
-            Mockito.verify( emailService ).sendConfirmYouAreAMemberEmail( "theId123", "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", UserRoleEnum.STANDARD );
+            Mockito.verify( emailService ).sendConfirmYouAreAMemberEmail( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", UserRoleEnum.ADMIN );
+        } else if ( STANDARD.equals( role ) ) {
+            Mockito.verify( emailService ).sendConfirmYouAreAMemberEmail( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", STANDARD );
         }
 
     }
@@ -507,8 +511,9 @@ class AcspMembershipsControllerTest {
         Mockito.doReturn( users.getFirst() ).when( usersService ).fetchUserDetails( "WITU001" );
         Mockito.doReturn( users.getLast() ).when( usersService ).fetchUserDetails( "COMU001" );
         Mockito.doReturn( acsp ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
-        Mockito.doReturn( List.of() ).when( acspMembersService ).fetchAcspMembershipDaos( "COMU001", false );
+        Mockito.doReturn( List.of() ).when( acspMembersService ).fetchMembershipDaos( "COMU001", false );
         Mockito.doReturn( Optional.of( requestingUsersMembership ) ).when( acspMembersService ).fetchActiveAcspMembership( "WITU001", "WITA001" );
+        Mockito.doReturn( Mono.empty() ).when( emailService ).sendConfirmYouAreAMemberEmail("jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", role );
 
         mockMvc.perform( post("/acsps/WITA001/memberships")
                         .header("X-Request-Id", "theId123")
@@ -521,11 +526,11 @@ class AcspMembershipsControllerTest {
                 .andExpect( status().isCreated() );
 
         if ( UserRoleEnum.OWNER.equals( role ) ) {
-            Mockito.verify( emailService ).sendConfirmYouAreAMemberEmail( "theId123", "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", UserRoleEnum.OWNER );
+            Mockito.verify( emailService ).sendConfirmYouAreAMemberEmail( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", UserRoleEnum.OWNER );
         } else if ( UserRoleEnum.ADMIN.equals( role ) ) {
-            Mockito.verify( emailService ).sendConfirmYouAreAMemberEmail( "theId123", "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", UserRoleEnum.ADMIN );
-        } else if ( UserRoleEnum.STANDARD.equals( role ) ) {
-            Mockito.verify( emailService ).sendConfirmYouAreAMemberEmail( "theId123", "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", UserRoleEnum.STANDARD );
+            Mockito.verify( emailService ).sendConfirmYouAreAMemberEmail( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", UserRoleEnum.ADMIN );
+        } else if ( STANDARD.equals( role ) ) {
+            Mockito.verify( emailService ).sendConfirmYouAreAMemberEmail( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", STANDARD );
         }
 
     }
@@ -540,7 +545,7 @@ class AcspMembershipsControllerTest {
         Mockito.doReturn( users.getFirst() ).when( usersService ).fetchUserDetails( "WITU001" );
         Mockito.doReturn( users.getLast() ).when( usersService ).fetchUserDetails( "COMU001" );
         Mockito.doReturn( acsp ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
-        Mockito.doReturn( List.of() ).when( acspMembersService ).fetchAcspMembershipDaos( "COMU001", false );
+        Mockito.doReturn( List.of() ).when( acspMembersService ).fetchMembershipDaos( "COMU001", false );
         Mockito.doReturn( Optional.of( requestingUsersMembership ) ).when( acspMembersService ).fetchActiveAcspMembership( "WITU001", "WITA001" );
 
         mockMvc.perform( post("/acsps/WITA001/memberships")
@@ -554,11 +559,11 @@ class AcspMembershipsControllerTest {
                 .andExpect( status().isCreated() );
 
         if ( UserRoleEnum.OWNER.equals( role ) ) {
-            Mockito.verify( emailService, times( 0 ) ).sendConfirmYouAreAMemberEmail( "theId123", "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", UserRoleEnum.OWNER );
+            Mockito.verify( emailService, times( 0 ) ).sendConfirmYouAreAMemberEmail(  "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", UserRoleEnum.OWNER );
         } else if ( UserRoleEnum.ADMIN.equals( role ) ) {
-            Mockito.verify( emailService, times( 0 ) ).sendConfirmYouAreAMemberEmail( "theId123", "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", UserRoleEnum.ADMIN );
-        } else if ( UserRoleEnum.STANDARD.equals( role ) ) {
-            Mockito.verify( emailService, times( 0 ) ).sendConfirmYouAreAMemberEmail( "theId123", "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", UserRoleEnum.STANDARD );
+            Mockito.verify( emailService, times( 0 ) ).sendConfirmYouAreAMemberEmail(  "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", UserRoleEnum.ADMIN );
+        } else if ( STANDARD.equals( role ) ) {
+            Mockito.verify( emailService, times( 0 ) ).sendConfirmYouAreAMemberEmail(  "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", STANDARD );
         }
     }
 
