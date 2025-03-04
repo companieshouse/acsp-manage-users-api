@@ -23,7 +23,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CsrfFilter;
 import uk.gov.companieshouse.acsp.manage.users.filter.UserAuthenticationFilter;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
-import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.api.filter.CustomCorsFilter;
 
 @Configuration
@@ -33,12 +32,12 @@ public class WebSecurityConfig {
     private static final Supplier<List<String>> externalMethods = () -> List.of( GET.name() );
 
     @Bean
-    public SecurityFilterChain filterChain( final HttpSecurity http, final UsersService usersService, final AcspMembersService acspMembersService ) throws Exception {
+    public SecurityFilterChain filterChain( final HttpSecurity http, final AcspMembersService acspMembersService ) throws Exception {
         http.cors( AbstractHttpConfigurer::disable )
                 .sessionManagement( s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS ) )
                 .csrf( AbstractHttpConfigurer::disable )
                 .addFilterBefore( new CustomCorsFilter( externalMethods.get() ), CsrfFilter.class )
-                .addFilterAfter( new UserAuthenticationFilter( usersService, acspMembersService ), CsrfFilter.class )
+                .addFilterAfter( new UserAuthenticationFilter( acspMembersService ), CsrfFilter.class )
                 .authorizeHttpRequests( request -> request
                         .requestMatchers( GET, "/acsp-manage-users-api/healthcheck" ).permitAll()
                         .requestMatchers( GET, "/user/acsps/memberships" ).hasAnyRole( getValues( BASIC_OAUTH_ROLE, ACSP_OWNER_ROLE, ACSP_ADMIN_ROLE, ACSP_STANDARD_ROLE ) )

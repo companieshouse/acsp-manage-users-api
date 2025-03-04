@@ -19,7 +19,9 @@ public final class RequestContext {
     }
 
     public static void clear(){
-        requestContextDataThreadLocal.remove();
+        if ( Objects.nonNull( requestContextDataThreadLocal ) ) {
+            requestContextDataThreadLocal.remove();
+        }
     }
 
 }
