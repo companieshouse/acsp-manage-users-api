@@ -8,15 +8,15 @@ import uk.gov.companieshouse.acsp.manage.users.interceptor.*;
 @Configuration
 public class InterceptorConfig implements WebMvcConfigurer {
 
-    private final LoggingAndCleanupInterceptor loggingInterceptor;
+    private final RequestLifecycleInterceptor requestLifecycleInterceptor;
 
-    public InterceptorConfig( final LoggingAndCleanupInterceptor loggingInterceptor ) {
-        this.loggingInterceptor = loggingInterceptor;
+    public InterceptorConfig( final RequestLifecycleInterceptor requestLifecycleInterceptor ) {
+        this.requestLifecycleInterceptor = requestLifecycleInterceptor;
     }
 
     @Override
     public void addInterceptors( final InterceptorRegistry registry ) {
-        registry.addInterceptor( loggingInterceptor );
+        registry.addInterceptor( requestLifecycleInterceptor );
     }
 
 }

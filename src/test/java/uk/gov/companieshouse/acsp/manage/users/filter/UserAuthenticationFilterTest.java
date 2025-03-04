@@ -44,7 +44,7 @@ class UserAuthenticationFilterTest {
     void setup(){
         usersService = Mockito.mock( UsersService.class );
         acspMembersService = Mockito.mock( AcspMembersService.class );
-        userAuthenticationFilter = new UserAuthenticationFilter( usersService, acspMembersService );
+        userAuthenticationFilter = new UserAuthenticationFilter( acspMembersService );
     }
 
     private ArgumentMatcher<Authentication> springRoleWasAssigned( final String springRole ){
@@ -57,18 +57,17 @@ class UserAuthenticationFilterTest {
 
     @Test
     void doFilterInternalDoesNotAddAnyRolesWhenUnhandledExceptionIsThrown() {
-        final var user = testDataManager.fetchUserDtos( "COMU002" ).getFirst();
         final var ericAuthorisedTokenPermissions = testDataManager.fetchTokenPermissions( "COM002" );
 
         final var request = new MockHttpServletRequest();
         request.addHeader( "X-Request-Id", "theId123" );
-        request.addHeader( "Eric-Identity", user.getUserId() );
+        request.addHeader( "Eric-Identity", "COMU002" );
         request.addHeader( "Eric-Identity-Type","oauth2" );
         request.addHeader( "Eric-Authorised-Token-Permissions", ericAuthorisedTokenPermissions );
         final var response = new MockHttpServletResponse();
         final var filterChain = Mockito.mock( FilterChain.class );
 
-        Mockito.doThrow( new IllegalArgumentException( "Something odd happened here" ) ).when( usersService ).fetchUserDetails( user.getUserId() );
+        Mockito.doThrow( new IllegalArgumentException( "Something odd happened here" ) ).when( acspMembersService ).fetchActiveAcspMembership( "COMU002", "COMA001" );
 
         final var securityContext = Mockito.mock( SecurityContext.class );
         SecurityContextHolder.setContext( securityContext );
@@ -156,40 +155,18 @@ class UserAuthenticationFilterTest {
     }
 
     @Test
-    void doFilterInternalWithNonexistentRequestingUserDoesNotAddAnyRoles() {
-        final var request = new MockHttpServletRequest();
-        request.addHeader( "X-Request-Id", "theId123" );
-        request.addHeader( "Eric-Identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-        request.addHeader( "Eric-Identity-Type","oauth2" );
-        request.addHeader( "Eric-Authorised-Roles", "/admin/acsp/search" );
-        final var response = new MockHttpServletResponse();
-        final var filterChain = Mockito.mock( FilterChain.class );
-
-        Mockito.doThrow( new NotFoundRuntimeException(  "Could not find user", new Exception( "Could not find user" ) ) ).when( usersService ).fetchUserDetails( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-
-        final var securityContext = Mockito.mock( SecurityContext.class );
-        SecurityContextHolder.setContext( securityContext );
-
-        userAuthenticationFilter.doFilterInternal( request, response, filterChain );
-
-        Mockito.verify( securityContext ).setAuthentication( argThat( springRoleWasAssigned( "ROLE_UNKNOWN" ) ) );
-    }
-
-    @Test
     void doFilterInternalDoesNotAddAnyRolesWhenDatabaseIsOutOfSyncWithSession() {
-        final var user = testDataManager.fetchUserDtos( "COMU002" ).getFirst();
         final var membership = testDataManager.fetchAcspMembersDaos( "COM002" ).getFirst();
         final var ericAuthorisedTokenPermissions = testDataManager.fetchTokenPermissions( "COM004" );
 
         final var request = new MockHttpServletRequest();
         request.addHeader( "X-Request-Id", "theId123" );
-        request.addHeader( "Eric-Identity", user.getUserId() );
+        request.addHeader( "Eric-Identity", "COMU002" );
         request.addHeader( "Eric-Identity-Type","oauth2" );
         request.addHeader( "Eric-Authorised-Token-Permissions", ericAuthorisedTokenPermissions );
         final var response = new MockHttpServletResponse();
         final var filterChain = Mockito.mock( FilterChain.class );
 
-        Mockito.doReturn( user ).when( usersService ).fetchUserDetails( user.getUserId() );
         Mockito.doReturn( Optional.of( membership ) ).when( acspMembersService ).fetchActiveAcspMembership( membership.getUserId(), membership.getAcspNumber() );
 
         final var securityContext = Mockito.mock( SecurityContext.class );
@@ -220,8 +197,6 @@ class UserAuthenticationFilterTest {
 
     @Test
     void doFilterInternalWithValidAdminRequestAddsAdminRole() {
-        final var user = testDataManager.fetchUserDtos( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" ).getFirst();
-
         final var request = new MockHttpServletRequest();
         request.addHeader( "X-Request-Id", "theId123" );
         request.addHeader( "Eric-Identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
@@ -229,8 +204,6 @@ class UserAuthenticationFilterTest {
         request.addHeader( "Eric-Authorised-Roles", "/admin/acsp/search" );
         final var response = new MockHttpServletResponse();
         final var filterChain = Mockito.mock( FilterChain.class );
-
-        Mockito.doReturn( user ).when( usersService ).fetchUserDetails( user.getUserId() );
 
         final var securityContext = Mockito.mock( SecurityContext.class );
         SecurityContextHolder.setContext( securityContext );
@@ -241,35 +214,31 @@ class UserAuthenticationFilterTest {
     }
 
     private static Stream<Arguments> doFilterInternalWithValidAcspRequestScenarios(){
-        final var ownerUser = testDataManager.fetchUserDtos( "COMU002" ).getFirst();
         final var ownerMembership = testDataManager.fetchAcspMembersDaos( "COM002" ).getFirst();
         final var ownerPermissions = testDataManager.fetchTokenPermissions( "COM002" );
-        final var adminUser = testDataManager.fetchUserDtos( "COMU004" ).getFirst();
         final var adminMembership = testDataManager.fetchAcspMembersDaos( "COM004" ).getFirst();
         final var adminPermissions = testDataManager.fetchTokenPermissions( "COM004" );
-        final var standardUser = testDataManager.fetchUserDtos( "COMU007" ).getFirst();
         final var standardMembership = testDataManager.fetchAcspMembersDaos( "COM007" ).getFirst();
         final var standardPermissions = testDataManager.fetchTokenPermissions( "COM007" );
 
         return Stream.of(
-                Arguments.of( ownerUser, ownerMembership, ownerPermissions, "ROLE_ACSP_OWNER" ),
-                Arguments.of( adminUser, adminMembership, adminPermissions, "ROLE_ACSP_ADMIN" ),
-                Arguments.of( standardUser, standardMembership, standardPermissions, "ROLE_ACSP_STANDARD" )
+                Arguments.of( "COMU002", ownerMembership, ownerPermissions, "ROLE_ACSP_OWNER" ),
+                Arguments.of( "COMU004", adminMembership, adminPermissions, "ROLE_ACSP_ADMIN" ),
+                Arguments.of( "COMU007", standardMembership, standardPermissions, "ROLE_ACSP_STANDARD" )
         );
     }
 
     @ParameterizedTest
     @MethodSource( "doFilterInternalWithValidAcspRequestScenarios" )
-    void doFilterInternalWithValidAcspRequestTests( final User user, final AcspMembersDao membership, final String ericAuthorisedTokenPermissions, final String expectedOutcome ) {
+    void doFilterInternalWithValidAcspRequestTests( final String userId, final AcspMembersDao membership, final String ericAuthorisedTokenPermissions, final String expectedOutcome ) {
         final var request = new MockHttpServletRequest();
         request.addHeader( "X-Request-Id", "theId123" );
-        request.addHeader( "Eric-Identity", user.getUserId() );
+        request.addHeader( "Eric-Identity", userId );
         request.addHeader( "Eric-Identity-Type","oauth2" );
         request.addHeader( "Eric-Authorised-Token-Permissions", ericAuthorisedTokenPermissions );
         final var response = new MockHttpServletResponse();
         final var filterChain = Mockito.mock( FilterChain.class );
 
-        Mockito.doReturn( user ).when( usersService ).fetchUserDetails( user.getUserId() );
         Mockito.doReturn( Optional.of( membership ) ).when( acspMembersService ).fetchActiveAcspMembership( membership.getUserId(), membership.getAcspNumber() );
 
         final var securityContext = Mockito.mock( SecurityContext.class );
