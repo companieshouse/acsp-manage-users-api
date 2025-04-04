@@ -65,7 +65,7 @@ public class AcspMembersService {
     @Transactional( readOnly = true )
     public AcspMembershipsList fetchMemberships( final User user, final boolean includeRemoved, final String acspNumber ) {
         final var loggingAcspNumber = Objects.nonNull( acspNumber ) ? String.format( " and Acsp %s", acspNumber ) : "";
-        LOGGER.debugContext( getXRequestId(), String.format( "Attempting to fetch memberships for user %s%s", user.getEmail(), loggingAcspNumber ), null );
+        LOGGER.debugContext( getXRequestId(), String.format( "Attempting to fetch memberships for user %s%s", Optional.of( user ).orElseThrow( () -> new NullPointerException( "User cannot be null" ) ).getEmail(), loggingAcspNumber ), null );
 
         final var membershipDaos = Optional
                 .ofNullable( acspNumber )
