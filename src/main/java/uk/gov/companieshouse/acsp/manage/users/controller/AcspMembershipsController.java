@@ -62,8 +62,8 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
 
         LOGGER.infoContext( getXRequestId(), String.format( "Received request with acsp_number=%s, user_id=%s, user_role=%s ", targetAcspNumber, targetUserId, targetUserRole.getValue() ), null );
 
-        final var targetUser = invokeAndMapException( (Function<String, User>) usersService::fetchUserDetails, NotFoundRuntimeException.class, new BadRequestRuntimeException( ERROR_CODE_1001.getCode(), new Exception( "Cannot find user" ) ) ).apply( targetUserId );
-        final var targetAcspProfile = invokeAndMapException( acspProfileService::fetchAcspProfile, NotFoundRuntimeException.class, new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN, new Exception( "Cannot find Acsp" ) ) ).apply( targetAcspNumber );
+        final var targetUser = invokeAndMapException( (Function<String, User>) usersService::fetchUserDetails, NotFoundRuntimeException.class, () -> new BadRequestRuntimeException( ERROR_CODE_1001.getCode(), new Exception( "Cannot find user" ) ) ).apply( targetUserId );
+        final var targetAcspProfile = invokeAndMapException( acspProfileService::fetchAcspProfile, NotFoundRuntimeException.class, () -> new BadRequestRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN, new Exception( "Cannot find Acsp" ) ) ).apply( targetAcspNumber );
 
         final var memberships = acspMembersService.fetchMembershipDaos( targetUserId, false );
         if ( !memberships.isEmpty() ) {
