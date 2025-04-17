@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.acsp.manage.users.mapper;
 
+import java.util.Optional;
 import org.mapstruct.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
@@ -34,7 +35,9 @@ public abstract class AcspMembershipMapper {
     @AfterMapping
     protected void enrichWithUserDetails( @MappingTarget final AcspMembership acspMembership, @Context User userDetails ){
         if ( Objects.isNull( userDetails ) ){
-            userDetails = usersService.fetchUserDetails( acspMembership.getUserId() );
+            userDetails = Optional
+                    .ofNullable( usersService.retrieveUserDetails( acspMembership.getUserId(), acspMembership.getUserEmail() ) )
+                    .orElse( new User().email( acspMembership.getUserEmail() ) );
         }
         acspMembership.setUserEmail( userDetails.getEmail() );
         acspMembership.setUserDisplayName( Objects.isNull( userDetails.getDisplayName() ) ? DEFAULT_DISPLAY_NAME : userDetails.getDisplayName() );

@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 
 @Document( "acsp_members" )
+@CompoundIndex( name = "acsp_user_idx", def = "{'acsp_number': 1, 'user_id': 1, 'user_email': 1}", unique = true )
 public class AcspMembersDao {
 
     @Id
@@ -22,10 +24,13 @@ public class AcspMembersDao {
     @Field( "acsp_number" )
     private String acspNumber;
 
-    @NotNull
     @Indexed
     @Field( "user_id" )
     private String userId;
+
+    @Indexed
+    @Field( "user_email" )
+    private String userEmail;
 
     @NotNull
     @Field( "user_role" )
@@ -46,6 +51,15 @@ public class AcspMembersDao {
 
     @Field( "removed_by" )
     private String removedBy;
+
+    @Field( "invited_at" )
+    private LocalDateTime invitedAt;
+
+    @Field( "accepted_at" )
+    private LocalDateTime acceptedAt;
+
+    @Field( "rejected_at" )
+    private LocalDateTime rejectedAt;
 
     private String status;
 
@@ -94,6 +108,19 @@ public class AcspMembersDao {
 
     public String getUserId(){
         return userId;
+    }
+
+    public void setUserEmail( final String userEmail ){
+        this.userEmail = userEmail;
+    }
+
+    public AcspMembersDao userEmail( final String userEmail ){
+        setUserEmail( userEmail );
+        return this;
+    }
+
+    public String getUserEmail(){
+        return userEmail;
     }
 
     public void setUserRole( final String userRole ) {
@@ -200,6 +227,45 @@ public class AcspMembersDao {
         return version;
     }
 
+    public void setInvitedAt( final LocalDateTime invitedAt ){
+        this.invitedAt = invitedAt;
+    }
+
+    public AcspMembersDao invitedAt( final LocalDateTime invitedAt ){
+        setInvitedAt( invitedAt );
+        return this;
+    }
+
+    public LocalDateTime getInvitedAt(){
+        return invitedAt;
+    }
+
+    public void setAcceptedAt( final LocalDateTime acceptedAt ){
+        this.acceptedAt = acceptedAt;
+    }
+
+    public AcspMembersDao acceptedAt( final LocalDateTime acceptedAt ){
+        setAcceptedAt( acceptedAt );
+        return this;
+    }
+
+    public LocalDateTime getAcceptedAt(){
+        return acceptedAt;
+    }
+
+    public void setRejectedAt( final LocalDateTime rejectedAt ){
+        this.rejectedAt = rejectedAt;
+    }
+
+    public AcspMembersDao rejectedAt( final LocalDateTime rejectedAt ){
+        setRejectedAt( rejectedAt );
+        return this;
+    }
+
+    public LocalDateTime getRejectedAt(){
+        return rejectedAt;
+    }
+
     public void setStatus( final String status ){
         this.status = status;
     }
@@ -214,18 +280,22 @@ public class AcspMembersDao {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return "AcspMembersDao{" +
                 "id='" + id + '\'' +
                 ", acspNumber='" + acspNumber + '\'' +
                 ", userId='" + userId + '\'' +
-                ", userRole=" + userRole +
+                ", userEmail='" + userEmail + '\'' +
+                ", userRole='" + userRole + '\'' +
                 ", createdAt=" + createdAt +
                 ", addedAt=" + addedAt +
                 ", addedBy='" + addedBy + '\'' +
                 ", removedAt=" + removedAt +
                 ", removedBy='" + removedBy + '\'' +
-                ", status=" + status +
+                ", invitedAt=" + invitedAt +
+                ", acceptedAt=" + acceptedAt +
+                ", rejectedAt=" + rejectedAt +
+                ", status='" + status + '\'' +
                 ", etag='" + etag + '\'' +
                 ", version=" + version +
                 '}';

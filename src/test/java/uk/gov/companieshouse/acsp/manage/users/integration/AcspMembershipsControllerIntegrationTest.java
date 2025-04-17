@@ -518,23 +518,6 @@ class AcspMembershipsControllerIntegrationTest {
         }
 
         @Test
-        void addMemberForAcspWithoutUserIdInBodyReturnsBadRequest() throws Exception {
-            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
-
-            mockFetchUserDetailsFor("COMU002" );
-
-            mockMvc.perform( post( "/acsps/TSA001/memberships" )
-                            .header( "X-Request-Id", "theId123" )
-                            .header( "Eric-identity", "COMU002" )
-                            .header( "ERIC-Identity-Type", "oauth2" )
-                            .header( "ERIC-Authorised-Key-Roles", "*" )
-                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) )
-                            .contentType( MediaType.APPLICATION_JSON )
-                            .content( "{\"user_role\":\"standard\"}" ) )
-                    .andExpect( status().isBadRequest() );
-        }
-
-        @Test
         void addMemberForAcspWithoutUserRoleReturnsBadRequest() throws Exception {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 

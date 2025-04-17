@@ -201,6 +201,36 @@ class AcspMembershipControllerTest {
                 .andExpect( status().isOk() );
     }
 
+
+
+
+
+
+//    @Test
+//    void getAcspMembershipForAcspAndIdCanFetchPendingMembership() throws Exception {
+//        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT005" ) );
+//        Mockito.doReturn( testDataManager.fetchAcspProfiles( "WITA001" ).getFirst() ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
+//
+//        mockMvc.perform( get( "/acsps/memberships/WIT005" )
+//                        .header("X-Request-Id", "theId123")
+//                        .header("Eric-identity", "WITU001")
+//                        .header("ERIC-Identity-Type", "key")
+//                        .header("ERIC-Authorised-Key-Roles", "*") )
+//                .andExpect( status().isOk() );
+//    }
+
+
+    // getAcspMembershipForAcspAndId
+    // - can it fetch the 3 invitation memberships?
+    //
+    //
+    //
+    //
+    //
+
+
+
+
     @Test
     void updateAcspMembershipForAcspAndIdWithNullXRequestIdThrowsBadRequest() throws Exception {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );

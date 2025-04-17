@@ -11,6 +11,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -180,9 +183,9 @@ class UsersServiceTest {
 
     @Test
     void fetchUserDetailsWithStreamReturnsMap() throws JsonProcessingException {
-        final var membership = testDataManager.fetchAcspMembersDaos( "WIT001" ).getFirst();
+        final var memberships = testDataManager.fetchAcspMembersDaos( "WIT001", "WIT005" );
         mockWebClientForFetchUserDetails( "WITU001" );
-        final var users = usersService.fetchUserDetails( Stream.of( membership, membership ) );
+        final var users = usersService.fetchUserDetails( Stream.of( memberships.getFirst(), memberships.getFirst(), memberships.getLast() ) );
 
         Assertions.assertEquals( 1, users.size() );
         Assertions.assertTrue( users.containsKey( "WITU001" ) );
@@ -223,6 +226,37 @@ class UsersServiceTest {
     void searchUserDetailsWithArbitraryErrorReturnsInternalServerErrorRuntimeException() {
         mockWebClientForSearchUserDetailsJsonParsingError( "geralt@witcher.com" );
         Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> usersService.searchUserDetails( List.of( "geralt@witcher.com" ) ) );
+    }
+
+    @Test
+    void retrieveUserDetailsWithNonexistentUserIdThrowsNotFoundRuntimeException(){
+        mockWebClientForFetchUserDetailsErrorResponse( "404User", 404 );
+        Assertions.assertThrows( NotFoundRuntimeException.class, () -> usersService.retrieveUserDetails( "404User", null ) );
+    }
+
+    @Test
+    void retrieveUserDetailsWithUserIdRetrievesUser() throws JsonProcessingException {
+        final var expectedResult = testDataManager.fetchUserDtos( "WITU006" ).getFirst();
+        mockWebClientForFetchUserDetails( "WITU006" );
+        Assertions.assertEquals( expectedResult, usersService.retrieveUserDetails( "WITU006", null ) );
+    }
+
+    @Test
+    void retrieveUserDetailsWithUserEmailRetrievesUser() throws JsonProcessingException {
+        final var expectedResult = testDataManager.fetchUserDtos( "WITU006" ).getFirst();
+        mockWebClientForSearchUserDetails( "WITU006" );
+        Assertions.assertEquals( expectedResult, usersService.retrieveUserDetails( null, "margarita.witcher@inugami-example.com" ) );
+    }
+
+    @Test
+    void retrieveUserDetailsWithNonexistentUserEmailReturnsNull(){
+        mockWebClientForSearchUserDetailsNonexistentEmail( "404.user@inugami-example.com" );
+        Assertions.assertNull( usersService.retrieveUserDetails( null, "404.user@inugami-example.com" ) );
+    }
+
+    @Test
+    void retrieveUserDetailsWithNullInputsReturnsNull(){
+        Assertions.assertNull( usersService.retrieveUserDetails( null, null ) );
     }
 
 }

@@ -516,6 +516,48 @@ public class TestDataManager {
             return acspMembersDao;
         };
         acspMembersDaoSuppliers.put( "XME004", XmenDemoAcspMembersDao );
+
+        final Supplier<AcspMembersDao> WitcherDijkstraAcspMembersDao = () -> new AcspMembersDao()
+                .id( "WIT005" )
+                .acspNumber( "WITA001" )
+                .userEmail( "dijkstra.witcher@inugami-example.com" )
+                .userRole( UserRoleEnum.ADMIN.getValue() )
+                .createdAt( LocalDateTime.now().minusMonths( 1 ) )
+                .addedBy( "WITU001" )
+                .invitedAt( LocalDateTime.now().minusMonths( 1 ) )
+                .status( MembershipStatusEnum.PENDING.getValue() )
+                .etag( generateEtag() );
+        acspMembersDaoSuppliers.put( "WIT005", WitcherDijkstraAcspMembersDao );
+
+        final Supplier<AcspMembersDao> WitcherLethoAcspMembersDao = () -> new AcspMembersDao()
+                .id( "WIT006" )
+                .acspNumber( "WITA001" )
+                .userId( "WITU005" )
+                .userRole( UserRoleEnum.ADMIN.getValue() )
+                .createdAt( LocalDateTime.now().minusMonths( 2 ) )
+                .addedAt( LocalDateTime.now().minusMonths( 1 ) )
+                .addedBy( "WITU001" )
+                .invitedAt( LocalDateTime.now().minusMonths( 2 ) )
+                .acceptedAt( LocalDateTime.now().minusMonths( 1 ) )
+                .status( MembershipStatusEnum.ACTIVE.getValue() )
+                .etag( generateEtag() );
+        acspMembersDaoSuppliers.put( "WIT006", WitcherLethoAcspMembersDao );
+
+        final Supplier<AcspMembersDao> WitcherMargaritaAcspMembersDao = () -> new AcspMembersDao()
+                .id( "WIT007" )
+                .acspNumber( "WITA001" )
+                .userId( "WITU006" )
+                .userRole( UserRoleEnum.ADMIN.getValue() )
+                .createdAt( LocalDateTime.now().minusMonths( 3 ) )
+                .addedBy( "WITU001" )
+                .removedAt( LocalDateTime.now().minusMonths( 2 ) )
+                .removedBy( "WITU006" )
+                .invitedAt( LocalDateTime.now().minusMonths( 3 ) )
+                .rejectedAt( LocalDateTime.now().minusMonths( 2 ) )
+                .status( MembershipStatusEnum.REMOVED.getValue() )
+                .etag( generateEtag() );
+        acspMembersDaoSuppliers.put( "WIT007", WitcherMargaritaAcspMembersDao );
+        
     }
 
     private void instantiateUserDtoSuppliers(){
@@ -698,6 +740,17 @@ public class TestDataManager {
         };
         userDtoSuppliers.put( "WITU003", dandelionUserDto );
 
+        final Supplier<User> lethoUserDto = () -> new User()
+                    .userId( "WITU005" )
+                    .email( "letho.witcher@inugami-example.com" );
+        userDtoSuppliers.put( "WITU005", lethoUserDto );
+
+        final Supplier<User> margaritaUserDto = () -> new User()
+                .userId( "WITU006" )
+                .email( "margarita.witcher@inugami-example.com" )
+                .displayName( "Margarita Laux Antille" );
+        userDtoSuppliers.put( "WITU006", margaritaUserDto );
+        
         final Supplier<User> karlUserDto = () -> {
             final var userDto = new User();
             userDto.setUserId( "NEIU001" );
