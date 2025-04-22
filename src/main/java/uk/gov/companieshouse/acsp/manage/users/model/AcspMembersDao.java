@@ -58,9 +58,6 @@ public class AcspMembersDao {
     @Field( "accepted_at" )
     private LocalDateTime acceptedAt;
 
-    @Field( "rejected_at" )
-    private LocalDateTime rejectedAt;
-
     private String status;
 
     @NotNull
@@ -253,19 +250,6 @@ public class AcspMembersDao {
         return acceptedAt;
     }
 
-    public void setRejectedAt( final LocalDateTime rejectedAt ){
-        this.rejectedAt = rejectedAt;
-    }
-
-    public AcspMembersDao rejectedAt( final LocalDateTime rejectedAt ){
-        setRejectedAt( rejectedAt );
-        return this;
-    }
-
-    public LocalDateTime getRejectedAt(){
-        return rejectedAt;
-    }
-
     public void setStatus( final String status ){
         this.status = status;
     }
@@ -294,7 +278,6 @@ public class AcspMembersDao {
                 ", removedBy='" + removedBy + '\'' +
                 ", invitedAt=" + invitedAt +
                 ", acceptedAt=" + acceptedAt +
-                ", rejectedAt=" + rejectedAt +
                 ", status='" + status + '\'' +
                 ", etag='" + etag + '\'' +
                 ", version=" + version +

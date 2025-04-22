@@ -273,19 +273,4 @@ class AcspMembershipMapperTest {
         Assertions.assertNull( dto.getRemovedAt() );
     }
 
-    @Test
-    void daoToDtoMapsRejectedInvitationMembershipCorrectly(){
-        final var dao = testDataManager.fetchAcspMembersDaos( "WIT007" ).getFirst();
-        final var acspProfile = testDataManager.fetchAcspProfiles( "WITA001" ).getFirst();
-        final var userData = testDataManager.fetchUserDtos( "WITU006" ).getFirst();
-        final var dto = acspMembershipMapper.daoToDto( dao, userData, acspProfile );
-
-        Assertions.assertEquals( "WITU006", dto.getUserId() );
-        Assertions.assertEquals( "margarita.witcher@inugami-example.com", dto.getUserEmail() );
-        Assertions.assertEquals( MembershipStatusEnum.REMOVED, dto.getMembershipStatus() );
-        Assertions.assertNotNull( dto.getInvitedAt() );
-        Assertions.assertNull( dto.getAcceptedAt() );
-        Assertions.assertNotNull( dto.getRemovedAt() );
-    }
-
 }

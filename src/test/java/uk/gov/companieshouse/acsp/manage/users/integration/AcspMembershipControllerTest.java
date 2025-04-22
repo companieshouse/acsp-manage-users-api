@@ -247,29 +247,6 @@ class AcspMembershipControllerTest {
     }
 
     @Test
-    void getAcspMembershipForAcspAndIdCanFetchRejectedInvitationMembership() throws Exception {
-        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT007" ) );
-        Mockito.doReturn( testDataManager.fetchAcspProfiles( "WITA001" ).getFirst() ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
-        Mockito.doReturn( testDataManager.fetchUserDtos( "WITU006" ).getFirst() ).when( usersService ).retrieveUserDetails( "WITU006", null );
-
-        final var response = mockMvc.perform( get( "/acsps/memberships/WIT007" )
-                        .header("X-Request-Id", "theId123")
-                        .header("Eric-identity", "WITU001")
-                        .header("ERIC-Identity-Type", "key")
-                        .header("ERIC-Authorised-Key-Roles", "*") )
-                .andExpect( status().isOk() );
-
-        final var acspMembership = parseResponseTo( response, AcspMembership.class );
-
-        Assertions.assertEquals( "WITU006", acspMembership.getUserId() );
-        Assertions.assertEquals( "margarita.witcher@inugami-example.com", acspMembership.getUserEmail() );
-        Assertions.assertEquals( MembershipStatusEnum.REMOVED, acspMembership.getMembershipStatus() );
-        Assertions.assertNotNull( acspMembership.getInvitedAt() );
-        Assertions.assertNull( acspMembership.getAcceptedAt() );
-        Assertions.assertNotNull( acspMembership.getRemovedAt() );
-    }
-
-    @Test
     void updateAcspMembershipForAcspAndIdWithNullXRequestIdThrowsBadRequest() throws Exception {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT004" ) );
 

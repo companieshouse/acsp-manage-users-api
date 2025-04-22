@@ -546,14 +546,13 @@ public class TestDataManager {
         final Supplier<AcspMembersDao> WitcherMargaritaAcspMembersDao = () -> new AcspMembersDao()
                 .id( "WIT007" )
                 .acspNumber( "WITA001" )
-                .userId( "WITU006" )
+                .userEmail( "margarita.witcher@inugami-example.com" )
                 .userRole( UserRoleEnum.ADMIN.getValue() )
                 .createdAt( LocalDateTime.now().minusMonths( 3 ) )
                 .addedBy( "WITU001" )
                 .removedAt( LocalDateTime.now().minusMonths( 2 ) )
-                .removedBy( "WITU006" )
+                .removedBy( "WITU001" )
                 .invitedAt( LocalDateTime.now().minusMonths( 3 ) )
-                .rejectedAt( LocalDateTime.now().minusMonths( 2 ) )
                 .status( MembershipStatusEnum.REMOVED.getValue() )
                 .etag( generateEtag() );
         acspMembersDaoSuppliers.put( "WIT007", WitcherMargaritaAcspMembersDao );
