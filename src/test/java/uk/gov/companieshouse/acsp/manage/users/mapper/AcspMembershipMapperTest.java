@@ -82,7 +82,7 @@ class AcspMembershipMapperTest {
         final var acspMembership = new AcspMembership().userId( "TSU002" );
         final var userDetails = testDataManager.fetchUserDtos( "TSU002" ).getFirst();
 
-        Mockito.doReturn( userDetails ).when( usersService ).fetchUserDetails( "TSU002" );
+        Mockito.doReturn( userDetails ).when( usersService ).retrieveUserDetails( "TSU002", null );
 
         acspMembershipMapper.enrichWithUserDetails( acspMembership, null );
 
@@ -144,7 +144,7 @@ class AcspMembershipMapperTest {
         final var userData = testDataManager.fetchUserDtos("TSU001").getFirst();
 
         Mockito.doReturn(acspProfile).when(acspProfileService).fetchAcspProfile("TSA001");
-        Mockito.doReturn(userData).when(usersService).fetchUserDetails("TSU001");
+        Mockito.doReturn(userData).when(usersService).retrieveUserDetails("TSU001",null);
 
         final var dto = acspMembershipMapper.daoToDto(dao, null, null);
 
@@ -172,7 +172,7 @@ class AcspMembershipMapperTest {
         final var userData = testDataManager.fetchUserDtos("TSU002").getFirst();
 
         Mockito.doReturn(acspProfile).when(acspProfileService).fetchAcspProfile("TSA001");
-        Mockito.doReturn(userData).when(usersService).fetchUserDetails("TSU002");
+        Mockito.doReturn(userData).when(usersService).retrieveUserDetails("TSU002", null);
 
         final var dto = acspMembershipMapper.daoToDto(dao, null, null);
 
