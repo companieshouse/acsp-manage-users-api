@@ -39,6 +39,7 @@ public abstract class AcspMembershipMapper {
                     .ofNullable( usersService.retrieveUserDetails( acspMembership.getUserId(), acspMembership.getUserEmail() ) )
                     .orElse( new User().email( acspMembership.getUserEmail() ) );
         }
+        acspMembership.setUserId( userDetails.getUserId() );
         acspMembership.setUserEmail( userDetails.getEmail() );
         acspMembership.setUserDisplayName( Objects.isNull( userDetails.getDisplayName() ) ? DEFAULT_DISPLAY_NAME : userDetails.getDisplayName() );
     }
