@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 
 @Document( "acsp_members" )
-@CompoundIndex( name = "acsp_user_idx", def = "{'acsp_number': 1, 'user_id': 1, 'user_email': 1}", unique = true )
 public class AcspMembersDao {
 
     @Id
