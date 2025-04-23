@@ -225,8 +225,18 @@ class AcspMembershipsControllerIntegrationTest {
         @MethodSource("provideRoleAndIncludeRemovedTestData")
         void getMembersForAcspWithRoleAndIncludeRemovedFilterAppliesCorrectly( final String role, final boolean includeRemoved, final int expectedCount, final List<String> expectedUserIds ) throws Exception {
             acspMembersRepository.insert(testDataManager.fetchAcspMembersDaos("COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009"));
+            
+            Mockito.doReturn( testDataManager.fetchUserDtos( "COMU001" ).getFirst() ).when( usersService ).retrieveUserDetails( "COMU001", null );
+            Mockito.doReturn( testDataManager.fetchUserDtos( "COMU002" ).getFirst() ).when( usersService ).retrieveUserDetails( "COMU002", null );
+            Mockito.doReturn( testDataManager.fetchUserDtos( "COMU003" ).getFirst() ).when( usersService ).retrieveUserDetails( "COMU003", null );
+            Mockito.doReturn( testDataManager.fetchUserDtos( "COMU004" ).getFirst() ).when( usersService ).retrieveUserDetails( "COMU004", null );
+            Mockito.doReturn( testDataManager.fetchUserDtos( "COMU005" ).getFirst() ).when( usersService ).retrieveUserDetails( "COMU005", null );
+            Mockito.doReturn( testDataManager.fetchUserDtos( "COMU006" ).getFirst() ).when( usersService ).retrieveUserDetails( "COMU006", null );
+            Mockito.doReturn( testDataManager.fetchUserDtos( "COMU007" ).getFirst() ).when( usersService ).retrieveUserDetails( "COMU007", null );
+            Mockito.doReturn( testDataManager.fetchUserDtos( "COMU008" ).getFirst() ).when( usersService ).retrieveUserDetails( "COMU008", null );
+            Mockito.doReturn( testDataManager.fetchUserDtos( "COMU009" ).getFirst() ).when( usersService ).retrieveUserDetails( "COMU009", null );
 
-            mockFetchUserDetailsFor("COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008", "COMU009");
+            mockFetchUserDetailsFor( "COMU002" );
             mockFetchAcspProfilesFor("COMA001");
 
             final var response =
@@ -514,23 +524,6 @@ class AcspMembershipsControllerIntegrationTest {
                             .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) )
                             .contentType( MediaType.APPLICATION_JSON )
                             .content( "{\"user_id\":\"COMU001\",\"user_role\":\"standard\"}" ) )
-                    .andExpect( status().isBadRequest() );
-        }
-
-        @Test
-        void addMemberForAcspWithoutUserIdInBodyReturnsBadRequest() throws Exception {
-            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
-
-            mockFetchUserDetailsFor("COMU002" );
-
-            mockMvc.perform( post( "/acsps/TSA001/memberships" )
-                            .header( "X-Request-Id", "theId123" )
-                            .header( "Eric-identity", "COMU002" )
-                            .header( "ERIC-Identity-Type", "oauth2" )
-                            .header( "ERIC-Authorised-Key-Roles", "*" )
-                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) )
-                            .contentType( MediaType.APPLICATION_JSON )
-                            .content( "{\"user_role\":\"standard\"}" ) )
                     .andExpect( status().isBadRequest() );
         }
 

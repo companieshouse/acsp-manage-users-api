@@ -152,7 +152,7 @@ class AcspMembershipControllerTest {
         acspMembersRepository.insert( dao );
 
         mockFetchUserDetailsFor("67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-        Mockito.doReturn( testDataManager.fetchUserDtos( "TSU001" ).getFirst() ).when( usersService ).fetchUserDetails( "TSU001" );
+        Mockito.doReturn( testDataManager.fetchUserDtos( "TSU001" ).getFirst() ).when( usersService ).retrieveUserDetails( "TSU001", null );
         Mockito.doReturn( testDataManager.fetchAcspProfiles( "TSA001" ).getFirst() ).when(
                 acspProfileService).fetchAcspProfile( "TSA001" );
 
@@ -199,6 +199,51 @@ class AcspMembershipControllerTest {
                         .header("ERIC-Authorised-Key-Roles", "*")
                         .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) ) )
                 .andExpect( status().isOk() );
+    }
+
+    @Test
+    void getAcspMembershipForAcspAndIdCanFetchPendingMembership() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT005" ) );
+        Mockito.doReturn( testDataManager.fetchAcspProfiles( "WITA001" ).getFirst() ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
+
+        final var response = mockMvc.perform( get( "/acsps/memberships/WIT005" )
+                        .header("X-Request-Id", "theId123")
+                        .header("Eric-identity", "WITU001")
+                        .header("ERIC-Identity-Type", "key")
+                        .header("ERIC-Authorised-Key-Roles", "*") )
+                .andExpect( status().isOk() );
+
+        final var acspMembership = parseResponseTo( response, AcspMembership.class );
+
+        Assertions.assertNull( acspMembership.getUserId() );
+        Assertions.assertEquals( "dijkstra.witcher@inugami-example.com", acspMembership.getUserEmail() );
+        Assertions.assertEquals( MembershipStatusEnum.PENDING, acspMembership.getMembershipStatus() );
+        Assertions.assertNotNull( acspMembership.getInvitedAt() );
+        Assertions.assertNull( acspMembership.getAcceptedAt() );
+        Assertions.assertNull( acspMembership.getRemovedAt() );
+    }
+
+    @Test
+    void getAcspMembershipForAcspAndIdCanFetchAcceptedInvitationMembership() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT006" ) );
+        Mockito.doReturn( testDataManager.fetchAcspProfiles( "WITA001" ).getFirst() ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
+        Mockito.doReturn( testDataManager.fetchUserDtos( "WITU005" ).getFirst() ).when( usersService ).retrieveUserDetails( "WITU005", null );
+
+        final var response = mockMvc.perform( get( "/acsps/memberships/WIT006" )
+                        .header("X-Request-Id", "theId123")
+                        .header("Eric-identity", "WITU001")
+                        .header("ERIC-Identity-Type", "key")
+                        .header("ERIC-Authorised-Key-Roles", "*") )
+                .andExpect( status().isOk() );
+
+        final var acspMembership = parseResponseTo( response, AcspMembership.class );
+
+        Assertions.assertEquals( "WITU005", acspMembership.getUserId() );
+        Assertions.assertEquals( "letho.witcher@inugami-example.com", acspMembership.getUserEmail() );
+        Assertions.assertEquals( MembershipStatusEnum.ACTIVE, acspMembership.getMembershipStatus() );
+        Assertions.assertNotNull( acspMembership.getInvitedAt() );
+        Assertions.assertNotNull( acspMembership.getAcceptedAt() );
+        Assertions.assertNull( acspMembership.getRemovedAt() );
     }
 
     @Test
