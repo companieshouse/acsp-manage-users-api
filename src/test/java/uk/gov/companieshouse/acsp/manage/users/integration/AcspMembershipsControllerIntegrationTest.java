@@ -49,6 +49,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
 import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.*;
+import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum.ACTIVE;
+import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum.PENDING;
+import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum.ADMIN;
 
 @AutoConfigureMockMvc
 @SpringBootTest
@@ -584,7 +587,7 @@ class AcspMembershipsControllerIntegrationTest {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
 
             mockFetchUserDetailsFor("COMU002" );
-            Mockito.doThrow( new NotFoundRuntimeException( "", new Exception( "" ) ) ).when( usersService ).fetchUserDetails( "COMU001" );
+            Mockito.doThrow( new NotFoundRuntimeException( "", new Exception( "" ) ) ).when( usersService ).retrieveUserDetails( "COMU001", null );
 
             mockMvc.perform( post( "/acsps/TSA001/memberships" )
                             .header( "X-Request-Id", "theId123" )
@@ -644,8 +647,9 @@ class AcspMembershipsControllerIntegrationTest {
         void addMemberForAcspWithCorrectDataReturnsAddedAcspMembership() throws Exception {
             acspMembersRepository.insert(testDataManager.fetchAcspMembersDaos("COM001", "COM002", "COM003", "COM004", "COM005", "COM006", "COM007", "COM008", "COM009", "TS001"));
 
-            mockFetchUserDetailsFor("COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008", "COMU009", "TSU001");
+            mockFetchUserDetailsFor( "COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008", "COMU009", "TSU001");
             mockFetchAcspProfilesFor("TSA001");
+            Mockito.doReturn( testDataManager.fetchUserDtos( "COMU001" ).getFirst() ).when( usersService ).retrieveUserDetails( "COMU001", null );
 
             final var response =
             mockMvc.perform( post("/acsps/TSA001/memberships")
@@ -668,7 +672,7 @@ class AcspMembershipsControllerIntegrationTest {
         static Stream<Arguments> rolesStream(){
             return Stream.of(
                     Arguments.of( UserRoleEnum.OWNER ),
-                    Arguments.of( UserRoleEnum.ADMIN ),
+                    Arguments.of( ADMIN ),
                     Arguments.of( UserRoleEnum.STANDARD )
             );
         }
@@ -679,6 +683,7 @@ class AcspMembershipsControllerIntegrationTest {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos("TS001" ) );
             mockFetchUserDetailsFor( "TSU001", "COMU001" );
             mockFetchAcspProfilesFor("TSA001" );
+            Mockito.doReturn( testDataManager.fetchUserDtos( "COMU001" ).getFirst() ).when( usersService ).retrieveUserDetails( "COMU001", null );
 
             setEmailProducerCountDownLatch( 1 );
 
@@ -696,7 +701,7 @@ class AcspMembershipsControllerIntegrationTest {
 
             if ( UserRoleEnum.OWNER.equals( role ) ) {
                 Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAnOwnerMemberEmailData( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", signinUrl ), CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE.getValue() );
-            } else if ( UserRoleEnum.ADMIN.equals( role ) ) {
+            } else if ( ADMIN.equals( role ) ) {
                 Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAnAdminMemberEmailData( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", signinUrl ), CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue() );
             } else if ( UserRoleEnum.STANDARD.equals( role ) ) {
                 Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAStandardMemberEmailData( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", signinUrl ), CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE.getValue() );
@@ -709,6 +714,7 @@ class AcspMembershipsControllerIntegrationTest {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos("WIT001" ) );
             mockFetchUserDetailsFor( "WITU001", "COMU001" );
             mockFetchAcspProfilesFor("WITA001" );
+            Mockito.doReturn( testDataManager.fetchUserDtos( "COMU001" ).getFirst() ).when( usersService ).retrieveUserDetails( "COMU001", null );
 
             setEmailProducerCountDownLatch( 1 );
 
@@ -726,7 +732,7 @@ class AcspMembershipsControllerIntegrationTest {
 
             if ( UserRoleEnum.OWNER.equals( role ) ) {
                 Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAnOwnerMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl ), CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE.getValue() );
-            } else if ( UserRoleEnum.ADMIN.equals( role ) ) {
+            } else if ( ADMIN.equals( role ) ) {
                 Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAnAdminMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl ), CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue() );
             } else if ( UserRoleEnum.STANDARD.equals( role ) ) {
                 Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAStandardMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl ), CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE.getValue() );
@@ -740,6 +746,7 @@ class AcspMembershipsControllerIntegrationTest {
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos("WIT001" ) );
             mockFetchUserDetailsFor( "WITU001", "COMU001" );
             mockFetchAcspProfilesFor("WITA001" );
+            Mockito.doReturn( testDataManager.fetchUserDtos( "COMU001" ).getFirst() ).when( usersService ).retrieveUserDetails( "COMU001", null );
 
             mockMvc.perform( post("/acsps/WITA001/memberships")
                             .header("X-Request-Id", "theId123")
@@ -753,11 +760,140 @@ class AcspMembershipsControllerIntegrationTest {
 
             if ( UserRoleEnum.OWNER.equals( role ) ) {
                 Mockito.verify( emailProducer, times( 0 ) ).sendEmail( new ConfirmYouAreAnOwnerMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl ), CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE.getValue() );
-            } else if ( UserRoleEnum.ADMIN.equals( role ) ) {
+            } else if ( ADMIN.equals( role ) ) {
                 Mockito.verify( emailProducer, times( 0 ) ).sendEmail( new ConfirmYouAreAnAdminMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl ), CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue() );
             } else if ( UserRoleEnum.STANDARD.equals( role ) ) {
                 Mockito.verify( emailProducer, times( 0 ) ).sendEmail( new ConfirmYouAreAStandardMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl ), CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE.getValue() );
             }
+
+        }
+
+        @Test
+        void addMemberForAcspWithMalformedUserEmailReturnsBadRequest() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos("WIT006" ) );
+            mockFetchUserDetailsFor( "WITU005" );
+
+            mockMvc.perform( post("/acsps/WITA001/memberships")
+                            .header("X-Request-Id", "theId123")
+                            .header("Eric-identity", "WITU005")
+                            .header("ERIC-Identity-Type", "oauth2")
+                            .header("ERIC-Authorised-Key-Roles", "*")
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT006" ) )
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content( String.format( "{\"user_email\":\"$$$\",\"user_role\":\"%s\"}", ADMIN.getValue() ) ) )
+                    .andExpect( status().isBadRequest() );
+        }
+
+        @Test
+        void addMemberForAcspWithNullUserIdAndUserEmailReturnsBadRequest() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos("WIT006" ) );
+            mockFetchUserDetailsFor( "WITU005" );
+
+            mockMvc.perform( post("/acsps/WITA001/memberships")
+                            .header("X-Request-Id", "theId123")
+                            .header("Eric-identity", "WITU005")
+                            .header("ERIC-Identity-Type", "oauth2")
+                            .header("ERIC-Authorised-Key-Roles", "*")
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT006" ) )
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content( String.format( "{\"user_role\":\"%s\"}", ADMIN.getValue() ) ) )
+                    .andExpect( status().isBadRequest() );
+
+        }
+
+        @Test
+        void addMemberForAcspSendsInvitationWhenCHSAccountDoesNotExist() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos("WIT006" ) );
+            mockFetchUserDetailsFor( "WITU005" );
+            Mockito.doReturn( null ).when( usersService ).retrieveUserDetails( null, "dijkstra.witcher@inugami-example.com" );
+            mockFetchAcspProfilesFor("WITA001" );
+
+            mockMvc.perform( post("/acsps/WITA001/memberships")
+                            .header("X-Request-Id", "theId123")
+                            .header("Eric-identity", "WITU005")
+                            .header("ERIC-Identity-Type", "oauth2")
+                            .header("ERIC-Authorised-Key-Roles", "*")
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT006" ) )
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content( String.format( "{\"user_email\":\"dijkstra.witcher@inugami-example.com\",\"user_role\":\"%s\"}", ADMIN.getValue() ) ) )
+                    .andExpect( status().isCreated() );
+
+            final var membership = acspMembersRepository.fetchMembershipsForUserAndStatus( null, "dijkstra.witcher@inugami-example.com", Set.of( "pending" ) ).getFirst();
+
+            Assertions.assertNotNull( membership.getId() );
+            Assertions.assertEquals( "WITA001", membership.getAcspNumber() );
+            Assertions.assertNull( membership.getUserId() );
+            Assertions.assertEquals( "dijkstra.witcher@inugami-example.com", membership.getUserEmail() );
+            Assertions.assertEquals( ADMIN, membership.getUserRole() );
+            Assertions.assertNotNull( membership.getCreatedAt() );
+            Assertions.assertNull( membership.getAddedAt() );
+            Assertions.assertEquals( "WITU005", membership.getAddedBy() );
+            Assertions.assertNull( membership.getRemovedAt() );
+            Assertions.assertNull( membership.getRemovedBy() );
+            Assertions.assertNotNull( membership.getInvitedAt() );
+            Assertions.assertNull( membership.getAcceptedAt() );
+            Assertions.assertEquals( PENDING.getValue(), membership.getStatus() );
+            Assertions.assertNotNull( membership.getEtag() );
+
+            Mockito.verify( emailProducer, times( 0 ) ).sendEmail( new ConfirmYouAreAnAdminMemberEmailData( "dijkstra.witcher@inugami-example.com", "letho.witcher@inugami-example.com", "Witcher", signinUrl ), CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue() );
+        }
+
+        @Test
+        void addMemberForAcspCreateActiveMembershipWhenCHSAccountExists() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos("WIT006" ) );
+            mockFetchUserDetailsFor( "WITU005" );
+            Mockito.doReturn( testDataManager.fetchUserDtos( "WITU006" ).getFirst() ).when( usersService ).retrieveUserDetails( null, "margarita.witcher@inugami-example.com" );
+            mockFetchAcspProfilesFor("WITA001" );
+
+            setEmailProducerCountDownLatch( 1 );
+
+            mockMvc.perform( post("/acsps/WITA001/memberships")
+                            .header("X-Request-Id", "theId123")
+                            .header("Eric-identity", "WITU005")
+                            .header("ERIC-Identity-Type", "oauth2")
+                            .header("ERIC-Authorised-Key-Roles", "*")
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT006" ) )
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content( String.format( "{\"user_email\":\"margarita.witcher@inugami-example.com\",\"user_role\":\"%s\"}", ADMIN.getValue() ) ) )
+                    .andExpect( status().isCreated() );
+
+            latch.await( 10, TimeUnit.SECONDS );
+
+            final var membership = acspMembersRepository.fetchMembershipsForUserAndStatus( "WITU006", null, Set.of( "active" ) ).getFirst();
+            Assertions.assertNotNull( membership.getId() );
+            Assertions.assertEquals( "WITA001", membership.getAcspNumber() );
+            Assertions.assertEquals( "WITU006", membership.getUserId() );
+            Assertions.assertNull( membership.getUserEmail() );
+            Assertions.assertEquals( ADMIN, membership.getUserRole() );
+            Assertions.assertNotNull( membership.getCreatedAt() );
+            Assertions.assertNotNull( membership.getAddedAt() );
+            Assertions.assertEquals( "WITU005", membership.getAddedBy() );
+            Assertions.assertNull( membership.getRemovedAt() );
+            Assertions.assertNull( membership.getRemovedBy() );
+            Assertions.assertNull( membership.getInvitedAt() );
+            Assertions.assertNull( membership.getAcceptedAt() );
+            Assertions.assertEquals( ACTIVE.getValue(), membership.getStatus() );
+            Assertions.assertNotNull( membership.getEtag() );
+
+            Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAnAdminMemberEmailData( "margarita.witcher@inugami-example.com", "letho.witcher@inugami-example.com", "Witcher", signinUrl ), CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue() );
+        }
+
+        @Test
+        void addMemberForAcspReturnsBadRequestWhenInvitationAlreadyPending() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos("WIT006", "WIT005" ) );
+            mockFetchUserDetailsFor( "WITU005" );
+            Mockito.doReturn( null ).when( usersService ).retrieveUserDetails( null, "dijkstra.witcher@inugami-example.com" );
+            mockFetchAcspProfilesFor("WITA001" );
+
+            mockMvc.perform( post("/acsps/WITA001/memberships")
+                            .header("X-Request-Id", "theId123")
+                            .header("Eric-identity", "WITU005")
+                            .header("ERIC-Identity-Type", "oauth2")
+                            .header("ERIC-Authorised-Key-Roles", "*")
+                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT006" ) )
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content( String.format( "{\"user_email\":\"dijkstra.witcher@inugami-example.com\",\"user_role\":\"%s\"}", ADMIN.getValue() ) ) )
+                    .andExpect( status().isBadRequest() );
 
         }
 

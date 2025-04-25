@@ -1,11 +1,16 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
+import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -22,6 +27,8 @@ import uk.gov.companieshouse.acsp.manage.users.model.context.RequestContextData.
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipCollectionMappers;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.AcspStatusEnum;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserStatusEnum;
@@ -29,11 +36,15 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserSt
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import uk.gov.companieshouse.api.acspprofile.AcspProfile;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 import static uk.gov.companieshouse.acsp.manage.users.common.ComparisonUtils.updateMatches;
+import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum.ACTIVE;
+import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum.PENDING;
+import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum.REMOVED;
 
 @ExtendWith( MockitoExtension.class )
 @Tag( "unit-test" )
@@ -356,6 +367,80 @@ class AcspMembersServiceTest {
         final var result = acspMembersService.createMembership( userDto, acspProfile, UserRoleEnum.ADMIN, "COMU002" );
 
         assertEquals( "COMU004", result.getUserId() );
+    }
+
+    @Test
+    void fetchMembershipDaosRetrievesMembershipForUserIdAndIncludeRemovedTrue(){
+        Mockito.doReturn( testDataManager.fetchAcspMembersDaos( "WIT006" ) ).when( acspMembersRepository ).fetchMembershipsForUserAndStatus( eq( "WITU005" ), isNull(), eq( Set.of( ACTIVE.getValue(), PENDING.getValue(), REMOVED.getValue() ) ) );
+        final var memberships = acspMembersService.fetchMembershipDaos( "WITU005", null, true );
+        Assertions.assertEquals( 1, memberships.size() );
+        Assertions.assertEquals( "WIT006", memberships.getFirst().getId() );
+    }
+
+    @Test
+    void fetchMembershipDaosRetrievesMembershipForUserEmailAndIncludeRemovedTrue(){
+        Mockito.doReturn( testDataManager.fetchAcspMembersDaos( "WIT007" ) ).when( acspMembersRepository ).fetchMembershipsForUserAndStatus( isNull(), eq( "margarita.witcher@inugami-example.com" ), eq( Set.of( ACTIVE.getValue(), PENDING.getValue(), REMOVED.getValue() ) ) );
+        final var memberships = acspMembersService.fetchMembershipDaos( null, "margarita.witcher@inugami-example.com", true );
+        Assertions.assertEquals( 1, memberships.size() );
+        Assertions.assertEquals( "WIT007", memberships.getFirst().getId() );
+    }
+
+    private static Stream<Arguments> fetchMembershipDaosNonexistentScenarios(){
+        return Stream.of(
+                Arguments.of( "404UserId", null, true ),
+                Arguments.of( null, "404UserEmail@test.com", true ),
+                Arguments.of( null, "margarita.witcher@inugami-example.com", false )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource( "fetchMembershipDaosNonexistentScenarios" )
+    void fetchMembershipDaosRetrieveEmptyListWhenQueryUnsatisfied( final String userId, final String userEmail, final boolean includeRemoved ){
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT005", "WIT006", "WIT007" ) );
+        Assertions.assertTrue( acspMembersService.fetchMembershipDaos( userId, userEmail, includeRemoved ).isEmpty() );
+    }
+
+    private static Stream<Arguments> createInvitationNullInputScenarios(){
+        final var acspProfile = testDataManager.fetchAcspProfiles( "WITA001" ).getFirst();
+
+        return Stream.of(
+                Arguments.of( null, acspProfile, UserRoleEnum.ADMIN ),
+                Arguments.of( "dijkstra.witcher@inugami-example.com", null, UserRoleEnum.ADMIN ),
+                Arguments.of( "dijkstra.witcher@inugami-example.com", acspProfile, null )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource( "createInvitationNullInputScenarios" )
+    void createInvitationWithNullInputsThrowNullPointerExceptions( final String userEmail, final AcspProfile acspProfile, final UserRoleEnum userRoleEnum ){
+        Assertions.assertThrows( NullPointerException.class, () -> acspMembersService.createInvitation( userEmail, acspProfile, userRoleEnum, "WITU001" ) );
+    }
+
+    @Test
+    void createInvitationCreatesPendingMembership(){
+        final var acspProfile = testDataManager.fetchAcspProfiles( "WITA001" ).getFirst();
+        Mockito.doReturn( testDataManager.fetchAcspMembersDaos( "WIT005" ).getFirst() ).when( acspMembersRepository ).insert( any( AcspMembersDao.class ) );
+        Mockito.doReturn( testDataManager.fetchAcspMembershipDtos( "WIT005" ).getFirst() ).when( acspMembershipCollectionMappers ).daoToDto( any( AcspMembersDao.class ), isNull(), eq( acspProfile ) );
+
+        final var membership = acspMembersService.createInvitation( "dijkstra.witcher@inugami-example.com", acspProfile, UserRoleEnum.ADMIN, "WITU001" );
+
+        Assertions.assertNotNull( membership.getEtag() );
+        Assertions.assertEquals( "WIT005", membership.getId() );
+        Assertions.assertNull( membership.getUserId() );
+        Assertions.assertEquals( "Not Provided", membership.getUserDisplayName() );
+        Assertions.assertEquals( "dijkstra.witcher@inugami-example.com", membership.getUserEmail() );
+        Assertions.assertEquals( UserRoleEnum.ADMIN, membership.getUserRole() );
+        Assertions.assertEquals( "WITA001", membership.getAcspNumber() );
+        Assertions.assertEquals( "Witcher", membership.getAcspName() );
+        Assertions.assertEquals( AcspStatusEnum.ACTIVE, membership.getAcspStatus() );
+        Assertions.assertEquals( MembershipStatusEnum.PENDING, membership.getMembershipStatus() );
+        Assertions.assertNull( membership.getAddedAt() );
+        Assertions.assertNotNull( membership.getInvitedAt() );
+        Assertions.assertNull( membership.getAcceptedAt() );
+        Assertions.assertEquals( "WITU001", membership.getAddedBy() );
+        Assertions.assertNull( membership.getRemovedBy() );
+        Assertions.assertNull( membership.getRemovedAt() );
+        Assertions.assertEquals( "acsp-membership", membership.getKind() );
     }
 
 }
