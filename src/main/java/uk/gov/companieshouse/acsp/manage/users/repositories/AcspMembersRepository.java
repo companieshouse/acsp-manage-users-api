@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.acsp.manage.users.repositories;
 
+import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Update;
@@ -16,6 +17,9 @@ public interface AcspMembersRepository extends MongoRepository<AcspMembersDao, S
 
     @Query( "{ 'user_id': ?0 }" )
     List<AcspMembersDao> fetchActiveAndRemovedMembershipsForUserId( final String userId );
+
+    @Query( "{ '$or': [ { 'user_id': { '$ne': null, '$eq': ?0 } }, { 'user_email': { '$ne': null, '$eq': ?1 } } ], 'status': { $in: ?2 } }" )
+    List<AcspMembersDao> fetchMembershipsForUserAndStatus( final String userId, final String userEmail, final Set<String> statuses );
 
     @Query( "{ 'user_id': ?0, 'status': 'active' }" )
     Optional<AcspMembersDao> fetchActiveMembershipForUserId( final String userId );

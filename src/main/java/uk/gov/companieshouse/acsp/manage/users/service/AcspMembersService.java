@@ -4,11 +4,15 @@ import static uk.gov.companieshouse.GenerateEtagUtil.generateEtag;
 import static uk.gov.companieshouse.acsp.manage.users.utils.LoggingUtil.LOGGER;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
 import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum.ACTIVE;
+import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum.PENDING;
+import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum.REMOVED;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.springframework.data.domain.PageRequest;
@@ -55,10 +59,14 @@ public class AcspMembersService {
     }
 
     @Transactional( readOnly = true )
-    public List<AcspMembersDao> fetchMembershipDaos( final String userId, final boolean includeRemoved ) {
-        LOGGER.debugContext( getXRequestId(), String.format( "Attempting to fetch memberships for user with id %s", userId ), null );
-        final var memberships = includeRemoved ? acspMembersRepository.fetchActiveAndRemovedMembershipsForUserId( userId ) : acspMembersRepository.fetchActiveMembershipForUserId( userId ).map( List::of ).orElse( List.of() );
-        LOGGER.debugContext( getXRequestId(), String.format( "Successfully fetched memberships for user with id %s", userId ), null );
+    public List<AcspMembersDao> fetchMembershipDaos( final String userId, final String userEmail, final boolean includeRemoved ) {
+        LOGGER.debugContext( getXRequestId(), String.format( "Attempting to fetch memberships for user with id %s and email %s", userId, userEmail ), null );
+        final var statuses = new HashSet<>( Set.of( ACTIVE.getValue(), PENDING.getValue() ) );
+        if ( includeRemoved ){
+            statuses.add( REMOVED.getValue() );
+        }
+        final var memberships = acspMembersRepository.fetchMembershipsForUserAndStatus( userId, userEmail, statuses );
+        LOGGER.debugContext( getXRequestId(), String.format( "Successfully fetched memberships for user with id %s and email %s", userId, userEmail ), null );
         return memberships;
     }
 
@@ -125,6 +133,33 @@ public class AcspMembersService {
         final var membership = acspMembershipCollectionMappers.daoToDto( completedMembership, user, acspProfile );
 
         LOGGER.debugContext( getXRequestId(), String.format( "Successfully created membership for user %s and Acsp %s", user.getUserId(), acspProfile.getNumber() ), null );
+        return membership;
+    }
+
+    @Transactional
+    public AcspMembership createInvitation( final String userEmail, final AcspProfile acspProfile, final UserRoleEnum userRole, final String addedByUserId ){
+        LOGGER.debugContext( getXRequestId(), String.format( "Attempting to create invitation for user %s and Acsp %s", userEmail, acspProfile.getNumber() ), null );
+
+        if ( Objects.isNull( userEmail ) ){
+            LOGGER.errorContext( getXRequestId(), new Exception( "Attempted to create invitation with null userEmail" ), null );
+            throw new NullPointerException( "userEmail cannot be null" );
+        }
+
+        final var now = LocalDateTime.now();
+        final var proposedMembership = new AcspMembersDao()
+                .userEmail( userEmail )
+                .acspNumber( acspProfile.getNumber() )
+                .userRole( userRole.getValue() )
+                .createdAt( now )
+                .addedBy( addedByUserId )
+                .etag( generateEtag() )
+                .status( PENDING.getValue() )
+                .invitedAt( now );
+        final var completedInvitation = acspMembersRepository.insert( proposedMembership );
+
+        final var membership = acspMembershipCollectionMappers.daoToDto( completedInvitation, null, acspProfile );
+
+        LOGGER.debugContext( getXRequestId(), String.format( "Successfully created invitation for user %s and Acsp %s", userEmail, acspProfile.getNumber() ), null );
         return membership;
     }
 
