@@ -10,6 +10,9 @@ import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.g
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isActiveMemberOfAcsp;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.isOAuth2Request;
+import static uk.gov.companieshouse.acsp.manage.users.utils.UserUtil.isRequestingUser;
+import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum.ACTIVE;
+import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum.PENDING;
 import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum.OWNER;
 import static uk.gov.companieshouse.api.acspprofile.Status.CEASED;
 
@@ -26,6 +29,7 @@ import uk.gov.companieshouse.acsp.manage.users.service.EmailService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.api.acsp_manage_users.api.AcspMembershipInterface;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch;
 
@@ -64,6 +68,10 @@ public class AcspMembershipController implements AcspMembershipInterface {
         final var proposedUserStatus = Optional
                 .ofNullable( requestBody )
                 .map( RequestBodyPatch::getUserStatus )
+                .map( userStatus -> switch ( userStatus ){
+                    case APPROVED -> ACTIVE;
+                    case REMOVED -> MembershipStatusEnum.REMOVED;
+                } )
                 .orElse( null );
 
         final var proposedUserRole = Optional
@@ -85,11 +93,11 @@ public class AcspMembershipController implements AcspMembershipInterface {
 
         final var targetAcsp = acspProfileService.fetchAcspProfile( targetMembership.getAcspNumber() );
 
-        final var targetUserIsLastOwner = !targetAcsp.getStatus().equals( CEASED ) && OWNER.equals( targetMembership.getUserRole() ) && acspMembersService.fetchNumberOfActiveOwners( targetMembership.getAcspNumber() ) <= 1;
-        final var requestingUserIsNotActiveMemberOfTargetAcsp = !isActiveMemberOfAcsp( targetMembership.getAcspNumber() );
-        final var requestingUserAttemptingToRemoveWithoutAuthority = Objects.nonNull( proposedUserStatus ) && !canRemoveMembership( targetMembership.getUserRole() );
-        final var requestingUserAttemptingToChangeRoleWithoutAuthority = Objects.nonNull( proposedUserRole ) && !canChangeRole( targetMembership.getUserRole(), proposedUserRole );
-        if ( targetUserIsLastOwner || ( isOAuth2Request() && ( requestingUserIsNotActiveMemberOfTargetAcsp || requestingUserAttemptingToRemoveWithoutAuthority || requestingUserAttemptingToChangeRoleWithoutAuthority ) ) ){
+        final var targetUserIsLastOwner = !CEASED.equals( targetAcsp.getStatus() ) && OWNER.equals( targetMembership.getUserRole() ) && ACTIVE.getValue().equals( targetMembership.getStatus() ) && acspMembersService.fetchNumberOfActiveOwners( targetMembership.getAcspNumber() ) <= 1;
+        final var requestingUserIsAttemptingToActivateWithoutAuthority = ACTIVE.equals( proposedUserStatus ) && ( !PENDING.getValue().equals( targetMembership.getStatus() ) || !isRequestingUser( targetMembership ) );
+        final var requestingUserAttemptingToRemoveWithoutAuthority = AcspMembership.MembershipStatusEnum.REMOVED.equals( proposedUserStatus ) && ( !canRemoveMembership( targetMembership.getUserRole() ) || !isActiveMemberOfAcsp( targetMembership.getAcspNumber() ) );
+        final var requestingUserAttemptingToChangeRoleWithoutAuthority = Objects.nonNull( proposedUserRole ) && ( !canChangeRole( targetMembership.getUserRole(), proposedUserRole ) || !isActiveMemberOfAcsp( targetMembership.getAcspNumber() ) );
+        if ( targetUserIsLastOwner || ( isOAuth2Request() && ( requestingUserIsAttemptingToActivateWithoutAuthority || requestingUserAttemptingToRemoveWithoutAuthority || requestingUserAttemptingToChangeRoleWithoutAuthority ) ) ){
             throw new ForbiddenRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN, new Exception( "User is not permitted to carry out action" ) );
         }
 

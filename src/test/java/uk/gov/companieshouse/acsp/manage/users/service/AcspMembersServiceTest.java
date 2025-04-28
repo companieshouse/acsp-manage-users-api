@@ -324,13 +324,13 @@ class AcspMembersServiceTest {
 
     @Test
     void updateMembershipWithNullMembershipIdThrowsInternalServerErrorRuntimeException() {
-        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspMembersService.updateMembership( null, UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" ) );
+        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspMembersService.updateMembership( null, MembershipStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" ) );
     }
 
     @Test
     void updateMembershipWithMalformedOrNonexistentMembershipIdThrowsInternalServerErrorRuntimeException() {
-        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspMembersService.updateMembership( "£££", UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" ) );
-        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspMembersService.updateMembership( "TS001", UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" ) );
+        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspMembersService.updateMembership( "£££", MembershipStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" ) );
+        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspMembersService.updateMembership( "TS001", MembershipStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" ) );
     }
 
     @Test
@@ -343,15 +343,22 @@ class AcspMembersServiceTest {
     @Test
     void updateMembershipWithNotNullUserStatusAndNullUserRoleOnlyUpdatesEtagAndStatusAndRemovedAtAndRemovedBy() {
         Mockito.doReturn( 1 ).when( acspMembersRepository ).updateAcspMembership( eq( "TS001" ), any( Update.class ) );
-        acspMembersService.updateMembership( "TS001", UserStatusEnum.REMOVED, null, "TSU002" );
+        acspMembersService.updateMembership( "TS001", MembershipStatusEnum.REMOVED, null, "TSU002" );
         Mockito.verify( acspMembersRepository ).updateAcspMembership(eq( "TS001" ), argThat( updateMatches( Map.of("status", UserStatusEnum.REMOVED.getValue(), "removed_by", "TSU002") ) ) );
     }
 
     @Test
     void updateMembershipWithNotNullUserStatusAndNotNullUserRoleOnlyUpdatesEverything() {
         Mockito.doReturn( 1 ).when( acspMembersRepository ).updateAcspMembership( eq( "TS001" ), any( Update.class ) );
-        acspMembersService.updateMembership( "TS001", UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" );
+        acspMembersService.updateMembership( "TS001", MembershipStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" );
         Mockito.verify( acspMembersRepository ).updateAcspMembership( eq( "TS001" ), argThat( updateMatches( Map.of("user_role", UserRoleEnum.STANDARD.getValue(), "status", UserStatusEnum.REMOVED.getValue(), "removed_by", "TSU002" ) ) ) );
+    }
+
+    @Test
+    void updateMembershipWithActiveActivatesMembership(){
+        Mockito.doReturn( 1 ).when( acspMembersRepository ).updateAcspMembership( eq( "WIT005" ), any( Update.class ) );
+        acspMembersService.updateMembership( "WIT005", MembershipStatusEnum.ACTIVE, null, "WITU404" );
+        Mockito.verify( acspMembersRepository ).updateAcspMembership( eq( "WIT005" ), argThat( updateMatches( Map.of( "user_id", "WITU404", "status", MembershipStatusEnum.ACTIVE.getValue() ) ) ) );
     }
 
     @Test

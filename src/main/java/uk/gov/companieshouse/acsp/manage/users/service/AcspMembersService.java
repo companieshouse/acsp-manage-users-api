@@ -26,9 +26,9 @@ import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
+import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
-import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserStatusEnum;
 import uk.gov.companieshouse.api.acspprofile.AcspProfile;
 
 @Service
@@ -168,20 +168,26 @@ public class AcspMembersService {
     }
 
     @Transactional
-    public void updateMembership( final String membershipId, final UserStatusEnum userStatus, final UserRoleEnum userRole, final String updatedBy ) {
+    public void updateMembership( final String membershipId, final MembershipStatusEnum userStatus, final UserRoleEnum userRole, final String updatedBy ) {
         LOGGER.debugContext( getXRequestId(), String.format( "Attempting to update membership for id: %s", membershipId ), null );
         if ( Objects.isNull( membershipId ) ) {
             throw new InternalServerErrorRuntimeException( "Cannot update Acsp Membership", new Exception( "membershipId is null" ) );
         }
 
         final var isChangingRole = Objects.nonNull( userRole );
-        final var isRemovingMembership = Objects.nonNull( userStatus );
+        final var isActivatingMembership = ACTIVE.equals( userStatus );
+        final var isRemovingMembership = REMOVED.equals( userStatus );
         final var numbRecordsUpdated = Optional.of( new Update() )
                 .map( enrichUpdate( true, "etag", GenerateEtagUtil::generateEtag ) )
                 .map( enrichUpdate( isChangingRole, "user_role", () -> userRole.getValue() ) )
-                .map( enrichUpdate( isRemovingMembership, "status", () -> userStatus.getValue() ) )
+                .map( enrichUpdate( isRemovingMembership, "status", REMOVED::getValue ) )
                 .map( enrichUpdate( isRemovingMembership, "removed_by", () -> updatedBy ) )
                 .map( enrichUpdate( isRemovingMembership, "removed_at", LocalDateTime::now ) )
+                .map( enrichUpdate( isActivatingMembership, "user_id", () -> updatedBy ) )
+                .map( enrichUpdate( isActivatingMembership, "user_email", () -> null ) )
+                .map( enrichUpdate( isActivatingMembership, "added_at", LocalDateTime::now ) )
+                .map( enrichUpdate( isActivatingMembership, "accepted_at", LocalDateTime::now ) )
+                .map( enrichUpdate( isActivatingMembership, "status", ACTIVE::getValue ) )
                 .map( update -> acspMembersRepository.updateAcspMembership( membershipId, update ) )
                 .filter( numRecordsUpdated -> numRecordsUpdated != 0 )
                 .orElseThrow( () -> new InternalServerErrorRuntimeException( String.format( "Failed to update Acsp Membership %s", membershipId ), new Exception( String.format( "Failed to update Acsp Membership with id: %s", membershipId ) ) ) );
