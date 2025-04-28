@@ -42,7 +42,7 @@ public class WebSecurityConfig {
                         .requestMatchers( GET, "/acsp-manage-users-api/healthcheck" ).permitAll()
                         .requestMatchers( GET, "/user/acsps/memberships" ).hasAnyRole( getValues( BASIC_OAUTH_ROLE, ACSP_OWNER_ROLE, ACSP_ADMIN_ROLE, ACSP_STANDARD_ROLE ) )
                         .requestMatchers( POST, "/acsps/*/memberships" ).hasAnyRole( getValues( ACSP_OWNER_ROLE, ACSP_ADMIN_ROLE, KEY_ROLE ) )
-                        .requestMatchers( PATCH, "/acsps/memberships/*" ).hasAnyRole( getValues( ACSP_OWNER_ROLE, ACSP_ADMIN_ROLE, KEY_ROLE ) )
+                        .requestMatchers( PATCH, "/acsps/memberships/*" ).hasAnyRole( getValues( BASIC_OAUTH_ROLE, ACSP_OWNER_ROLE, ACSP_ADMIN_ROLE, KEY_ROLE ) )
                         .requestMatchers( GET, "/acsps/memberships/*" ).hasAnyRole( getValues( ACSP_OWNER_ROLE, ACSP_ADMIN_ROLE, ACSP_STANDARD_ROLE, KEY_ROLE ) )
                         .requestMatchers( GET, "/acsps/*/memberships" ).hasAnyRole( getValues( ACSP_OWNER_ROLE, ACSP_ADMIN_ROLE, ACSP_STANDARD_ROLE, KEY_ROLE, ADMIN_WITH_ACSP_SEARCH_PRIVILEGE_ROLE ) )
                         .requestMatchers( POST, "/acsps/*/memberships/lookup" ).hasAnyRole( getValues( ACSP_OWNER_ROLE, ACSP_ADMIN_ROLE, ACSP_STANDARD_ROLE, KEY_ROLE, ADMIN_WITH_ACSP_SEARCH_PRIVILEGE_ROLE ) )

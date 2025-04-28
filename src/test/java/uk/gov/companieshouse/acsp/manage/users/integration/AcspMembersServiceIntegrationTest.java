@@ -337,14 +337,14 @@ class AcspMembersServiceIntegrationTest {
 
     @Test
     void updateMembershipWithNullMembershipIdThrowsInternalServerErrorRuntimeException() {
-        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspMembersService.updateMembership( null, UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" ) );
+        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspMembersService.updateMembership( null, MembershipStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" ) );
     }
 
     @Test
     void
     updateMembershipWithMalformedOrNonexistentMembershipIdThrowsInternalServerErrorRuntimeException() {
-        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspMembersService.updateMembership( "£££", UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" ) );
-        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspMembersService.updateMembership( "TS001", UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" ) );
+        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspMembersService.updateMembership( "£££", MembershipStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" ) );
+        Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> acspMembersService.updateMembership( "TS001", MembershipStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002" ) );
     }
 
     @Test
@@ -383,7 +383,7 @@ class AcspMembersServiceIntegrationTest {
         final var originalDao = testDataManager.fetchAcspMembersDaos("TS001").getFirst();
         acspMembersRepository.insert(originalDao);
 
-        acspMembersService.updateMembership("TS001", UserStatusEnum.REMOVED, null, "TSU002");
+        acspMembersService.updateMembership("TS001", MembershipStatusEnum.REMOVED, null, "TSU002");
         final var updatedDao = acspMembersRepository.findById("TS001").get();
 
         Assertions.assertNotEquals(originalDao.getEtag(), updatedDao.getEtag());
@@ -398,7 +398,7 @@ class AcspMembersServiceIntegrationTest {
         final var originalDao = testDataManager.fetchAcspMembersDaos("TS001").getFirst();
         acspMembersRepository.insert(originalDao);
 
-        acspMembersService.updateMembership("TS001", UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002");
+        acspMembersService.updateMembership("TS001", MembershipStatusEnum.REMOVED, UserRoleEnum.STANDARD, "TSU002");
         final var updatedDao = acspMembersRepository.findById("TS001").get();
 
         Assertions.assertNotEquals(originalDao.getEtag(), updatedDao.getEtag());
@@ -413,7 +413,7 @@ class AcspMembersServiceIntegrationTest {
         final var originalDao = testDataManager.fetchAcspMembersDaos("TS001").getFirst();
         acspMembersRepository.insert(originalDao);
 
-        acspMembersService.updateMembership("TS001", UserStatusEnum.REMOVED, UserRoleEnum.STANDARD, null);
+        acspMembersService.updateMembership("TS001", MembershipStatusEnum.REMOVED, UserRoleEnum.STANDARD, null);
         final var updatedDao = acspMembersRepository.findById("TS001").get();
 
         Assertions.assertNotEquals(originalDao.getEtag(), updatedDao.getEtag());
@@ -423,7 +423,21 @@ class AcspMembersServiceIntegrationTest {
         Assertions.assertNull(updatedDao.getRemovedBy());
     }
 
+    @Test
+    void updateMembershipWithActiveActivatesMembership(){
+        final var originalDao = testDataManager.fetchAcspMembersDaos( "WIT005" ).getFirst();
+        acspMembersRepository.insert(originalDao);
 
+        acspMembersService.updateMembership( "WIT005", MembershipStatusEnum.ACTIVE, null, "WITU404" );
+        final var updatedDao = acspMembersRepository.findById( "WIT005" ).get();
+
+        Assertions.assertNotEquals( originalDao.getEtag(), updatedDao.getEtag() );
+        Assertions.assertEquals( "WITU404", updatedDao.getUserId() );
+        Assertions.assertNull( updatedDao.getUserEmail() );
+        Assertions.assertNotEquals( originalDao.getAddedAt(), updatedDao.getAddedAt() );
+        Assertions.assertNotEquals( originalDao.getAcceptedAt(), updatedDao.getAcceptedAt() );
+        Assertions.assertEquals( MembershipStatusEnum.ACTIVE.getValue(), updatedDao.getStatus() );
+    }
 
     @Nested
     class AddAcspMembership {
