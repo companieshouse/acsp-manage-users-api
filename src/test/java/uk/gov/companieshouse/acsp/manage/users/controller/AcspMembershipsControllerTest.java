@@ -175,7 +175,7 @@ class AcspMembershipsControllerTest {
             Mockito.doReturn( Optional.of( requestingUserDao ) ).when( acspMembersService ).fetchActiveAcspMembership( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
             Mockito.doReturn( usersList ).when( usersService ).searchUserDetails( List.of( "buzz.lightyear@toystory.com" ) );
             Mockito.doReturn( acspProfile ).when(acspProfileService).fetchAcspProfile( "COMA001" );
-            Mockito.doReturn( new AcspMembershipsList() ).when( acspMembersService ).fetchMemberships( user, false, "COMA001" );
+            Mockito.doReturn( new AcspMembershipsList() ).when( acspMembersService ).fetchMemberships( user.getUserId(), user.getEmail(), false, "COMA001" );
 
             final var response =
             mockMvc.perform( post( "/acsps/COMA001/memberships/lookup?include_removed=false" )
@@ -211,24 +211,6 @@ class AcspMembershipsControllerTest {
                     .andExpect( status().isBadRequest() );
         }
 
-        @Test
-        void findMembershipsForUserAndAcspWithNonexistentUserEmailThrowsNotFoundException() throws Exception {
-            final var requestingUserDao = testDataManager.fetchAcspMembersDaos( "WIT004" ).getFirst();
-
-            mockFetchUserDetailsFor( "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
-            Mockito.doReturn( Optional.of( requestingUserDao ) ).when( acspMembersService ).fetchActiveAcspMembership( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", "WITA001" );
-            Mockito.doReturn( new UsersList() ).when( usersService ).searchUserDetails( List.of( "buzz.lightyear@toystory.com" ) );
-
-            mockMvc.perform( post( "/acsps/COMA001/memberships/lookup?include_removed=false" )
-                            .header("X-Request-Id", "theId123")
-                            .header("Eric-identity", "67ZeMsvAEgkBWs7tNKacdrPvOmQ")
-                            .header("ERIC-Identity-Type", "oauth2")
-                            .header("ERIC-Authorised-Key-Roles", "*")
-                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT004" ) )
-                            .contentType( MediaType.APPLICATION_JSON )
-                            .content( "{\"user_email\":\"buzz.lightyear@toystory.com\"}" ) )
-                    .andExpect( status().isNotFound() );
-        }
     }
 
     @Nested

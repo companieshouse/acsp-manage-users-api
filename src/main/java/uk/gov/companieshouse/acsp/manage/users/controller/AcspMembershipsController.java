@@ -104,15 +104,16 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
 
         LOGGER.infoContext( getXRequestId(), String.format( "Received request with acsp_number=%s, include_removed=%s, user_email=%s", acspNumber, includeRemoved, userEmail ), null );
 
-        final var user = Optional
+        final var userId = Optional
                 .ofNullable( usersService.searchUserDetails( List.of( userEmail ) ) )
                 .filter( users -> !users.isEmpty() )
                 .map( UsersList::getFirst )
-                .orElseThrow( () -> new NotFoundRuntimeException( PLEASE_CHECK_THE_REQUEST_AND_TRY_AGAIN, new Exception( String.format( "User %s was not found", userEmail ) ) ) );
+                .map( User::getUserId )
+                .orElse( null );
 
         acspProfileService.fetchAcspProfile( acspNumber );
 
-        final var memberships = acspMembersService.fetchMemberships( user, includeRemoved, acspNumber );
+        final var memberships = acspMembersService.fetchMemberships( userId, userEmail, includeRemoved, acspNumber );
 
         return new ResponseEntity<>( memberships, OK );
     }
