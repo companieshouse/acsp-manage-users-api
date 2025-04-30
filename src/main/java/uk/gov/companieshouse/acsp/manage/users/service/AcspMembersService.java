@@ -6,6 +6,9 @@ import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.g
 import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum.ACTIVE;
 import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum.PENDING;
 import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum.REMOVED;
+import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum.ADMIN;
+import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum.OWNER;
+import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum.STANDARD;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -71,18 +74,23 @@ public class AcspMembersService {
     }
 
     @Transactional( readOnly = true )
-    public AcspMembershipsList fetchMemberships( final User user, final boolean includeRemoved, final String acspNumber ) {
+    public AcspMembershipsList fetchMemberships( final String userId, final String userEmail, final boolean includeRemoved, final String acspNumber ) {
         final var loggingAcspNumber = Objects.nonNull( acspNumber ) ? String.format( " and Acsp %s", acspNumber ) : "";
-        LOGGER.debugContext( getXRequestId(), String.format( "Attempting to fetch memberships for user %s%s", Optional.of( user ).orElseThrow( () -> new NullPointerException( "User cannot be null" ) ).getEmail(), loggingAcspNumber ), null );
+        LOGGER.debugContext( getXRequestId(), String.format( "Attempting to fetch memberships for userId %s or userEmail %s%s", userId, userEmail, loggingAcspNumber ), null );
+
+        final var statuses = new HashSet<>( Set.of( ACTIVE.getValue(), PENDING.getValue() ) );
+        if ( includeRemoved ){
+            statuses.add( REMOVED.getValue() );
+        }
 
         final var membershipDaos = Optional
                 .ofNullable( acspNumber )
-                .map( any -> includeRemoved ? acspMembersRepository.fetchActiveAndRemovedMemberships( user.getUserId(), acspNumber ) : acspMembersRepository.fetchActiveMembership( user.getUserId(), acspNumber ).stream().toList() )
-                .orElseGet( () -> includeRemoved ? acspMembersRepository.fetchActiveAndRemovedMembershipsForUserId( user.getUserId() ) : acspMembersRepository.fetchActiveMembershipForUserId( user.getUserId() ).map( List::of ).orElse( List.of() ) );
+                .map( any -> acspMembersRepository.fetchMembershipsForUserAcspNumberAndStatuses( userId, userEmail, acspNumber, statuses ) )
+                .orElseGet( () -> acspMembersRepository.fetchMembershipsForUserAndStatus( userId, userEmail, statuses ) );
 
-        final var memberships = acspMembershipCollectionMappers.daoToDto( membershipDaos, user, null );
+        final var memberships = acspMembershipCollectionMappers.daoToDto( membershipDaos, null, null );
 
-        LOGGER.debugContext( getXRequestId(), String.format( "Successfully fetched memberships for user %s%s", user.getEmail(), loggingAcspNumber ), null );
+        LOGGER.debugContext( getXRequestId(), String.format( "Successfully fetched memberships for userId %s or userEmail %s%s", userId, userEmail, loggingAcspNumber ), null );
         return new AcspMembershipsList().items( memberships );
     }
 
@@ -90,11 +98,17 @@ public class AcspMembersService {
     public AcspMembershipsList fetchMembershipsForAcspNumberAndRole( final AcspProfile acspProfile, final String userRole, final boolean includeRemoved, final int pageIndex, final int itemsPerPage ) {
         LOGGER.debugContext( getXRequestId(), "Attempting to fetch memberships", null );
 
-        final var pageable = PageRequest.of( pageIndex, itemsPerPage );
-        final var membershipDaos = Optional
-                .ofNullable( userRole )
-                .map( role -> includeRemoved ? acspMembersRepository.fetchActiveAndRemovedMembershipsForAcspNumberAndUserRole( acspProfile.getNumber(), role, pageable ) : acspMembersRepository.fetchActiveMembershipsForAcspNumberAndUserRole( acspProfile.getNumber(), role, pageable ) )
-                .orElseGet( () -> includeRemoved ? acspMembersRepository.fetchActiveAndRemovedMembershipsForAcspNumber( acspProfile.getNumber(), pageable ) : acspMembersRepository.fetchActiveMembershipsForAcspNumber( acspProfile.getNumber(), pageable ) );
+        final var statuses = new HashSet<>( Set.of( ACTIVE.getValue(), PENDING.getValue() ) );
+        if ( includeRemoved ){
+            statuses.add( REMOVED.getValue() );
+        }
+
+        final var roles = Optional.ofNullable( userRole )
+                .map( Set::of )
+                .orElse( Set.of( OWNER.getValue(), ADMIN.getValue(), STANDARD.getValue() ) );
+
+        final var membershipDaos = acspMembersRepository.fetchMembershipsForAcspAndStatusesAndRoles( acspProfile.getNumber(), statuses, roles, PageRequest.of( pageIndex, itemsPerPage ) );
+
         final var memberships = acspMembershipCollectionMappers.daoToDto( membershipDaos, null, acspProfile );
 
         LOGGER.debugContext( getXRequestId(), String.format( "Successfully retrieved members for Acsp %s", acspProfile.getNumber() ), null );

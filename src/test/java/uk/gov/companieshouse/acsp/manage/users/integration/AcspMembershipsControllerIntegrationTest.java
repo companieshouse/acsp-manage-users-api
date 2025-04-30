@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.acsp.manage.users.integration;
 
+import java.util.Map;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -260,6 +261,29 @@ class AcspMembershipsControllerIntegrationTest {
             Assertions.assertEquals( 1, roles.size() );
             Assertions.assertTrue( roles.contains( role ) );
         }
+
+        @Test
+        void getMembersForAcspCanRetrievePendingMemberships() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT005", "WIT006" ) );
+
+            mockFetchUserDetailsFor("WITU005" );
+            mockFetchAcspProfilesFor("WITA001");
+
+            final var response = mockMvc.perform( get("/acsps/WITA001/memberships")
+                                    .header("X-Request-Id", "theId123")
+                                    .header("Eric-identity", "WITU005")
+                                    .header("ERIC-Identity-Type", "oauth2")
+                                    .header("ERIC-Authorised-Key-Roles", "*")
+                                    .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT006" ) ) )
+                            .andExpect(status().isOk());
+
+            final var acspMembers = parseResponseTo( response, AcspMembershipsList.class );
+
+            final var membershipIds = acspMembers.getItems().stream().map(AcspMembership::getId).collect(Collectors.toSet());
+
+            assertTrue(membershipIds.containsAll( Set.of( "WIT005", "WIT006" ) ) );
+        }
+
     }
 
     @Nested
@@ -334,23 +358,6 @@ class AcspMembershipsControllerIntegrationTest {
         }
 
         @Test
-        void findMembershipsForUserAndAcspWithNonExistentUserReturnsNotFound() throws Exception {
-            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002" ) );
-
-            mockFetchUserDetailsFor("COMU002" );
-            Mockito.doReturn(new UsersList()).when(usersService).searchUserDetails(List.of("shaun.lock@comedy.com"));
-            mockMvc.perform(post("/acsps/COMA001/memberships/lookup")
-                            .header("X-Request-Id", "theId123")
-                            .header("Eric-identity", "COMU002")
-                            .header("ERIC-Identity-Type", "oauth2")
-                            .header("ERIC-Authorised-Key-Roles", "*")
-                            .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "COM002" ) )
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"user_email\":\"shaun.lock@comedy.com\"}"))
-                    .andExpect(status().isNotFound());
-        }
-
-        @Test
         void findMembershipsForUserAndAcspReturnsCorrectData() throws Exception {
             final var userDto = testDataManager.fetchUserDtos("COMU002").getFirst();
             final var acspProfile = testDataManager.fetchAcspProfiles("COMA001").getFirst();
@@ -363,6 +370,7 @@ class AcspMembershipsControllerIntegrationTest {
             mockFetchUserDetailsFor("COMU002" );
             Mockito.doReturn(usersList).when(usersService).searchUserDetails(List.of(userDto.getEmail()));
             Mockito.doReturn(acspProfile).when(acspProfileService).fetchAcspProfile("COMA001");
+            Mockito.doReturn( Map.of( "COMU002", userDto ) ).when( usersService ).fetchUserDetails( any( Stream.class ) );
 
             final var response =
             mockMvc.perform(post("/acsps/COMA001/memberships/lookup")
@@ -476,6 +484,34 @@ class AcspMembershipsControllerIntegrationTest {
 
             assertEquals(0, acspMembershipsList.getItems().size());
         }
+
+        @Test
+        void findMembershipsForUserAndAcspCanRetrievePendingMembership() throws Exception {
+            acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT005", "WIT006" ) );
+
+            mockFetchUserDetailsFor("WITU005" );
+
+            Mockito.doReturn( new UsersList() ).when( usersService ).searchUserDetails( List.of( "dijkstra.witcher@inugami-example.com" ) );
+
+            mockFetchAcspProfilesFor("WITA001");
+
+            final var response =
+                    mockMvc.perform(post("/acsps/WITA001/memberships/lookup")
+                                    .header("X-Request-Id", "theId123")
+                                    .header("Eric-identity", "WITU005")
+                                    .header("ERIC-Identity-Type", "oauth2")
+                                    .header("ERIC-Authorised-Key-Roles", "*")
+                                    .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT006" ) )
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("{\"user_email\":\"dijkstra.witcher@inugami-example.com\"}"))
+                            .andExpect(status().isOk());
+
+            final var acspMembershipsList = parseResponseTo( response, AcspMembershipsList.class );
+
+            assertEquals(1, acspMembershipsList.getItems().size());
+            assertEquals("WIT005", acspMembershipsList.getItems().get(0).getId());
+        }
+
     }
 
     @Nested

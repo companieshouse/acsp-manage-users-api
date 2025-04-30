@@ -1,5 +1,7 @@
 package uk.gov.companieshouse.acsp.manage.users.integration;
 
+import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -17,6 +19,7 @@ import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
+import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
 import uk.gov.companieshouse.email_producer.EmailProducer;
 import uk.gov.companieshouse.email_producer.factory.KafkaProducerFactory;
@@ -24,6 +27,7 @@ import uk.gov.companieshouse.email_producer.factory.KafkaProducerFactory;
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
@@ -117,6 +121,7 @@ class UserAcspMembershipControllerIntegrationTest {
 
         mockFetchUserDetailsFor( "COMU001", "COMU002", "COMU003", "COMU004", "COMU005", "COMU006", "COMU007", "COMU008", "COMU009", "COMU010", "COMU011", "COMU012", "COMU013", "COMU014", "COMU015", "COMU016" );
         mockFetchAcspProfilesFor( "COMA001" );
+        Mockito.doReturn( Map.of( "COMU002", testDataManager.fetchUserDtos( "COMU002" ).getFirst() ) ).when( usersService ).fetchUserDetails( any( Stream.class ) );
 
         final var response =
         mockMvc.perform(get("/user/acsps/memberships")
@@ -133,6 +138,27 @@ class UserAcspMembershipControllerIntegrationTest {
         assertEquals("COM002", acspMemberships.getFirst().getId());
         assertEquals("COMU002", acspMemberships.getFirst().getUserId());
         assertEquals("COMA001", acspMemberships.getFirst().getAcspNumber());
+    }
+
+    @Test
+    void getAcspMembershipsForUserIdCanRetrievePendingMembership() throws Exception {
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT005" ) );
+
+        Mockito.doReturn( new User().userId( "404User" ).email( "dijkstra.witcher@inugami-example.com" ) ).when( usersService ).fetchUserDetails( "404User" );
+        mockFetchAcspProfilesFor( "WITA001" );
+
+        final var response = mockMvc.perform(get("/user/acsps/memberships")
+                                .header("X-Request-Id", "theId123")
+                                .header("Eric-identity", "404User")
+                                .header("ERIC-Identity-Type", "oauth2")
+                                .header("ERIC-Authorised-Key-Roles", "*"))
+                        .andExpect(status().isOk());
+
+        final var acspMemberships = parseResponseTo( response, AcspMembershipsList.class ).getItems();
+
+        assertEquals(1, acspMemberships.size());
+        assertEquals("WIT005", acspMemberships.getFirst().getId());
+
     }
 
     @AfterEach
