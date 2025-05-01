@@ -32,6 +32,7 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch;
+import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserStatusEnum;
 
 @RestController
 public class AcspMembershipController implements AcspMembershipInterface {
@@ -68,10 +69,8 @@ public class AcspMembershipController implements AcspMembershipInterface {
         final var proposedUserStatus = Optional
                 .ofNullable( requestBody )
                 .map( RequestBodyPatch::getUserStatus )
-                .map( userStatus -> switch ( userStatus ){
-                    case APPROVED -> ACTIVE;
-                    case REMOVED -> MembershipStatusEnum.REMOVED;
-                } )
+                .map( UserStatusEnum::getValue )
+                .map( MembershipStatusEnum::fromValue )
                 .orElse( null );
 
         final var proposedUserRole = Optional

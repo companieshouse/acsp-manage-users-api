@@ -153,7 +153,7 @@ class AcspMembershipControllerTest {
         final var dao = testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst();
         acspMembersRepository.insert( dao );
 
-        mockFetchUserDetailsFor("67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
+        mockFetchUserDetailsFor("TSU001", "67ZeMsvAEgkBWs7tNKacdrPvOmQ" );
         Mockito.doReturn( testDataManager.fetchUserDtos( "TSU001" ).getFirst() ).when( usersService ).retrieveUserDetails( "TSU001", null );
         Mockito.doReturn( testDataManager.fetchAcspProfiles( "TSA001" ).getFirst() ).when(
                 acspProfileService).fetchAcspProfile( "TSA001" );
@@ -699,8 +699,9 @@ class AcspMembershipControllerTest {
                         .header("Eric-identity", "WITU404" )
                         .header("ERIC-Identity-Type", "oauth2")
                         .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT001" ) )
                         .contentType( MediaType.APPLICATION_JSON )
-                        .content( "{\"user_status\":\"approved\"}" ) )
+                        .content( "{\"user_status\":\"active\"}" ) )
                 .andExpect( status().isOk() );
 
         final var updatedDao = acspMembersRepository.findById( "WIT005" ).get();

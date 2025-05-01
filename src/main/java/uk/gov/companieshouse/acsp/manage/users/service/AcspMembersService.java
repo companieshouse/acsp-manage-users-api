@@ -151,7 +151,7 @@ public class AcspMembersService {
     }
 
     @Transactional
-    public AcspMembership createInvitation( final String userEmail, final AcspProfile acspProfile, final UserRoleEnum userRole, final String addedByUserId ){
+    public AcspMembership createPendingMembership( final String userEmail, final AcspProfile acspProfile, final UserRoleEnum userRole, final String addedByUserId ){
         LOGGER.debugContext( getXRequestId(), String.format( "Attempting to create invitation for user %s and Acsp %s", userEmail, acspProfile.getNumber() ), null );
 
         if ( Objects.isNull( userEmail ) ){

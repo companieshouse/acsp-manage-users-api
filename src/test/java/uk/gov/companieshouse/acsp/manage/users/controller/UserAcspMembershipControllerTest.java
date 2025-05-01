@@ -1,6 +1,7 @@
 package uk.gov.companieshouse.acsp.manage.users.controller;
 
 import java.util.Arrays;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -19,8 +20,8 @@ import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 
-import java.util.Optional;
-
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -61,7 +62,7 @@ class UserAcspMembershipControllerTest {
     void getAcspMembershipsForUserIdWithoutXRequestIdReturnsBadRequest() throws Exception {
         final var requestingUserDao = testDataManager.fetchAcspMembersDaos( "COM002" ).getFirst();
         mockFetchUserDetailsFor( "COMU002" );
-        Mockito.doReturn( Optional.of( requestingUserDao ) ).when( acspMembersService ).fetchActiveAcspMembership( "COMU002", "COMA001" );
+        Mockito.doReturn( List.of( requestingUserDao ) ).when( acspMembersService ).fetchMembershipDaos( eq( "COMU002" ), anyString(), eq( false ) );
 
         mockMvc.perform( get( "/user/acsps/memberships")
                         .header( "Eric-identity", "COMU002" )
@@ -75,7 +76,7 @@ class UserAcspMembershipControllerTest {
     void getAcspMembershipsForUserIdWithWrongIncludeRemovedParameterInBodyReturnsBadRequest() throws Exception {
         final var requestingUserDao = testDataManager.fetchAcspMembersDaos( "COM002" ).getFirst();
         mockFetchUserDetailsFor( "COMU002" );
-        Mockito.doReturn( Optional.of( requestingUserDao ) ).when( acspMembersService ).fetchActiveAcspMembership( "COMU002", "COMA001" );
+        Mockito.doReturn( List.of( requestingUserDao ) ).when( acspMembersService ).fetchMembershipDaos( eq( "COMU002" ), anyString(), eq( false ) );
 
         mockMvc.perform( get( "/user/acsps/memberships?include_removed=null" )
                         .header( "X-Request-Id", "theId123" )
