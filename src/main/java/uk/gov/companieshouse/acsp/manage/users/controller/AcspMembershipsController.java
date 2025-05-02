@@ -87,9 +87,12 @@ public class AcspMembershipsController implements AcspMembershipsInterface {
                 .map( user -> acspMembersService.createMembership( user, targetAcspProfile, targetUserRole, isOAuth2Request() ? getEricIdentity() : null ) )
                 .orElseGet( () -> acspMembersService.createPendingMembership( targetUserEmail, targetAcspProfile, targetUserRole, isOAuth2Request() ? getEricIdentity() : null ) );
 
-        if ( isOAuth2Request() && Objects.nonNull( targetUser ) ){
+        if ( isOAuth2Request() ){
             final var requestingUserDisplayName = Optional.ofNullable( getUser().getDisplayName() ).orElse( getUser().getEmail() );
-            emailService.sendConfirmYouAreAMemberEmail( targetUser.getEmail(), requestingUserDisplayName, targetAcspProfile.getName(), targetUserRole ).subscribe();
+            Optional.ofNullable( targetUser )
+                    .map( user -> emailService.sendConfirmYouAreAMemberEmail( user.getEmail(), requestingUserDisplayName, targetAcspProfile.getName(), targetUserRole ) )
+                    .orElseGet( () -> emailService.sendYouHaveBeenInvitedToAcspEmail( targetUserEmail, requestingUserDisplayName, targetAcspProfile.getName() ) )
+                    .subscribe();
         }
 
         return new ResponseEntity<>( membership, CREATED );

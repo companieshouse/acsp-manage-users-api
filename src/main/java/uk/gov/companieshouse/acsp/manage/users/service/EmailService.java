@@ -8,6 +8,7 @@ import uk.gov.companieshouse.acsp.manage.users.model.email.BaseEmailData;
 import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAStandardMemberEmailData;
 import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAnAdminMemberEmailData;
 import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAnOwnerMemberEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.YouHaveBeenInvitedToAcsp.YouHaveBeenInvitedToAcspEmailData;
 import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChanged.YourRoleAtAcspHasChangedToAdminEmailData;
 import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChanged.YourRoleAtAcspHasChangedToOwnerEmailData;
 import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChanged.YourRoleAtAcspHasChangedToStandardEmailData;
@@ -104,6 +105,16 @@ public class EmailService {
         };
 
         return sendEmail( emailData, messageType );
+    }
+
+    public Mono<Void> sendYouHaveBeenInvitedToAcspEmail( final String recipientEmail, final String invitedBy, final String acspName ){
+        final var xRequestId = getXRequestId();
+        if ( Objects.isNull( recipientEmail ) || Objects.isNull( invitedBy ) || Objects.isNull( acspName ) ){
+            LOGGER.errorContext( xRequestId, new Exception( "Attempted to send you-have-been-invited-to-acsp email, with null recipientEmail, null invitedBy, or null acspName." ), null );
+            throw new IllegalArgumentException( "recipientEmail, invitedBy, and acspName must not be null." );
+        }
+
+        return sendEmail( new YouHaveBeenInvitedToAcspEmailData( recipientEmail, invitedBy, acspName, signinUrl ), YOU_HAVE_BEEN_INVITED_TO_ACSP );
     }
 
 }
