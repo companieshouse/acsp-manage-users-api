@@ -529,7 +529,7 @@ class AcspMembersServiceIntegrationTest {
     @ParameterizedTest
     @MethodSource( "createInvitationNullInputScenarios" )
     void createInvitationWithNullInputsThrowNullPointerExceptions( final String userEmail, final AcspProfile acspProfile, final UserRoleEnum userRoleEnum ){
-        Assertions.assertThrows( NullPointerException.class, () -> acspMembersService.createInvitation( userEmail, acspProfile, userRoleEnum, "WITU001" ) );
+        Assertions.assertThrows( NullPointerException.class, () -> acspMembersService.createPendingMembership( userEmail, acspProfile, userRoleEnum, "WITU001" ) );
     }
 
     @Test
@@ -537,7 +537,7 @@ class AcspMembersServiceIntegrationTest {
         final var acspProfile = testDataManager.fetchAcspProfiles( "WITA001" ).getFirst();
         Mockito.doReturn( testDataManager.fetchAcspMembershipDtos( "WIT005" ).getFirst() ).when( acspMembershipCollectionMappers ).daoToDto( any( AcspMembersDao.class ), isNull(), eq( acspProfile ) );
 
-        final var membership = acspMembersService.createInvitation( "dijkstra.witcher@inugami-example.com", acspProfile, ADMIN, "WITU001" );
+        final var membership = acspMembersService.createPendingMembership( "dijkstra.witcher@inugami-example.com", acspProfile, ADMIN, "WITU001" );
 
         Assertions.assertNotNull( membership.getEtag() );
         Assertions.assertEquals( "WIT005", membership.getId() );
