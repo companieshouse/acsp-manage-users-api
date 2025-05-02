@@ -1,25 +1,34 @@
 package uk.gov.companieshouse.acsp.manage.users.integration;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Update;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
-import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum.ACTIVE;
+import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum.PENDING;
+import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum.REMOVED;
 
 @Tag( "integration-test" )
 @DataMongoTest
@@ -35,27 +44,6 @@ class AcspMembersRepositoryIntegrationTest {
     private StaticPropertyUtil staticPropertyUtil;
 
     private final TestDataManager testDataManager = TestDataManager.getInstance();
-
-    @Test
-    void findAllNotRemovedByAcspNumberReturnsNotRemovedMembersForGivenAcspNumber() {
-        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos("COM001", "COM002", "COM003", "COM004", "COM005", "COM006" ) );
-
-        final var result = acspMembersRepository.fetchActiveMembershipsForAcspNumber("COMA001", PageRequest.of( 0, 10 ) ).getContent();
-
-        assertEquals( 3, result.size() );
-        assertTrue( result.stream().allMatch( member -> member.getAcspNumber().equals("COMA001" ) ) );
-        assertTrue( result.stream().allMatch( member -> member.getRemovedBy() == null ) );
-    }
-
-    @Test
-    void findAllByAcspNumberReturnsAllMembersForGivenAcspNumber() {
-        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM001", "COM002", "COM003", "COM004", "COM005", "COM006" ) );
-
-        final var result = acspMembersRepository.fetchActiveAndRemovedMembershipsForAcspNumber( "COMA001", PageRequest.of(0, 10) );
-
-        assertEquals( 6, result.getTotalElements() );
-        assertTrue( result.getContent().stream().allMatch( member -> member.getAcspNumber().equals("COMA001" ) ) );
-    }
 
     @Test
     void findAllNotRemovedByAcspNumberAndUserRoleReturnsNotRemovedMembersForGivenAcspNumberAndUserRole() {
@@ -75,37 +63,6 @@ class AcspMembersRepositoryIntegrationTest {
 
         assertEquals( 3, result.getTotalElements() );
         assertTrue( result.getContent().stream().allMatch( member -> member.getAcspNumber().equals( "COMA001" ) && member.getUserRole().equals( UserRoleEnum.ADMIN ) ) );
-    }
-
-    @Test
-    void fetchAllAcspMembersByUserIdReturnsAllAcspMembersForProvidedUserId() {
-        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM001", "COM002", "COM003", "NF002", "TS002" ) );
-
-        final var result = acspMembersRepository.fetchActiveAndRemovedMembershipsForUserId( "TSU002" );
-
-        assertEquals( 2, result.size() );
-        assertTrue( result.stream().anyMatch( elem -> elem.getId().equals( "NF002" ) && elem.getUserId().equals( "TSU002" ) && elem.getStatus().equals( MembershipStatusEnum.ACTIVE.getValue() ) ) );
-        assertTrue( result.stream().anyMatch( elem -> elem.getId().equals("TS002") && elem.getUserId().equals( "TSU002" ) && elem.getStatus().equals( MembershipStatusEnum.REMOVED.getValue() ) ) );
-    }
-
-    @Test
-    void fetchActiveAcspMembersByUserIdReturnsActiveAcspMembersForProvidedUserId() {
-        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM001", "COM002", "COM003", "NF002", "TS002" ) );
-
-        final var result = acspMembersRepository.fetchActiveMembershipForUserId( "TSU002" ).map( List::of ).orElse( List.of() );
-
-        assertEquals( 1, result.size() );
-        assertTrue( result.stream().anyMatch( elem -> elem.getId().equals( "NF002" ) && elem.getUserId().equals( "TSU002" ) && elem.getStatus().equals( MembershipStatusEnum.ACTIVE.getValue() ) ) );
-    }
-
-    @Test
-    void fetchAllAcspMembersByUserIdAndAcspNumberReturnsRemovedAcspMembersForProvidedUserIdAndAcspNumber() {
-        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM001", "COM002", "COM003", "NF002", "TS002" ) );
-
-        final var result = acspMembersRepository.fetchActiveAndRemovedMemberships( "COMU001", "COMA001" );
-
-        assertEquals( 1, result.size() );
-        assertTrue( result.stream().anyMatch( member -> member.getId().equals( "COM001" ) && member.getUserId().equals( "COMU001" ) && member.getAcspNumber().equals( "COMA001" ) && member.getStatus().equals( MembershipStatusEnum.REMOVED.getValue() ) ) );
     }
 
     @Test
@@ -159,6 +116,144 @@ class AcspMembersRepositoryIntegrationTest {
         acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "TS001" ) );
         Assertions.assertEquals( 1, acspMembersRepository.updateAcspMembership( "TS001", new Update().set( "user_role", "standard" ) ) );
         Assertions.assertEquals( UserRoleEnum.STANDARD, acspMembersRepository.findById( "TS001" ).get().getUserRole() );
+    }
+
+    @Test
+    void fetchMembershipsForUserAndStatusRetrievesMembershipForNonnullUserIdAndNullUserEmail(){
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT005", "WIT006", "WIT007" ) );
+        final var memberships = acspMembersRepository.fetchMembershipsForUserAndStatus( "WITU005", null, Set.of( ACTIVE.getValue(), PENDING.getValue() ) );
+        Assertions.assertEquals( 1, memberships.size() );
+        Assertions.assertEquals( "WIT006", memberships.getFirst().getId() );
+    }
+
+    @Test
+    void fetchMembershipsForUserAndStatusRetrievesMembershipForNullUserIdAndNonnullUserEmail(){
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT005", "WIT006", "WIT007" ) );
+        final var memberships = acspMembersRepository.fetchMembershipsForUserAndStatus( null, "dijkstra.witcher@inugami-example.com", Set.of( PENDING.getValue() ) );
+        Assertions.assertEquals( 1, memberships.size() );
+        Assertions.assertEquals( "WIT005", memberships.getFirst().getId() );
+    }
+
+    private static Stream<Arguments> fetchMembershipsForUserAndStatusNonexistentScenarios(){
+        return Stream.of(
+                Arguments.of( "404UserId", null, Set.of( ACTIVE.getValue(), PENDING.getValue(), REMOVED.getValue() ) ),
+                Arguments.of( null, "404UserEmail@test.com", Set.of( ACTIVE.getValue(), PENDING.getValue(), REMOVED.getValue() ) ),
+                Arguments.of( null, "dijkstra.witcher@inugami-example.com", Set.of() ),
+                Arguments.of( null, "dijkstra.witcher@inugami-example.com", Set.of( "complicated" ) )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource( "fetchMembershipsForUserAndStatusNonexistentScenarios" )
+    void fetchMembershipsForUserAndStatusRetrievesEmptyListWhenQueryUnsatisfied( final String userId, final String userEmail, final Set<String> statuses ){
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT005", "WIT006", "WIT007" ) );
+        Assertions.assertTrue( acspMembersRepository.fetchMembershipsForUserAndStatus( userId, userEmail, statuses ).isEmpty() );
+    }
+
+    @Test
+    void fetchMembershipsForUserAndStatusWithNullStatusesThrowsUncategorizedMongoDbException(){
+        Assertions.assertThrows( UncategorizedMongoDbException.class, () -> acspMembersRepository.fetchMembershipsForUserAndStatus( "dijkstra.witcher@inugami-example.com", null, null ) );
+    }
+
+    @Test
+    void fetchMembershipsForAcspAndStatusesAndRolesWithNullSetsThrowsUncategorizedMongoDbException(){
+        Assertions.assertThrows( UncategorizedMongoDbException.class, () -> acspMembersRepository.fetchMembershipsForAcspAndStatusesAndRoles( "WITA001", null, Set.of( UserRoleEnum.ADMIN.getValue() ), null ) );
+        Assertions.assertThrows( UncategorizedMongoDbException.class, () -> acspMembersRepository.fetchMembershipsForAcspAndStatusesAndRoles( "WITA001", Set.of( ACTIVE.getValue(), PENDING.getValue() ), null, null ) );
+    }
+
+    @Test
+    void fetchMembershipsForAcspAndStatusesAndRolesWithNullAcspNumberReturnsEmptyList(){
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002", "WIT001", "WIT002", "WIT003", "WIT004", "WIT005", "WIT006", "WIT007" ) );
+        Assertions.assertTrue( acspMembersRepository.fetchMembershipsForAcspAndStatusesAndRoles( null, Set.of( ACTIVE.getValue(), PENDING.getValue() ), Set.of( UserRoleEnum.ADMIN.getValue() ), null ).toList().isEmpty() );
+    }
+
+    private static Stream<Arguments> fetchMembershipsForAcspAndStatusesAndRolesEmptyScenarios(){
+        return Stream.of(
+                Arguments.of( "404ACSP", new HashSet<>( Set.of( ACTIVE.getValue(), PENDING.getValue() ) ), new HashSet<>( Set.of( UserRoleEnum.ADMIN.getValue() ) ) ),
+                Arguments.of( "WITA001", new HashSet<String>(), new HashSet<>( Set.of( UserRoleEnum.ADMIN.getValue() ) ) ),
+                Arguments.of( "WITA001", new HashSet<>( Set.of( ACTIVE.getValue(), PENDING.getValue() ) ), new HashSet<String>() ),
+                Arguments.of( "WITA001", new HashSet<>( Set.of( "bad_role" ) ), new HashSet<>( Set.of( UserRoleEnum.ADMIN.getValue() ) ) ),
+                Arguments.of( "WITA001", new HashSet<>( Set.of( ACTIVE.getValue(), PENDING.getValue() ) ), new HashSet<>( Set.of( "bad_status" ) ) )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource( "fetchMembershipsForAcspAndStatusesAndRolesEmptyScenarios" )
+    void fetchMembershipsForAcspAndStatusesAndRolesReturnsEmptyListWhenRecordsNotFound( final String acspNumber, final HashSet<String> statuses, final HashSet<String> roles ){
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002", "WIT001", "WIT002", "WIT003", "WIT004", "WIT005", "WIT006", "WIT007" ) );
+        Assertions.assertTrue( acspMembersRepository.fetchMembershipsForAcspAndStatusesAndRoles( acspNumber, statuses, roles, null ).toList().isEmpty() );
+    }
+
+    @Test
+    void fetchMembershipsForAcspAndStatusesAndRolesAppliesFiltersCorrectly(){
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002", "WIT001", "WIT002", "WIT003", "WIT004", "WIT005", "WIT006", "WIT007" ) );
+
+        final var membershipIds = acspMembersRepository.fetchMembershipsForAcspAndStatusesAndRoles( "WITA001", Set.of( ACTIVE.getValue(), PENDING.getValue() ), Set.of( UserRoleEnum.ADMIN.getValue() ), null )
+                .map( AcspMembersDao::getId )
+                .stream()
+                .toList();
+
+        Assertions.assertEquals( 3, membershipIds.size() );
+        Assertions.assertTrue( membershipIds.containsAll( List.of(  "WIT002", "WIT005", "WIT006" ) ) );
+    }
+
+    @Test
+    void fetchMembershipsForAcspAndStatusesAndRolesImplementsPaginationCorrectly(){
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "COM002", "WIT001", "WIT002", "WIT003", "WIT004", "WIT005", "WIT006", "WIT007" ) );
+
+        final var membershipIds = acspMembersRepository.fetchMembershipsForAcspAndStatusesAndRoles( "WITA001", Set.of( ACTIVE.getValue(), PENDING.getValue() ), Set.of( UserRoleEnum.ADMIN.getValue() ), PageRequest.of( 1, 1 ) )
+                .map( AcspMembersDao::getId )
+                .stream()
+                .toList();
+
+        Assertions.assertEquals( 1, membershipIds.size() );
+        Assertions.assertEquals( "WIT005", membershipIds.getFirst() );
+    }
+
+    @Test
+    void fetchMembershipsForUserAcspNumberAndStatusesWithNullStatusesThrowsUncategorizedMongoDbException(){
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT005", "WIT006" ) );
+        Assertions.assertThrows( UncategorizedMongoDbException.class, () -> acspMembersRepository.fetchMembershipsForUserAcspNumberAndStatuses( "WITU005", null, "WITA001", null ) );
+    }
+
+    private static Stream<Arguments> fetchMembershipsForUserAcspNumberAndStatusesEmptyScenarios(){
+        return Stream.of(
+                Arguments.of( "WITU404", "WITA001", new HashSet<>( Set.of( ACTIVE.getValue() ) ) ),
+                Arguments.of( "WITU005", "WITA404", new HashSet<>( Set.of( ACTIVE.getValue() ) ) ),
+                Arguments.of( "WITU005", "WITA001", new HashSet<>() ),
+                Arguments.of( "WITU005", "WITA001", new HashSet<>( Set.of( "bad_status" ) ) )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource( "fetchMembershipsForUserAcspNumberAndStatusesEmptyScenarios" )
+    void fetchMembershipsForUserAcspNumberAndStatusesReturnsEmptyListWhenRecordsNotFound( final String userId, final String acspNumber, final HashSet<String> statuses ){
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT005", "WIT006" ) );
+        Assertions.assertTrue( acspMembersRepository.fetchMembershipsForUserAcspNumberAndStatuses( userId, null, acspNumber, statuses ).isEmpty() );
+    }
+
+    @Test
+    void fetchMembershipsForUserAcspNumberAndStatusesWithNonexistentEmailReturnsEmptyList(){
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT005", "WIT006" ) );
+        Assertions.assertTrue( acspMembersRepository.fetchMembershipsForUserAcspNumberAndStatuses( null, "404@example.com", "WITA001", Set.of( PENDING.getValue() ) ).isEmpty() );
+    }
+
+    @Test
+    void fetchMembershipsForUserAcspNumberAndStatusesWithNullAcspNumberReturnsEmptyList(){
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT005", "WIT006" ) );
+        Assertions.assertTrue( acspMembersRepository.fetchMembershipsForUserAcspNumberAndStatuses( "WITU005", null, null, Set.of( ACTIVE.getValue() ) ).isEmpty());
+    }
+
+    @Test
+    void fetchMembershipsForUserAcspNumberAndStatusesRetrievesMembershipsForUserId(){
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT005", "WIT006" ) );
+        Assertions.assertEquals( "WIT006", acspMembersRepository.fetchMembershipsForUserAcspNumberAndStatuses( "WITU005", null, "WITA001", Set.of( ACTIVE.getValue() ) ).getFirst().getId() );
+    }
+
+    @Test
+    void fetchMembershipsForUserAcspNumberAndStatusesRetrievesMembershipsForUserEmail(){
+        acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos( "WIT005", "WIT006" ) );
+        Assertions.assertEquals( "WIT005", acspMembersRepository.fetchMembershipsForUserAcspNumberAndStatuses( null, "dijkstra.witcher@inugami-example.com", "WITA001", Set.of( PENDING.getValue() ) ).getFirst().getId() );
     }
 
     @AfterEach

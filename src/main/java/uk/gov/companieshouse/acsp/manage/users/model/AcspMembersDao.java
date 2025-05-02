@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -22,10 +23,13 @@ public class AcspMembersDao {
     @Field( "acsp_number" )
     private String acspNumber;
 
-    @NotNull
     @Indexed
     @Field( "user_id" )
     private String userId;
+
+    @Indexed
+    @Field( "user_email" )
+    private String userEmail;
 
     @NotNull
     @Field( "user_role" )
@@ -46,6 +50,12 @@ public class AcspMembersDao {
 
     @Field( "removed_by" )
     private String removedBy;
+
+    @Field( "invited_at" )
+    private LocalDateTime invitedAt;
+
+    @Field( "accepted_at" )
+    private LocalDateTime acceptedAt;
 
     private String status;
 
@@ -94,6 +104,19 @@ public class AcspMembersDao {
 
     public String getUserId(){
         return userId;
+    }
+
+    public void setUserEmail( final String userEmail ){
+        this.userEmail = userEmail;
+    }
+
+    public AcspMembersDao userEmail( final String userEmail ){
+        setUserEmail( userEmail );
+        return this;
+    }
+
+    public String getUserEmail(){
+        return userEmail;
     }
 
     public void setUserRole( final String userRole ) {
@@ -200,6 +223,32 @@ public class AcspMembersDao {
         return version;
     }
 
+    public void setInvitedAt( final LocalDateTime invitedAt ){
+        this.invitedAt = invitedAt;
+    }
+
+    public AcspMembersDao invitedAt( final LocalDateTime invitedAt ){
+        setInvitedAt( invitedAt );
+        return this;
+    }
+
+    public LocalDateTime getInvitedAt(){
+        return invitedAt;
+    }
+
+    public void setAcceptedAt( final LocalDateTime acceptedAt ){
+        this.acceptedAt = acceptedAt;
+    }
+
+    public AcspMembersDao acceptedAt( final LocalDateTime acceptedAt ){
+        setAcceptedAt( acceptedAt );
+        return this;
+    }
+
+    public LocalDateTime getAcceptedAt(){
+        return acceptedAt;
+    }
+
     public void setStatus( final String status ){
         this.status = status;
     }
@@ -214,18 +263,21 @@ public class AcspMembersDao {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return "AcspMembersDao{" +
                 "id='" + id + '\'' +
                 ", acspNumber='" + acspNumber + '\'' +
                 ", userId='" + userId + '\'' +
-                ", userRole=" + userRole +
+                ", userEmail='" + userEmail + '\'' +
+                ", userRole='" + userRole + '\'' +
                 ", createdAt=" + createdAt +
                 ", addedAt=" + addedAt +
                 ", addedBy='" + addedBy + '\'' +
                 ", removedAt=" + removedAt +
                 ", removedBy='" + removedBy + '\'' +
-                ", status=" + status +
+                ", invitedAt=" + invitedAt +
+                ", acceptedAt=" + acceptedAt +
+                ", status='" + status + '\'' +
                 ", etag='" + etag + '\'' +
                 ", version=" + version +
                 '}';

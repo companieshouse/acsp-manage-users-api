@@ -116,6 +116,24 @@ class AcspMembershipCollectionMappersTest {
     }
 
     @Test
+    void daoToDtoToleratesNullUserIds(){
+        final var dao = testDataManager.fetchAcspMembersDaos( "WIT005" ).getFirst();
+        final var acspProfile = testDataManager.fetchAcspProfiles( "WITA001" ).getFirst();
+
+        Mockito.doReturn( Map.of() ).when( usersService ).fetchUserDetails( any( Stream.class ) );
+
+        final var dtos = acspMembershipCollectionMappers.daoToDto( List.of( dao ), null, acspProfile );
+        final var dto = dtos.getFirst();
+
+        Assertions.assertNull( dto.getUserId() );
+        Assertions.assertEquals( "dijkstra.witcher@inugami-example.com", dto.getUserEmail() );
+        Assertions.assertEquals( MembershipStatusEnum.PENDING, dto.getMembershipStatus() );
+        Assertions.assertNotNull( dto.getInvitedAt() );
+        Assertions.assertNull( dto.getAcceptedAt() );
+        Assertions.assertNull( dto.getRemovedAt() );
+    }
+
+    @Test
     void daoToDtoPageWithNullInputThrowNullPointerException() {
         final var userData = testDataManager.fetchUserDtos("TSU001").getFirst();
         final var acspProfile = testDataManager.fetchAcspProfiles( "TSA001" ).getFirst();
@@ -203,6 +221,26 @@ class AcspMembershipCollectionMappersTest {
         Assertions.assertEquals( "/acsps/TSA001/memberships?page_index=5&items_per_page=2", links.getNext() );
         Assertions.assertEquals( "/acsps/TSA001/memberships?page_index=4&items_per_page=2", links.getSelf() );
         Assertions.assertEquals( "/acsps/TSA001/memberships?page_index=3&items_per_page=2", links.getPrevious() );
+    }
+
+    @Test
+    void daoToDtoWithPageToleratesNullUserIds(){
+        final var daos = testDataManager.fetchAcspMembersDaos("WIT005" );
+        final var acspProfile = testDataManager.fetchAcspProfiles( "WITA001" ).getFirst();
+
+        final var page = new PageImpl<>( daos, PageRequest.of( 0, 15 ), 1 );
+
+        Mockito.doReturn( Map.of() ).when( usersService ).fetchUserDetails( any( Stream.class ) );
+
+        final var dtos = acspMembershipCollectionMappers.daoToDto( page, null, acspProfile );
+        final var dto = dtos.getItems().getFirst();
+
+        Assertions.assertNull( dto.getUserId() );
+        Assertions.assertEquals( "dijkstra.witcher@inugami-example.com", dto.getUserEmail() );
+        Assertions.assertEquals( MembershipStatusEnum.PENDING, dto.getMembershipStatus() );
+        Assertions.assertNotNull( dto.getInvitedAt() );
+        Assertions.assertNull( dto.getAcceptedAt() );
+        Assertions.assertNull( dto.getRemovedAt() );
     }
 
 }

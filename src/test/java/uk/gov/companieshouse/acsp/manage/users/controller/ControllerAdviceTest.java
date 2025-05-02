@@ -29,6 +29,8 @@ import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -79,7 +81,7 @@ class ControllerAdviceTest {
     @Test
     void testNotFoundRuntimeError() throws Exception {
         mockFetchUserDetailsFor( "TSU001" );
-        Mockito.doReturn( Optional.of( testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst() ) ).when( acspMemersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
+        Mockito.doReturn( testDataManager.fetchAcspMembersDaos( "TS001" ) ).when( acspMemersService ).fetchMembershipDaos( eq( "TSU001" ), anyString(), eq( false ) );
         Mockito.doThrow( new NotFoundRuntimeException( "Couldn't find association", new Exception( "Couldn't find association" ) ) ).when( acspMemersService ).fetchMembership( any() );
 
         mockMvc.perform( get("/acsps/memberships/TS001")
@@ -94,7 +96,7 @@ class ControllerAdviceTest {
     @Test
     void testBadRequestRuntimeError() throws Exception {
         mockFetchUserDetailsFor( "TSU001" );
-        Mockito.doReturn( Optional.of( testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst() ) ).when( acspMemersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
+        Mockito.doReturn( testDataManager.fetchAcspMembersDaos( "TS001" ) ).when( acspMemersService ).fetchMembershipDaos( eq( "TSU001" ), anyString(), eq( false ) );
         Mockito.doThrow( new BadRequestRuntimeException( "Request was less than ideal", new Exception( "Request was less than ideal" ) ) ).when( acspMemersService ).fetchMembership( any() );
 
         mockMvc.perform( get("/acsps/memberships/TS001")
@@ -109,7 +111,7 @@ class ControllerAdviceTest {
     @Test
     void testConstraintViolationError() throws Exception {
         mockFetchUserDetailsFor( "TSU001" );
-        Mockito.doReturn( Optional.of( testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst() ) ).when( acspMemersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
+        Mockito.doReturn( testDataManager.fetchAcspMembersDaos( "TS001" ) ).when( acspMemersService ).fetchMembershipDaos( eq( "TSU001" ), anyString(), eq( false ) );
 
         mockMvc.perform( get("/acsps/memberships/$$$")
                         .header( "X-Request-Id", "theId123" )
@@ -123,7 +125,7 @@ class ControllerAdviceTest {
     @Test
     void testOnInternalServerError() throws Exception {
         mockFetchUserDetailsFor( "TSU001" );
-        Mockito.doReturn( Optional.of( testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst() ) ).when( acspMemersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
+        Mockito.doReturn( testDataManager.fetchAcspMembersDaos( "TS001" ) ).when( acspMemersService ).fetchMembershipDaos( eq( "TSU001" ), anyString(), eq( false ) );
         Mockito.doThrow( new NullPointerException( "Something was null, which shouldn't have been." ) ).when( acspMemersService ).fetchMembership( any() );
 
         mockMvc.perform( get("/acsps/memberships/TS001")
@@ -138,7 +140,7 @@ class ControllerAdviceTest {
     @Test
     void testOnInternalServerErrorRuntimeException() throws Exception {
         mockFetchUserDetailsFor( "TSU001" );
-        Mockito.doReturn( Optional.of( testDataManager.fetchAcspMembersDaos( "TS001" ).getFirst() ) ).when( acspMemersService ).fetchActiveAcspMembership( "TSU001", "TSA001" );
+        Mockito.doReturn( testDataManager.fetchAcspMembersDaos( "TS001" ) ).when( acspMemersService ).fetchMembershipDaos( eq( "TSU001" ), anyString(), eq( false ) );
         Mockito.doThrow( new InternalServerErrorRuntimeException( "Problem", new Exception( "Problem" ) ) ).when( acspMemersService ).fetchMembership( any() );
 
         mockMvc.perform( get("/acsps/memberships/TS001")
