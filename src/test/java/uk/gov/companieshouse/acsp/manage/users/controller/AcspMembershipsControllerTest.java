@@ -594,6 +594,7 @@ class AcspMembershipsControllerTest {
         Mockito.doReturn( List.of() ).when( acspMembersService ).fetchMembershipDaos( null, "dijkstra.witcher@inugami-example.com", false );
         Mockito.doReturn( requestingUsersMembership ).when( acspMembersService ).fetchMembershipDaos( eq( "WITU005" ), anyString(), eq( false) );
         Mockito.doReturn( testDataManager.fetchAcspMembershipDtos( "WIT005" ).getFirst() ).when( acspMembersService ).createPendingMembership( "dijkstra.witcher@inugami-example.com", acsp, ADMIN, "WITU005" );
+        Mockito.doReturn( Mono.empty() ).when( emailService ).sendYouHaveBeenInvitedToAcspEmail("dijkstra.witcher@inugami-example.com", "letho.witcher@inugami-example.com", "Witcher" );
 
         final var response = mockMvc.perform( post("/acsps/WITA001/memberships")
                         .header("X-Request-Id", "theId123")
@@ -624,6 +625,8 @@ class AcspMembershipsControllerTest {
         Assertions.assertNull( membership.getRemovedBy() );
         Assertions.assertNull( membership.getRemovedAt() );
         Assertions.assertEquals( "acsp-membership", membership.getKind() );
+
+        Mockito.verify( emailService ).sendYouHaveBeenInvitedToAcspEmail( "dijkstra.witcher@inugami-example.com", "letho.witcher@inugami-example.com", "Witcher" );
     }
 
     @Test
