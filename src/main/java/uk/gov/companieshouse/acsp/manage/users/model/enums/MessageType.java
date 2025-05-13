@@ -12,7 +12,9 @@ public enum MessageType {
 
     YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_ADMIN_MESSAGE_TYPE( "your_role_at_acsp_has_changed_to_admin" ),
 
-    YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_OWNER_MESSAGE_TYPE( "your_role_at_acsp_has_changed_to_owner" );
+    YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_OWNER_MESSAGE_TYPE( "your_role_at_acsp_has_changed_to_owner" ),
+
+    YOU_HAVE_BEEN_INVITED_TO_ACSP( "you_have_been_invited_to_acsp" );
 
     private final String value;
 

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAStandardMemberEmailData;
 import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAnAdminMemberEmailData;
 import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAnOwnerMemberEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.YouHaveBeenInvitedToAcsp.YouHaveBeenInvitedToAcspEmailData;
 import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChanged.YourRoleAtAcspHasChangedToAdminEmailData;
 import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChanged.YourRoleAtAcspHasChangedToOwnerEmailData;
 import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChanged.YourRoleAtAcspHasChangedToStandardEmailData;
@@ -114,6 +115,26 @@ class EmailServiceTest {
         final var expectedEmailData = new YourRoleAtAcspHasChangedToStandardEmailData( "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher", signinUrl );
         emailService.sendYourRoleAtAcspHasChangedEmail( "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher", UserRoleEnum.STANDARD ).block();
         Mockito.verify( emailProducer ).sendEmail( expectedEmailData, YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_STANDARD_MESSAGE_TYPE.getValue() );
+    }
+
+    @Test
+    void sendYouHaveBeenInvitedToAcspEmailWithNullInputsThrowsIllegalArgumentException(){
+        Assertions.assertThrows( IllegalArgumentException.class, () -> emailService.sendYouHaveBeenInvitedToAcspEmail( null, "demo@ch.gov.uk", "Witcher" ) );
+        Assertions.assertThrows( IllegalArgumentException.class, () -> emailService.sendYouHaveBeenInvitedToAcspEmail( "buzz.lightyear@toystory.com", null, "Witcher" ) );
+        Assertions.assertThrows( IllegalArgumentException.class, () -> emailService.sendYouHaveBeenInvitedToAcspEmail( "buzz.lightyear@toystory.com", "demo@ch.gov.uk", null ) );
+    }
+
+    @Test
+    void sendYouHaveBeenInvitedToAcspEmailWithUnexpectedIssueThrowsEmailSendingException(){
+        Mockito.doThrow( new EmailSendingException( "Failed to send email", new Exception() ) ).when( emailProducer ).sendEmail( any(), eq( YOU_HAVE_BEEN_INVITED_TO_ACSP.getValue() ) );
+        Assertions.assertThrows( EmailSendingException.class, () -> emailService.sendYouHaveBeenInvitedToAcspEmail( "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher" ).block() );
+    }
+
+    @Test
+    void sendYouHaveBeenInvitedToAcspEmailThrowsMessageOnToKafkaQueue(){
+        final var expectedEmailData = new YouHaveBeenInvitedToAcspEmailData( "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher", signinUrl );
+        emailService.sendYouHaveBeenInvitedToAcspEmail( "buzz.lightyear@toystory.com", "demo@ch.gov.uk", "Witcher" ).block();
+        Mockito.verify( emailProducer ).sendEmail( expectedEmailData, YOU_HAVE_BEEN_INVITED_TO_ACSP.getValue() );
     }
 
 }
