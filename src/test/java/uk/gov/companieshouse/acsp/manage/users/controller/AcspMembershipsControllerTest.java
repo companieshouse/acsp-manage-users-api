@@ -49,6 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
 import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum.ACTIVE;
 import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum.ADMIN;
+import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum.OWNER;
 import static uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum.STANDARD;
 
 @WebMvcTest(AcspMembershipsController.class)
@@ -434,7 +435,7 @@ class AcspMembershipsControllerTest {
 
     static Stream<Arguments> rolesStream(){
         return Stream.of(
-                Arguments.of( UserRoleEnum.OWNER ),
+                Arguments.of( OWNER ),
                 Arguments.of( UserRoleEnum.ADMIN ),
                 Arguments.of( STANDARD )
         );
@@ -464,8 +465,8 @@ class AcspMembershipsControllerTest {
                         .content( String.format( "{\"user_id\":\"COMU001\",\"user_role\":\"%s\"}", role.getValue() ) ) )
                 .andExpect( status().isCreated() );
 
-        if ( UserRoleEnum.OWNER.equals( role ) ) {
-            Mockito.verify( emailService ).sendConfirmYouAreAMemberEmail("jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", UserRoleEnum.OWNER );
+        if ( OWNER.equals( role ) ) {
+            Mockito.verify( emailService ).sendConfirmYouAreAMemberEmail("jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", OWNER );
         } else if ( UserRoleEnum.ADMIN.equals( role ) ) {
             Mockito.verify( emailService ).sendConfirmYouAreAMemberEmail( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", UserRoleEnum.ADMIN );
         } else if ( STANDARD.equals( role ) ) {
@@ -498,8 +499,8 @@ class AcspMembershipsControllerTest {
                         .content( String.format( "{\"user_id\":\"COMU001\",\"user_role\":\"%s\"}", role.getValue() ) ) )
                 .andExpect( status().isCreated() );
 
-        if ( UserRoleEnum.OWNER.equals( role ) ) {
-            Mockito.verify( emailService ).sendConfirmYouAreAMemberEmail( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", UserRoleEnum.OWNER );
+        if ( OWNER.equals( role ) ) {
+            Mockito.verify( emailService ).sendConfirmYouAreAMemberEmail( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", OWNER );
         } else if ( UserRoleEnum.ADMIN.equals( role ) ) {
             Mockito.verify( emailService ).sendConfirmYouAreAMemberEmail( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", UserRoleEnum.ADMIN );
         } else if ( STANDARD.equals( role ) ) {
@@ -510,16 +511,17 @@ class AcspMembershipsControllerTest {
 
     @ParameterizedTest
     @MethodSource( "rolesStream" )
-    void addMemberForAcspDoesNotSendConfirmYouAreAMemberNotificationsWhenCalledInternally( final UserRoleEnum role ) throws Exception {
+    void addMemberForAcspSendsConfirmYouAreAMemberNotificationsWhenCalledInternally( final UserRoleEnum role ) throws Exception {
         final var users = testDataManager.fetchUserDtos( "WITU001", "COMU001" );
         final var acsp = testDataManager.fetchAcspProfiles( "WITA001" ).getFirst();
         final var requestingUsersMembership = testDataManager.fetchAcspMembersDaos( "WIT001" ).getFirst();
 
         Mockito.doReturn( users.getFirst() ).when( usersService ).fetchUserDetails( "WITU001" );
-        Mockito.doReturn( users.getLast() ).when( usersService ).fetchUserDetails( "COMU001" );
+        Mockito.doReturn( users.getLast() ).when( usersService ).retrieveUserDetails( "COMU001", null );
         Mockito.doReturn( acsp ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
         Mockito.doReturn( List.of() ).when( acspMembersService ).fetchMembershipDaos( "COMU001", null, false );
         Mockito.doReturn( Optional.of( requestingUsersMembership ) ).when( acspMembersService ).fetchActiveAcspMembership( "WITU001", "WITA001" );
+        Mockito.doReturn( Mono.empty() ).when( emailService ).sendConfirmYouAreAMemberEmail("jimmy.carr@comedy.com", "Companies House", "Witcher", role );
 
         mockMvc.perform( post("/acsps/WITA001/memberships")
                         .header("X-Request-Id", "theId123")
@@ -531,13 +533,39 @@ class AcspMembershipsControllerTest {
                         .content( String.format( "{\"user_id\":\"COMU001\",\"user_role\":\"%s\"}", role.getValue() ) ) )
                 .andExpect( status().isCreated() );
 
-        if ( UserRoleEnum.OWNER.equals( role ) ) {
-            Mockito.verify( emailService, times( 0 ) ).sendConfirmYouAreAMemberEmail(  "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", UserRoleEnum.OWNER );
+        if ( OWNER.equals( role ) ) {
+            Mockito.verify( emailService ).sendConfirmYouAreAMemberEmail(  "jimmy.carr@comedy.com", "Companies House", "Witcher", OWNER );
         } else if ( UserRoleEnum.ADMIN.equals( role ) ) {
-            Mockito.verify( emailService, times( 0 ) ).sendConfirmYouAreAMemberEmail(  "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", UserRoleEnum.ADMIN );
+            Mockito.verify( emailService ).sendConfirmYouAreAMemberEmail(  "jimmy.carr@comedy.com", "Companies House", "Witcher", UserRoleEnum.ADMIN );
         } else if ( STANDARD.equals( role ) ) {
-            Mockito.verify( emailService, times( 0 ) ).sendConfirmYouAreAMemberEmail(  "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", STANDARD );
+            Mockito.verify( emailService ).sendConfirmYouAreAMemberEmail(  "jimmy.carr@comedy.com", "Companies House", "Witcher", STANDARD );
         }
+    }
+
+    @Test
+    void addMemberForAcspSendsYouHaveBeenInvitedToAcspNotificationWhenCalledInternally() throws Exception {
+        final var users = testDataManager.fetchUserDtos( "WITU001", "COMU001" );
+        final var acsp = testDataManager.fetchAcspProfiles( "WITA001" ).getFirst();
+        final var requestingUsersMembership = testDataManager.fetchAcspMembersDaos( "WIT001" ).getFirst();
+
+        Mockito.doReturn( users.getFirst() ).when( usersService ).fetchUserDetails( "WITU001" );
+        Mockito.doReturn( users.getLast() ).when( usersService ).retrieveUserDetails( null, "jimmy.carr@comedy.com" );
+        Mockito.doReturn( acsp ).when( acspProfileService ).fetchAcspProfile( "WITA001" );
+        Mockito.doReturn( List.of() ).when( acspMembersService ).fetchMembershipDaos( "COMU001", null, false );
+        Mockito.doReturn( Optional.of( requestingUsersMembership ) ).when( acspMembersService ).fetchActiveAcspMembership( "WITU001", "WITA001" );
+        Mockito.doReturn( Mono.empty() ).when( emailService ).sendYouHaveBeenInvitedToAcspEmail("jimmy.carr@comedy.com", "Companies House", "Witcher" );
+
+        mockMvc.perform( post("/acsps/WITA001/memberships")
+                        .header("X-Request-Id", "theId123")
+                        .header("Eric-identity", "WITU001")
+                        .header("ERIC-Identity-Type", "key")
+                        .header("ERIC-Authorised-Key-Roles", "*")
+                        .header( "Eric-Authorised-Token-Permissions", testDataManager.fetchTokenPermissions( "WIT001" ) )
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content( String.format( "{\"user_email\":\"jimmy.carr@comedy.com\",\"user_role\":\"%s\"}", OWNER.getValue() ) ) )
+                .andExpect( status().isCreated() );
+
+        Mockito.verify( emailService ).sendYouHaveBeenInvitedToAcspEmail(  "jimmy.carr@comedy.com", "Companies House", "Witcher" );
     }
 
     @Test
