@@ -4,12 +4,11 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static uk.gov.companieshouse.acsp.manage.users.utils.LoggingUtil.LOGGER;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
 import static uk.gov.companieshouse.acsp.manage.users.utils.ParsingUtil.parseJsonTo;
+import static uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil.APPLICATION_NAMESPACE;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -22,6 +21,8 @@ import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeExcepti
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.accounts.user.model.UsersList;
+import uk.gov.companieshouse.logging.Logger;
+import uk.gov.companieshouse.logging.LoggerFactory;
 
 @Service
 public class UsersService {
@@ -55,7 +56,6 @@ public class UsersService {
     public Map<String, User> fetchUserDetails( final Stream<AcspMembersDao> memberships ){
         final var xRequestId = getXRequestId();
         return Flux.fromStream( memberships )
-                .filter( membership -> Objects.nonNull( membership.getUserId() ) )
                 .map( AcspMembersDao::getUserId )
                 .distinct()
                 .flatMap( userId -> toFetchUserDetailsRequest( userId, xRequestId ) )
@@ -74,19 +74,6 @@ public class UsersService {
                 .doOnSubscribe( onSubscribe -> LOGGER.infoContext( xRequestId, String.format( "Sending request to accounts-user-api: GET /users/search. Attempting to retrieve users: %s", String.join( ", ", emails ) ), null ) )
                 .doFinally( signalType -> LOGGER.infoContext( xRequestId, String.format( "Finished request to accounts-user-api for users: %s", String.join( ", ", emails ) ), null ) )
                 .block( Duration.ofSeconds( 20L ) );
-    }
-
-    public User retrieveUserDetails( final String userId, final String userEmail ){
-        if ( Objects.nonNull( userId ) ) {
-            return fetchUserDetails( userId );
-        }
-
-        return Optional.ofNullable( userEmail )
-                .map( List::of )
-                .map( this::searchUserDetails )
-                .filter( users -> !users.isEmpty() )
-                .map( UsersList::getFirst )
-                .orElse( null );
     }
 
 }

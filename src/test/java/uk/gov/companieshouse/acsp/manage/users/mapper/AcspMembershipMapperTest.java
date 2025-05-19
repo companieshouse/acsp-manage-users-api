@@ -11,7 +11,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
-import uk.gov.companieshouse.api.accounts.user.model.User;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.AcspStatusEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.MembershipStatusEnum;
@@ -82,30 +81,12 @@ class AcspMembershipMapperTest {
         final var acspMembership = new AcspMembership().userId( "TSU002" );
         final var userDetails = testDataManager.fetchUserDtos( "TSU002" ).getFirst();
 
-        Mockito.doReturn( userDetails ).when( usersService ).retrieveUserDetails( "TSU002", null );
+        Mockito.doReturn( userDetails ).when( usersService ).fetchUserDetails( "TSU002" );
 
         acspMembershipMapper.enrichWithUserDetails( acspMembership, null );
 
         Assertions.assertEquals( "woody@toystory.com", acspMembership.getUserEmail() );
         Assertions.assertEquals( "Woody", acspMembership.getUserDisplayName() );
-    }
-
-    @Test
-    void enrichWithUserDetailsWithEmailBasedMembershipWhereUserDoesNotExistUsesDefaults(){
-        final var acspMembership = new AcspMembership().userEmail( "dijkstra.witcher@inugami-example.com" );
-        Mockito.doReturn( null ).when( usersService ).retrieveUserDetails( null, "dijkstra.witcher@inugami-example.com" );
-        acspMembershipMapper.enrichWithUserDetails( acspMembership, null );
-        Assertions.assertEquals( "dijkstra.witcher@inugami-example.com", acspMembership.getUserEmail() );
-        Assertions.assertEquals( DEFAULT_DISPLAY_NAME, acspMembership.getUserDisplayName() );
-    }
-
-    @Test
-    void enrichWithUserDetailsWithEmailBasedMembershipRetrievesDisplayName(){
-        final var acspMembership = new AcspMembership().userEmail( "dijkstra.witcher@inugami-example.com" );
-        Mockito.doReturn( new User().email( "dijkstra.witcher@inugami-example.com" ).displayName( "Dijkstra" ) ).when( usersService ).retrieveUserDetails( null, "dijkstra.witcher@inugami-example.com" );
-        acspMembershipMapper.enrichWithUserDetails( acspMembership, null );
-        Assertions.assertEquals( "dijkstra.witcher@inugami-example.com", acspMembership.getUserEmail() );
-        Assertions.assertEquals( "Dijkstra", acspMembership.getUserDisplayName() );
     }
 
     @Test
@@ -144,7 +125,7 @@ class AcspMembershipMapperTest {
         final var userData = testDataManager.fetchUserDtos("TSU001").getFirst();
 
         Mockito.doReturn(acspProfile).when(acspProfileService).fetchAcspProfile("TSA001");
-        Mockito.doReturn(userData).when(usersService).retrieveUserDetails("TSU001",null);
+        Mockito.doReturn(userData).when(usersService).fetchUserDetails("TSU001");
 
         final var dto = acspMembershipMapper.daoToDto(dao, null, null);
 
@@ -172,7 +153,7 @@ class AcspMembershipMapperTest {
         final var userData = testDataManager.fetchUserDtos("TSU002").getFirst();
 
         Mockito.doReturn(acspProfile).when(acspProfileService).fetchAcspProfile("TSA001");
-        Mockito.doReturn(userData).when(usersService).retrieveUserDetails("TSU002", null);
+        Mockito.doReturn(userData).when(usersService).fetchUserDetails("TSU002");
 
         final var dto = acspMembershipMapper.daoToDto(dao, null, null);
 
@@ -241,36 +222,6 @@ class AcspMembershipMapperTest {
         Assertions.assertEquals(localDateTimeToNormalisedString(dao.getRemovedAt()), reduceTimestampResolution(dto.getRemovedAt().toString()));
         Assertions.assertEquals(MembershipStatusEnum.REMOVED, dto.getMembershipStatus());
         Assertions.assertEquals(DEFAULT_KIND, dto.getKind());
-    }
-
-    @Test
-    void daoToDtoMapsInvitationMembershipCorrectly(){
-        final var dao = testDataManager.fetchAcspMembersDaos( "WIT005" ).getFirst();
-        final var acspProfile = testDataManager.fetchAcspProfiles( "WITA001" ).getFirst();
-        final var userData = new User().email( "dijkstra.witcher@inugami-example.com" );
-        final var dto = acspMembershipMapper.daoToDto( dao, userData, acspProfile );
-
-        Assertions.assertNull( dto.getUserId() );
-        Assertions.assertEquals( "dijkstra.witcher@inugami-example.com", dto.getUserEmail() );
-        Assertions.assertEquals( MembershipStatusEnum.PENDING, dto.getMembershipStatus() );
-        Assertions.assertNotNull( dto.getInvitedAt() );
-        Assertions.assertNull( dto.getAcceptedAt() );
-        Assertions.assertNull( dto.getRemovedAt() );
-    }
-
-    @Test
-    void daoToDtoMapsAcceptedInvitationMembershipCorrectly(){
-        final var dao = testDataManager.fetchAcspMembersDaos( "WIT006" ).getFirst();
-        final var acspProfile = testDataManager.fetchAcspProfiles( "WITA001" ).getFirst();
-        final var userData = testDataManager.fetchUserDtos( "WITU005" ).getFirst();
-        final var dto = acspMembershipMapper.daoToDto( dao, userData, acspProfile );
-
-        Assertions.assertEquals( "WITU005", dto.getUserId() );
-        Assertions.assertEquals( "letho.witcher@inugami-example.com", dto.getUserEmail() );
-        Assertions.assertEquals( MembershipStatusEnum.ACTIVE, dto.getMembershipStatus() );
-        Assertions.assertNotNull( dto.getInvitedAt() );
-        Assertions.assertNotNull( dto.getAcceptedAt() );
-        Assertions.assertNull( dto.getRemovedAt() );
     }
 
 }

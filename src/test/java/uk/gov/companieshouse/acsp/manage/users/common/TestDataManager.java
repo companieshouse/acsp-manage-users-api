@@ -516,47 +516,6 @@ public class TestDataManager {
             return acspMembersDao;
         };
         acspMembersDaoSuppliers.put( "XME004", XmenDemoAcspMembersDao );
-
-        final Supplier<AcspMembersDao> WitcherDijkstraAcspMembersDao = () -> new AcspMembersDao()
-                .id( "WIT005" )
-                .acspNumber( "WITA001" )
-                .userEmail( "dijkstra.witcher@inugami-example.com" )
-                .userRole( UserRoleEnum.ADMIN.getValue() )
-                .createdAt( LocalDateTime.now().minusMonths( 1 ) )
-                .addedBy( "WITU001" )
-                .invitedAt( LocalDateTime.now().minusMonths( 1 ) )
-                .status( MembershipStatusEnum.PENDING.getValue() )
-                .etag( generateEtag() );
-        acspMembersDaoSuppliers.put( "WIT005", WitcherDijkstraAcspMembersDao );
-
-        final Supplier<AcspMembersDao> WitcherLethoAcspMembersDao = () -> new AcspMembersDao()
-                .id( "WIT006" )
-                .acspNumber( "WITA001" )
-                .userId( "WITU005" )
-                .userRole( UserRoleEnum.ADMIN.getValue() )
-                .createdAt( LocalDateTime.now().minusMonths( 2 ) )
-                .addedAt( LocalDateTime.now().minusMonths( 1 ) )
-                .addedBy( "WITU001" )
-                .invitedAt( LocalDateTime.now().minusMonths( 2 ) )
-                .acceptedAt( LocalDateTime.now().minusMonths( 1 ) )
-                .status( MembershipStatusEnum.ACTIVE.getValue() )
-                .etag( generateEtag() );
-        acspMembersDaoSuppliers.put( "WIT006", WitcherLethoAcspMembersDao );
-
-        final Supplier<AcspMembersDao> WitcherMargaritaAcspMembersDao = () -> new AcspMembersDao()
-                .id( "WIT007" )
-                .acspNumber( "WITA001" )
-                .userEmail( "margarita.witcher@inugami-example.com" )
-                .userRole( UserRoleEnum.ADMIN.getValue() )
-                .createdAt( LocalDateTime.now().minusMonths( 3 ) )
-                .addedBy( "WITU001" )
-                .removedAt( LocalDateTime.now().minusMonths( 2 ) )
-                .removedBy( "WITU001" )
-                .invitedAt( LocalDateTime.now().minusMonths( 3 ) )
-                .status( MembershipStatusEnum.REMOVED.getValue() )
-                .etag( generateEtag() );
-        acspMembersDaoSuppliers.put( "WIT007", WitcherMargaritaAcspMembersDao );
-
     }
 
     private void instantiateUserDtoSuppliers(){
@@ -567,8 +526,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "TSU001", buzzUserDto );
-        userDtoSuppliers.put( "buzz.lightyear@toystory.com", buzzUserDto );
-
 
         final Supplier<User> woodyUserDto = () -> {
             final var userDto = new User();
@@ -578,7 +535,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "TSU002", woodyUserDto );
-        userDtoSuppliers.put( "woody@toystory.com", woodyUserDto );
 
         final Supplier<User> jimmyUserDto = () -> {
             final var userDto = new User();
@@ -588,7 +544,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "COMU001", jimmyUserDto );
-        userDtoSuppliers.put( "jimmy.carr@comedy.com", jimmyUserDto );
 
         final Supplier<User> shaunUserDto = () -> {
             final var userDto = new User();
@@ -598,7 +553,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "COMU002", shaunUserDto );
-        userDtoSuppliers.put( "shaun.lock@comedy.com", shaunUserDto );
 
         final Supplier<User> davidUserDto = () -> {
             final var userDto = new User();
@@ -608,7 +562,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "COMU003", davidUserDto );
-        userDtoSuppliers.put( "david.mitchell@comedy.com", davidUserDto );
 
         final Supplier<User> charlieUserDto = () -> {
             final var userDto = new User();
@@ -618,7 +571,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "COMU004", charlieUserDto );
-        userDtoSuppliers.put( "charlie.brooker@comedy.com", charlieUserDto );
 
         final Supplier<User> katherineUserDto = () -> {
             final var userDto = new User();
@@ -628,7 +580,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "COMU005", katherineUserDto );
-        userDtoSuppliers.put( "kartherine.ryan@comedy.com", katherineUserDto );
 
         final Supplier<User> russellUserDto = () -> {
             final var userDto = new User();
@@ -638,7 +589,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "COMU006", russellUserDto );
-        userDtoSuppliers.put( "russell.brand@comedy.com", russellUserDto );
 
         final Supplier<User> frankieUserDto = () -> {
             final var userDto = new User();
@@ -648,7 +598,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "COMU007", frankieUserDto );
-        userDtoSuppliers.put( "frankie.boyle@comedy.com", frankieUserDto );
 
         final Supplier<User> mickyUserDto = () -> {
             final var userDto = new User();
@@ -658,7 +607,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "COMU008", mickyUserDto );
-        userDtoSuppliers.put( "micky.flanagan@comedy.com", mickyUserDto );
 
         final Supplier<User> stephenUserDto = () -> {
             final var userDto = new User();
@@ -667,7 +615,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "COMU009", stephenUserDto );
-        userDtoSuppliers.put( "stephen.fry@comedy.com", stephenUserDto );
 
         final Supplier<User> alanUserDto = () -> {
             final var userDto = new User();
@@ -676,7 +623,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "COMU010", alanUserDto );
-        userDtoSuppliers.put( "alan.davies@comedy.com", alanUserDto );
 
         final Supplier<User> daraUserDto = () -> {
             final var userDto = new User();
@@ -685,7 +631,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "COMU011", daraUserDto );
-        userDtoSuppliers.put( "dara.obrien@comedy.com", daraUserDto );
 
         final Supplier<User> jackUserDto = () -> {
             final var userDto = new User();
@@ -694,7 +639,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "COMU012", jackUserDto );
-        userDtoSuppliers.put( "jack.whitehall@comedy.com", jackUserDto );
 
         final Supplier<User> jonUserDto = () -> {
             final var userDto = new User();
@@ -703,7 +647,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "COMU013", jonUserDto );
-        userDtoSuppliers.put( "jon.richardson@comedy.com", jonUserDto );
 
         final Supplier<User> michaelUserDto = () -> {
             final var userDto = new User();
@@ -712,7 +655,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "COMU014", michaelUserDto );
-        userDtoSuppliers.put( "michael.mcintyre@comedy.com", michaelUserDto );
 
         final Supplier<User> joUserDto = () -> {
             final var userDto = new User();
@@ -721,7 +663,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "COMU015", joUserDto );
-        userDtoSuppliers.put( "jo.brand@comedy.com", joUserDto );
 
         final Supplier<User> henningUserDto = () -> {
             final var userDto = new User();
@@ -730,7 +671,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "COMU016", henningUserDto );
-        userDtoSuppliers.put( "henning.wehn@comedy.com", henningUserDto );
 
         final Supplier<User> geraltUserDto = () -> {
             final var userDto = new User();
@@ -740,7 +680,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "WITU001", geraltUserDto );
-        userDtoSuppliers.put( "geralt@witcher.com", geraltUserDto );
 
         final Supplier<User> yenneferUserDto = () -> {
             final var userDto = new User();
@@ -750,7 +689,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "WITU002", yenneferUserDto );
-        userDtoSuppliers.put( "yennefer@witcher.com", yenneferUserDto );
 
         final Supplier<User> dandelionUserDto = () -> {
             final var userDto = new User();
@@ -759,20 +697,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "WITU003", dandelionUserDto );
-        userDtoSuppliers.put( "dandelion@witcher.com", dandelionUserDto );
-
-        final Supplier<User> lethoUserDto = () -> new User()
-                    .userId( "WITU005" )
-                    .email( "letho.witcher@inugami-example.com" );
-        userDtoSuppliers.put( "WITU005", lethoUserDto );
-        userDtoSuppliers.put( "letho.witcher@inugami-example.com", lethoUserDto );
-
-        final Supplier<User> margaritaUserDto = () -> new User()
-                .userId( "WITU006" )
-                .email( "margarita.witcher@inugami-example.com" )
-                .displayName( "Margarita Laux Antille" );
-        userDtoSuppliers.put( "WITU006", margaritaUserDto );
-        userDtoSuppliers.put( "margarita.witcher@inugami-example.com", margaritaUserDto );
 
         final Supplier<User> karlUserDto = () -> {
             final var userDto = new User();
@@ -781,7 +705,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "NEIU001", karlUserDto );
-        userDtoSuppliers.put( "karl.kennedy@neighbours.com", karlUserDto );
 
         final Supplier<User> haroldUserDto = () -> {
             final var userDto = new User();
@@ -791,7 +714,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "NEIU002", haroldUserDto );
-        userDtoSuppliers.put( "harold.bishop@neighbours.com", haroldUserDto );
 
         final Supplier<User> toadieUserDto = () -> {
             final var userDto = new User();
@@ -801,7 +723,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "NEIU003", toadieUserDto );
-        userDtoSuppliers.put( "toadie@neighbours.com", toadieUserDto );
 
         final Supplier<User> wolverineUserDto = () -> {
             final var userDto = new User();
@@ -811,7 +732,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "XMEU001", wolverineUserDto );
-        userDtoSuppliers.put( "wolverine@xmen.com", wolverineUserDto );
 
         final Supplier<User> cyclopsUserDto = () -> {
             final var userDto = new User();
@@ -820,7 +740,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "XMEU002", cyclopsUserDto );
-        userDtoSuppliers.put( "cyclops@xmen.com", cyclopsUserDto );
 
         final Supplier<User> gambitUserDto = () -> {
             final var userDto = new User();
@@ -830,7 +749,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "XMEU003", gambitUserDto );
-        userDtoSuppliers.put( "gambit@xmen.com", gambitUserDto );
 
         final Supplier<User> demoUserDto = () -> {
             final var userDto = new User();
@@ -839,7 +757,6 @@ public class TestDataManager {
             return userDto;
         };
         userDtoSuppliers.put( "67ZeMsvAEgkBWs7tNKacdrPvOmQ", demoUserDto );
-        userDtoSuppliers.put( "demo@ch.gov.uk", demoUserDto );
 
     }
 
@@ -913,9 +830,10 @@ public class TestDataManager {
     }
 
     public List<User> fetchUserDtos( final String... ids ){
-        final var users = new ArrayList<User>();
-        Arrays.stream( ids ).forEach( id -> users.add( userDtoSuppliers.containsKey( id ) ? userDtoSuppliers.get( id ).get() : null ) );
-        return users;
+        return Arrays.stream( ids )
+                     .map( userDtoSuppliers::get )
+                     .map( Supplier::get )
+                     .collect( Collectors.toList() );
     }
 
     public List<AcspProfile> fetchAcspProfiles( final String... ids ){
@@ -927,14 +845,14 @@ public class TestDataManager {
 
     private AcspMembership fetchAcspMembershipDto( final String id ){
         final var acspMembersDao = fetchAcspMembersDaos( id ).getFirst();
-        final var userData = fetchUserDtos( Optional.ofNullable( acspMembersDao.getUserId() ).orElse( acspMembersDao.getUserEmail() ) ).getFirst();
+        final var userData = fetchUserDtos( acspMembersDao.getUserId() ).getFirst();
         final var acspProfile = fetchAcspProfiles( acspMembersDao.getAcspNumber() ).getFirst();
 
         return new AcspMembership()
                 .id( acspMembersDao.getId() )
-                .userId( Optional.ofNullable( userData ).map( User::getUserId ).orElse( acspMembersDao.getUserId() ) )
-                .userEmail( Optional.ofNullable( userData ).map( User::getEmail ).orElse( acspMembersDao.getUserEmail() ) )
-                .userDisplayName( Optional.ofNullable( userData ).map( User::getDisplayName ).orElse( "Not Provided" ) )
+                .userId( acspMembersDao.getUserId() )
+                .userEmail( userData.getEmail() )
+                .userDisplayName( Objects.isNull( userData.getDisplayName() ) ? "Not Provided" : userData.getDisplayName() )
                 .acspNumber( acspMembersDao.getAcspNumber() )
                 .acspName( acspProfile.getName() )
                 .acspStatus( AcspStatusEnum.fromValue( acspProfile.getStatus().toString() ) )
@@ -945,9 +863,7 @@ public class TestDataManager {
                 .removedAt( localDateTimeToOffsetDateTime( acspMembersDao.getRemovedAt() ) )
                 .removedBy( acspMembersDao.getRemovedBy() )
                 .kind( "acsp-membership" )
-                .etag( acspMembersDao.getEtag() )
-                .invitedAt( localDateTimeToOffsetDateTime( acspMembersDao.getInvitedAt() ) )
-                .acceptedAt( localDateTimeToOffsetDateTime( acspMembersDao.getAcceptedAt() ) );
+                .etag( acspMembersDao.getEtag() );
     }
 
 

@@ -1,13 +1,11 @@
 package uk.gov.companieshouse.acsp.manage.users.filter;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 
 import jakarta.servlet.FilterChain;
-import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -26,9 +24,11 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
+import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
+import uk.gov.companieshouse.api.accounts.user.model.User;
 
 @ExtendWith( MockitoExtension.class )
 @Tag( "unit-test" )
@@ -44,7 +44,7 @@ class UserAuthenticationFilterTest {
     void setup(){
         usersService = Mockito.mock( UsersService.class );
         acspMembersService = Mockito.mock( AcspMembersService.class );
-        userAuthenticationFilter = new UserAuthenticationFilter( usersService, acspMembersService );
+        userAuthenticationFilter = new UserAuthenticationFilter( acspMembersService );
     }
 
     private ArgumentMatcher<Authentication> springRoleWasAssigned( final String springRole ){
@@ -67,8 +67,7 @@ class UserAuthenticationFilterTest {
         final var response = new MockHttpServletResponse();
         final var filterChain = Mockito.mock( FilterChain.class );
 
-        Mockito.doReturn( testDataManager.fetchUserDtos( "COMU002" ).getFirst() ).when( usersService ).fetchUserDetails( "COMU002" );
-        Mockito.doThrow( new IllegalArgumentException( "Something odd happened here" ) ).when( acspMembersService ).fetchMembershipDaos( eq( "COMU002" ), anyString(), eq( false ) );
+        Mockito.doThrow( new IllegalArgumentException( "Something odd happened here" ) ).when( acspMembersService ).fetchActiveAcspMembership( "COMU002", "COMA001" );
 
         final var securityContext = Mockito.mock( SecurityContext.class );
         SecurityContextHolder.setContext( securityContext );
@@ -168,8 +167,7 @@ class UserAuthenticationFilterTest {
         final var response = new MockHttpServletResponse();
         final var filterChain = Mockito.mock( FilterChain.class );
 
-        Mockito.doReturn( testDataManager.fetchUserDtos( membership.getUserId() ).getFirst() ).when( usersService ).fetchUserDetails( membership.getUserId() );
-        Mockito.doReturn(List.of( membership ) ).when( acspMembersService ).fetchMembershipDaos( eq( membership.getUserId() ), anyString(), eq( false ) );
+        Mockito.doReturn( Optional.of( membership ) ).when( acspMembersService ).fetchActiveAcspMembership( membership.getUserId(), membership.getAcspNumber() );
 
         final var securityContext = Mockito.mock( SecurityContext.class );
         SecurityContextHolder.setContext( securityContext );
@@ -241,8 +239,7 @@ class UserAuthenticationFilterTest {
         final var response = new MockHttpServletResponse();
         final var filterChain = Mockito.mock( FilterChain.class );
 
-        Mockito.doReturn( testDataManager.fetchUserDtos( membership.getUserId() ).getFirst() ).when( usersService ).fetchUserDetails( membership.getUserId() );
-        Mockito.doReturn(List.of( membership ) ).when( acspMembersService ).fetchMembershipDaos( eq( membership.getUserId() ), anyString(), eq( false ) );
+        Mockito.doReturn( Optional.of( membership ) ).when( acspMembersService ).fetchActiveAcspMembership( membership.getUserId(), membership.getAcspNumber() );
 
         final var securityContext = Mockito.mock( SecurityContext.class );
         SecurityContextHolder.setContext( securityContext );

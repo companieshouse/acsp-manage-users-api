@@ -24,7 +24,7 @@ public class UserAcspMembershipController implements UserAcspMembershipInterface
     @Override
     public ResponseEntity<AcspMembershipsList> getAcspMembershipsForUserId( final String xRequestId, final String ericIdentity, final Boolean includeRemoved ) {
         LOGGER.infoContext( getXRequestId(), String.format( "Received request with user_id=%s, include_removed=%b", getEricIdentity(), includeRemoved ), null );
-        final var acspMemberships = acspMembersService.fetchMemberships( getEricIdentity(), getUser().getEmail(), includeRemoved, null );
+        final var acspMemberships = acspMembersService.fetchMemberships( getUser(), includeRemoved, null );
         return new ResponseEntity<>( acspMemberships, OK );
     }
 
