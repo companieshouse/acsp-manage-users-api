@@ -1,5 +1,7 @@
 package uk.gov.companieshouse.acsp.manage.users.mapper;
 
+import static uk.gov.companieshouse.acsp.manage.users.model.Constants.*;
+
 import org.mapstruct.Mapper;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
@@ -9,6 +11,7 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsListLinks;
 import uk.gov.companieshouse.api.acspprofile.AcspProfile;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -42,11 +45,7 @@ public abstract class AcspMembershipCollectionMappers extends AcspMembershipMapp
         final var users = Objects.isNull( userData ) ? usersService.fetchUserDetails( acspMembers.stream() ) : Map.of( userData.getUserId(), userData );
         final var acsps = Objects.isNull( acspProfile ) ? acspProfileService.fetchAcspProfiles( acspMembers.stream() ) : Map.of( acspProfile.getNumber(), acspProfile );
         return acspMembers.stream()
-                .map( dao -> {
-                    final var user = Objects.isNull( dao.getUserId() ) ? null : users.getOrDefault( dao.getUserId(), null );
-                    final var acsp = acsps.get( dao.getAcspNumber() );
-                    return daoToDto( dao, user, acsp );
-                } )
+                .map( dao -> daoToDto( dao, users.get( dao.getUserId() ), acsps.get( dao.getAcspNumber() ) ) )
                 .collect( Collectors.toList() );
     }
 
@@ -55,10 +54,7 @@ public abstract class AcspMembershipCollectionMappers extends AcspMembershipMapp
             throw new IllegalArgumentException( "acspProfile cannot be null." );
         }
         final var users = Objects.isNull( userData ) ? usersService.fetchUserDetails( acspMembers.stream() ) : Map.of( userData.getUserId(), userData );
-        final var acspMemberships = acspMembers.map( dao -> {
-            final var user = Objects.isNull( dao.getUserId() ) ? null : users.getOrDefault( dao.getUserId(), null );
-            return daoToDto( dao, user, acspProfile );
-        } );
+        final var acspMemberships = acspMembers.map( dao -> daoToDto( dao, users.get( dao.getUserId() ), acspProfile ) );
         return enrichWithMetadata( acspMemberships, String.format( END_POINT_URL_TEMPLATE, acspProfile.getNumber() ) );
     }
 

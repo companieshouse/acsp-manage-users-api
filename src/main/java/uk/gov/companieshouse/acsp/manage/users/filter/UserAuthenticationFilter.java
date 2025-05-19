@@ -14,8 +14,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
@@ -25,19 +23,16 @@ import uk.gov.companieshouse.acsp.manage.users.model.context.RequestContextData.
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.model.enums.SpringRole;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspMembersService;
-import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 
 public class UserAuthenticationFilter extends OncePerRequestFilter {
 
-    private final UsersService usersService;
     private final AcspMembersService acspMembersService;
 
     private static final String ACSP_SEARCH_ADMIN_SEARCH = "/admin/acsp/search";
     private static final String KEY = "key";
 
 
-    public UserAuthenticationFilter( final UsersService usersService, final AcspMembersService acspMembersService ){
-        this.usersService = usersService;
+    public UserAuthenticationFilter( final AcspMembersService acspMembersService ){
         this.acspMembersService = acspMembersService;
     }
 
@@ -82,12 +77,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
 
     private SpringRole getAcspMemberRole( final RequestContextData requestContextData ) {
         LOGGER.debugContext( requestContextData.getXRequestId(), "Confirmed this request is from an Acsp Member. Checking session validity...", null );
-        final var user = usersService.fetchUserDetails( requestContextData.getEricIdentity() );
-
-        return Optional.ofNullable( acspMembersService.fetchMembershipDaos( requestContextData.getEricIdentity(), user.getEmail(), false ) )
-                .filter( memberships -> !memberships.isEmpty() )
-                .map( List::getFirst )
-                .filter( membership -> requestContextData.getActiveAcspNumber().equals( membership.getAcspNumber() ) )
+        return acspMembersService.fetchActiveAcspMembership( requestContextData.getEricIdentity(), requestContextData.getActiveAcspNumber() )
                 .map( AcspMembersDao::getUserRole )
                 .filter( databaseUserRole -> databaseUserRole.equals( requestContextData.getActiveAcspRole() ) )
                 .map( SpringRole::fromUserRoleEnum )
