@@ -9,33 +9,11 @@
   </suppress>
   <suppress until="2026-01-01Z">
     <notes><![CDATA[
-   file name: commons-beanutils-1.9.4.jar
-   ]]></notes>
-    <cve>CVE-2025-48734</cve>
-  </suppress>
-  <suppress until="2026-01-01Z">
-    <notes><![CDATA[
-   file name: jetty-webapp-11.0.19.jar
-   ]]></notes>
-    <cve>CVE-2024-8184</cve>
-    <cve>CVE-2024-22201</cve>
-  </suppress>
-  <suppress until="2026-01-01Z">
-    <notes><![CDATA[
    file name: kafka-clients-3.1.0.jar
    ]]></notes>
     <cve>CVE-2022-34917</cve>
     <cve>CVE-2023-25194</cve>
     <cve>CVE-2024-31141</cve>
     <cve>CVE-2024-56128</cve>
-  </suppress>
-  <suppress until="2026-01-01Z">
-    <notes><![CDATA[
-   file name: snappy-java-1.1.8.4.jar
-   ]]></notes>
-    <cve>CVE-2023-34455</cve>
-    <cve>CVE-2023-34454</cve>
-    <cve>CVE-2023-34453</cve>
-    <cve>CVE-2023-43642</cve>
   </suppress>
 </suppressions>
