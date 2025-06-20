@@ -68,7 +68,16 @@
                     <groupId>org.apache.logging.log4j</groupId>
                     <artifactId>log4j-slf4j-impl</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-web</artifactId>
+                </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <version>6.2.8</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -108,6 +117,17 @@
             <groupId>uk.gov.companieshouse</groupId>
             <artifactId>rest-service-common-library</artifactId>
             <version>${rest-service-common-library-version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.tomcat.embed</groupId>
+                    <artifactId>tomcat-embed-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-core</artifactId>
+            <version>11.0.8</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -291,16 +311,6 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.owasp</groupId>
-                <artifactId>dependency-check-maven</artifactId>
-                <configuration>
-                    <suppressionFiles>
-                        <suppressionFile>${project.basedir}/target/dependency-check-suppressions/suppressions/common_suppressions_spring_6.xml</suppressionFile>
-                        <suppressionFile>${project.basedir}/suppress.xml</suppressionFile>
-                    </suppressionFiles>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.sonarsource.scanner.maven</groupId>
