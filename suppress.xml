@@ -15,5 +15,13 @@
     <cve>CVE-2023-25194</cve>
     <cve>CVE-2024-31141</cve>
     <cve>CVE-2024-56128</cve>
+    <cve>CVE-2025-27817</cve>
+    <cve>CVE-2025-27818</cve>
+  </suppress>
+  <suppress until="2026-01-01Z">
+    <notes><![CDATA[
+   file name: commons-fileupload2-core-2.0.0-M2.jar
+   ]]></notes>
+    <cve>CVE-2025-48976</cve>
   </suppress>
 </suppressions>
