@@ -20,9 +20,9 @@
         <maven-surefire-plugin.version>3.5.1</maven-surefire-plugin.version>
         <structured-logging.version>3.0.20</structured-logging.version>
         <log4j-version>2.24.2</log4j-version>
-        <rest-service-common-library-version>2.0.4</rest-service-common-library-version>
+        <rest-service-common-library-version>2.0.6</rest-service-common-library-version>
         <private-api-sdk-java.version>4.0.300</private-api-sdk-java.version>
-        <api-sdk-manager-java-library.version>3.0.7</api-sdk-manager-java-library.version>
+        <api-sdk-manager-java-library.version>3.0.10</api-sdk-manager-java-library.version>
         <api-security-java-version>2.0.8</api-security-java-version>
         <org.mapstruct.version>1.6.2</org.mapstruct.version>
         <junit.version>4.13.2</junit.version>
@@ -77,7 +77,7 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
-            <version>6.2.8</version>
+            <version>6.2.9</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -122,12 +122,22 @@
                     <groupId>org.apache.tomcat.embed</groupId>
                     <artifactId>tomcat-embed-core</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.apache.tomcat.embed</groupId>
+                    <artifactId>tomcat-embed-websocket</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-core</artifactId>
-            <version>11.0.8</version>
+            <version>11.0.10</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-websocket -->
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-websocket</artifactId>
+            <version>11.0.10</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
