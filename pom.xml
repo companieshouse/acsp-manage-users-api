@@ -14,11 +14,11 @@
     <description>A service for managing associations between users and ACSPs.</description>
     <properties>
         <java.version>21</java.version>
-        <spring-boot.version>3.5.0</spring-boot.version>
+        <spring-boot.version>3.5.5</spring-boot.version>
         <maven.compiler.release>${java.version}</maven.compiler.release>
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.5.1</maven-surefire-plugin.version>
-        <structured-logging.version>3.0.20</structured-logging.version>
+        <structured-logging.version>3.0.40</structured-logging.version>
         <log4j-version>2.24.2</log4j-version>
         <rest-service-common-library-version>2.0.6</rest-service-common-library-version>
         <private-api-sdk-java.version>4.0.352</private-api-sdk-java.version>
@@ -28,7 +28,7 @@
         <junit.version>4.13.2</junit.version>
         <commons-compress.version>1.27.1</commons-compress.version>
         <google-http-client.version>1.45.0</google-http-client.version>
-        <api-helper-java.version>3.0.1</api-helper-java.version>
+        <api-helper-java.version>3.0.2</api-helper-java.version>
         <flapdoodle.version>4.20.0</flapdoodle.version>
         <email-producer-java.version>3.0.4</email-producer-java.version>
         <kafka-clients.version>3.1.0</kafka-clients.version>
@@ -247,6 +247,17 @@
                 <exclusion>
                     <groupId>org.eclipse.jetty</groupId>
                     <artifactId>jetty-webapp</artifactId>
+                </exclusion>
+
+                <!-- The following 2 exclusions prevents vulnerabilities in the email-producer-java on version 3.0.4 -->
+                <!-- These should be able to be removed when this is updated -->
+                <exclusion>
+                    <groupId>org.eclipse.jetty.http2</groupId>
+                    <artifactId>http2-server</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty.http2</groupId>
+                    <artifactId>http2-common</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
