@@ -2,6 +2,9 @@ package uk.gov.companieshouse.acsp.manage.users.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -98,23 +101,26 @@ class UsersServiceTest {
 
     private void mockWebClientForSearchUserDetails( final String... userIds ) throws JsonProcessingException {
         final var users = testDataManager.fetchUserDtos( userIds );
-        final var uri = String.format( "/users/search?user_email=" + String.join( "&user_email=", users.stream().map( User::getEmail ).toList() ) );
+        final var uri = String.format( "/users/search?user_email=%s",
+                String.join( "&user_email=", users.stream().map( User::getEmail ).map( this::encodeEmail ).toList() ) );
         final var jsonResponse = new ObjectMapper().writeValueAsString( users );
         mockWebClientSuccessResponse( uri, Mono.just( jsonResponse ) );
     }
 
     private void mockWebClientForSearchUserDetailsErrorResponse( final String userEmail, int responseCode ){
-        final var uri = String.format( "/users/search?user_email=%s", userEmail );
+        final var uri = String.format( "/users/search?user_email=%s", encodeEmail( userEmail ) );
         mockWebClientErrorResponse( uri, responseCode );
     }
 
     private void mockWebClientForSearchUserDetailsNonexistentEmail( final String... emails ) {
-        final var uri = String.format( "/users/search?user_email=" + String.join( "&user_email=", Arrays.stream( emails ).toList() ) );
+        final var encodedEmails = Arrays.stream( emails ).map( this::encodeEmail ).toList();
+        final var uri = String.format( "/users/search?user_email=%s", String.join( "&user_email=", encodedEmails ) );
         mockWebClientSuccessResponse( uri, Mono.empty() );
     }
 
     private void mockWebClientForSearchUserDetailsJsonParsingError( final String... emails ){
-        final var uri = String.format( "/users/search?user_email=" + String.join( "&user_email=", Arrays.stream( emails ).toList() ) );
+        final var encodedEmails = Arrays.stream( emails ).map( this::encodeEmail ).toList();
+        final var uri = String.format( "/users/search?user_email=%s", String.join( "&user_email=", encodedEmails ) );
         mockWebClientJsonParsingError( uri );
     }
 
@@ -223,6 +229,18 @@ class UsersServiceTest {
     void searchUserDetailsWithArbitraryErrorReturnsInternalServerErrorRuntimeException() {
         mockWebClientForSearchUserDetailsJsonParsingError( "geralt@witcher.com" );
         Assertions.assertThrows( InternalServerErrorRuntimeException.class, () -> usersService.searchUserDetails( List.of( "geralt@witcher.com" ) ) );
+    }
+
+    private String encodeEmail( final String email ) {
+        if ( email == null ) {
+            return null;
+        }
+
+        try {
+            return URLEncoder.encode( email, StandardCharsets.UTF_8 );
+        } catch ( final Exception e ) {
+            throw new RuntimeException( e );
+        }
     }
 
 }
