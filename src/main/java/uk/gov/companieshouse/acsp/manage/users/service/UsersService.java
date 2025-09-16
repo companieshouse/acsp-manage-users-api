@@ -6,18 +6,14 @@ import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.g
 import static uk.gov.companieshouse.acsp.manage.users.utils.ParsingUtil.parseJsonTo;
 import static uk.gov.companieshouse.acsp.manage.users.utils.StaticPropertyUtil.APPLICATION_NAMESPACE;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import org.springframework.web.util.UriBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
@@ -69,12 +65,8 @@ public class UsersService {
 
     public UsersList searchUserDetails( final List<String> emails ) {
         final var xRequestId = getXRequestId();
-        var encodedEmails = emails.stream()
-                .map( e -> e == null ? "null" : URLEncoder.encode( e, StandardCharsets.UTF_8 ) )
-                .toList();
-
         return usersWebClient.get()
-                .uri( "/users/search?user_email=" + String.join( "&user_email=", encodedEmails ) )
+                .uri( "/users/search?user_email=" + String.join( "&user_email=", emails ) )
                 .retrieve()
                 .bodyToMono( String.class )
                 .map( parseJsonTo( UsersList.class ) )
