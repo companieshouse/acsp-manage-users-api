@@ -55,7 +55,6 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <!-- Override Boot's Spring Framework to CVE-fixed 6.2.11 -->
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-framework-bom</artifactId>
@@ -173,7 +172,7 @@
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-reactive-httpclient</artifactId>
         </dependency>
-
+        <!-- Force Spring Framework to version fixed version rather than having it being handled by Spring Boot-->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-core</artifactId>
@@ -322,7 +321,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Force Spring Security modules to 6.5.4 -->
+        <!-- Force Spring Security modules to version fixed version rather than having it being handled by Spring Boot-->
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-core</artifactId>
