@@ -12,13 +12,13 @@ This Microservice has the following dependencies:
 - [Java 21](https://www.oracle.com/java/technologies/downloads/#java21)
 - [Maven](https://maven.apache.org/download.cgi)
 
-## 3.0) Tilt
+## 3.0) Docker-chs-development
 
-This section explains how the endpoints in this Microservice can be executed in Tilt. In particular, Section 3.1 describes the steps that can be taken to run the Microservice in Tilt, Section 3.2 explains how the database can be populated with test data, and Section 3.3 describes the endpoints that can be executed based on this test data. 
+This section explains how the endpoints in this Microservice can be executed in docker-chs-development. In particular, Section 3.1 describes the steps that can be taken to run the Microservice in docker-chs-development, Section 3.2 explains how the database can be populated with test data, and Section 3.3 describes the endpoints that can be executed based on this test data. 
 
 ### 3.1) Running the Microservice
 
-To run this Microservice in Tilt, the `platform` and `acsp-manage-users` modules and `accounts-user-api` modules must be enabled.
+To run this Microservice in docker-chs-development, the `platform` and `acsp-manage-users` modules and `accounts-user-api` modules must be enabled.
 These modules and services can be enabled by running the following commands in the `docker-chs-development` directory: 
 - `./bin/chs-dev modules enable platform`
 - `./bin/chs-dev modules enable acsp-manage-users`
@@ -27,13 +27,14 @@ These modules and services can be enabled by running the following commands in t
 To run this Microservice in development mode, the following command can also be executed in the `docker-chs-development` directory:
 - `./bin/chs-dev development enable acsp-manage-users-api`
 
-After all of the services are enabled, use the `tilt up` command.
+After all of the services are enabled, use the `chs-dev up` command.
 
 To enable debugging, create a new `Remove JVM Debug` configuration, and set the port to `9095`.
 
 ### 3.2) Populating MongoDB with Test Data 
 
 This Microservice draws on four MongoDB collections:
+
 1. `account.users`: This collection contains data relating to users. The pertinent data in a given document in this collection includes `_id`, `email`, and `display_name`. The Microservice uses `_id`  to uniquely identify a user, and `email` and `display_name` are items of data that are returned by some of the endpoints.
 2. `account.oauth2_authorisations`: This collection contains data relating to user sessions. The pertinent data in this collection includes `token` and `user_details.user_id`, which are used to uniquely identify the session and user respectively. After upstream dependencies have been satisfied and this Microservice has been updated, `token_permissions` will also be important, because it will contain information about the actions that the user is permitted to perform in this Microservice.
 3. `acsp_members.acsp_data`: This collection contains data relating to ACSPs. The pertinent data in a given document in this collection is `_id`, `acsp_name`, and `acsp_status`. `_id` uniquely identifies the ACSP, and `acsp_name` and `acsp_status` are data that returned by some of the endpoints.  This is a temporary MongoDB collection, and will be replaced by calls to the `acsp-profile-api`, after it has been built.
