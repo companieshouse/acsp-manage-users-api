@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag( "integration-test" )
 @DataMongoTest
-class AcspMembersRepositoryIntegrationTest {
+class AcspMembersRepositoryIntegrationTest extends BaseMongoIntegration {
 
     @Autowired
     private MongoTemplate mongoTemplate;

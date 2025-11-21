@@ -37,7 +37,7 @@ import static org.mockito.ArgumentMatchers.*;
 @SpringBootTest
 @ExtendWith(MockitoExtension.class)
 @Tag("integration-test")
-class AcspMembersServiceIntegrationTest {
+class AcspMembersServiceIntegrationTest extends BaseMongoIntegration {
 
     @Autowired
     private MongoTemplate mongoTemplate;
