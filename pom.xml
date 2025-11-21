@@ -35,6 +35,7 @@
         <email-producer-java.version>3.0.4</email-producer-java.version>
         <kafka-clients.version>3.1.0</kafka-clients.version>
         <logback-classic.version>1.5.16</logback-classic.version>
+        <tomcat.version>11.0.14</tomcat.version>
 
         <sonar-maven-plugin.version>4.0.0.4121</sonar-maven-plugin.version>
         <sonar.token>${CODE_ANALYSIS_TOKEN}</sonar.token>
@@ -152,13 +153,13 @@
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-core</artifactId>
-            <version>11.0.10</version>
+            <version>${tomcat.version}</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-websocket -->
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-websocket</artifactId>
-            <version>11.0.10</version>
+            <version>${tomcat.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
