@@ -54,7 +54,7 @@ import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.*;
 @SpringBootTest
 @ExtendWith(MockitoExtension.class)
 @Tag("integration-test")
-class AcspMembershipControllerTest {
+class AcspMembershipControllerTest extends BaseMongoIntegration {
 
     @Autowired
     private MongoTemplate mongoTemplate;

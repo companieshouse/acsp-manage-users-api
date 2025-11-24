@@ -32,7 +32,7 @@ import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseR
 @ExtendWith(MockitoExtension.class)
 @Tag("integration-test")
 @SpringBootTest
-class UserAcspMembershipControllerIntegrationTest {
+class UserAcspMembershipControllerIntegrationTest extends BaseMongoIntegration {
 
     @Autowired
     private MongoTemplate mongoTemplate;

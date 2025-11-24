@@ -31,10 +31,11 @@
         <commons-compress.version>1.27.1</commons-compress.version>
         <google-http-client.version>1.45.0</google-http-client.version>
         <api-helper-java.version>3.0.2</api-helper-java.version>
-        <flapdoodle.version>4.20.0</flapdoodle.version>
+        <test-containers.version>1.21.3</test-containers.version>
         <email-producer-java.version>3.0.4</email-producer-java.version>
         <kafka-clients.version>3.1.0</kafka-clients.version>
         <logback-classic.version>1.5.16</logback-classic.version>
+        <tomcat.version>11.0.14</tomcat.version>
 
         <sonar-maven-plugin.version>4.0.0.4121</sonar-maven-plugin.version>
         <sonar.token>${CODE_ANALYSIS_TOKEN}</sonar.token>
@@ -62,13 +63,17 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-
             <dependency>
                 <groupId>org.springframework.security</groupId>
                 <artifactId>spring-security-bom</artifactId>
                 <version>${spring-security.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>1.28.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -148,13 +153,13 @@
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-core</artifactId>
-            <version>11.0.10</version>
+            <version>${tomcat.version}</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-websocket -->
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-websocket</artifactId>
-            <version>11.0.10</version>
+            <version>${tomcat.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -263,9 +268,15 @@
             <version>${api-helper-java.version}</version>
         </dependency>
         <dependency>
-            <groupId>de.flapdoodle.embed</groupId>
-            <artifactId>de.flapdoodle.embed.mongo.spring3x</artifactId>
-            <version>${flapdoodle.version}</version>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>${test-containers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>mongodb</artifactId>
+            <version>${test-containers.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
