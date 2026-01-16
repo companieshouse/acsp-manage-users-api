@@ -1,6 +1,6 @@
-package uk.gov.companieshouse.acsp.manage.users.model.email;
+package uk.gov.companieshouse.acsp.manage.users.model.email.data;
 
-import uk.gov.companieshouse.email_producer.model.EmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.data.EmailData;
 
 public abstract class BaseEmailData<T extends BaseEmailData<T>> extends EmailData {
 

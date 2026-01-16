@@ -1,10 +1,10 @@
-package uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChanged;
+package uk.gov.companieshouse.acsp.manage.users.model.email.yourroleatacsphaschanged;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import uk.gov.companieshouse.acsp.manage.users.model.email.data.BaseEmailData;
 
 import java.util.Objects;
-import uk.gov.companieshouse.acsp.manage.users.model.email.BaseEmailData;
 
 public abstract class YourRoleAtAcspHasChangedEmailData extends
         BaseEmailData<YourRoleAtAcspHasChangedEmailData> {

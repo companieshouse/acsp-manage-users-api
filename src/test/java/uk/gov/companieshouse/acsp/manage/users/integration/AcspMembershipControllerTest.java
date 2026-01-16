@@ -1,6 +1,5 @@
 package uk.gov.companieshouse.acsp.manage.users.integration;
 
-import java.util.Arrays;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
@@ -15,15 +14,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import uk.gov.companieshouse.acsp.manage.users.client.EmailClient;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
+import uk.gov.companieshouse.acsp.manage.users.factory.SendEmailFactory;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
-import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChanged.YourRoleAtAcspHasChangedToAdminEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChanged.YourRoleAtAcspHasChangedToOwnerEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChanged.YourRoleAtAcspHasChangedToStandardEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.yourroleatacsphaschanged.YourRoleAtAcspHasChangedToAdminEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.yourroleatacsphaschanged.YourRoleAtAcspHasChangedToOwnerEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.yourroleatacsphaschanged.YourRoleAtAcspHasChangedToStandardEmailData;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
@@ -32,23 +33,24 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.Membersh
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserStatusEnum;
 import uk.gov.companieshouse.api.acspprofile.Status;
-import uk.gov.companieshouse.email_producer.EmailProducer;
-import uk.gov.companieshouse.email_producer.factory.KafkaProducerFactory;
+import uk.gov.companieshouse.api.chskafka.SendEmail;
 
+import java.util.Arrays;
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.companieshouse.acsp.manage.users.TestUtils.getMockSendEmail;
 import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.localDateTimeToNormalisedString;
 import static uk.gov.companieshouse.acsp.manage.users.common.DateUtils.reduceTimestampResolution;
 import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
-import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.*;
+import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_ADMIN_MESSAGE_TYPE;
+import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_OWNER_MESSAGE_TYPE;
+import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_STANDARD_MESSAGE_TYPE;
 
 @AutoConfigureMockMvc
 @SpringBootTest
@@ -62,10 +64,10 @@ class AcspMembershipControllerTest extends BaseMongoIntegration {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private UsersService usersService;
 
-    @MockBean
+    @MockitoBean
     private AcspProfileService acspProfileService;
 
     @Autowired
@@ -73,29 +75,18 @@ class AcspMembershipControllerTest extends BaseMongoIntegration {
 
     private static final TestDataManager testDataManager = TestDataManager.getInstance();
 
-    @MockBean
-    private EmailProducer emailProducer;
+    @MockitoBean
+    private EmailClient emailClient;
 
-    @MockBean
-    private KafkaProducerFactory kafkaProducerFactory;
+    @MockitoBean
+    private SendEmailFactory sendEmailFactory;
 
     @Value( "${signin.url}" )
     private String signinUrl;
 
-    private CountDownLatch latch;
-
     private static final String DEFAULT_DISPLAY_NAME = "Not Provided";
 
     private static final String DEFAULT_KIND = "acsp-membership";
-
-    private void setEmailProducerCountDownLatch( int countdown ){
-        latch = new CountDownLatch( countdown );
-        doAnswer( invocation -> {
-            latch.countDown();
-            return null;
-        } ).when( emailProducer ).sendEmail( any(), any() );
-    }
-
     private void mockFetchUserDetailsFor( final String... userIds ) {
         Arrays.stream( userIds ).forEach( userId -> Mockito.doReturn( testDataManager.fetchUserDtos( userId ).getFirst() ).when( usersService ).fetchUserDetails( userId ) );
     }
@@ -474,9 +465,7 @@ class AcspMembershipControllerTest extends BaseMongoIntegration {
         Mockito.doReturn( testDataManager.fetchUserDtos( requestUserId ).getFirst() ).when( usersService ).fetchUserDetails( requestUserId );
         Mockito.doReturn( targetUser ).when( usersService ).fetchUserDetails( targetUser.getUserId() );
         Mockito.doReturn( acsp ).when( acspProfileService ).fetchAcspProfile( acsp.getNumber() );
-
-        setEmailProducerCountDownLatch( 1 );
-
+        SendEmail mockSendEmail = getMockSendEmail(sendEmailFactory);
         mockMvc.perform( patch( String.format( "/acsps/memberships/%s", targetUserMembershipId ) )
                         .header("X-Request-Id", "theId123")
                         .header("Eric-identity", requestUserId )
@@ -493,17 +482,15 @@ class AcspMembershipControllerTest extends BaseMongoIntegration {
         Assertions.assertEquals( originalDao.getStatus(), updatedDao.getStatus() );
         Assertions.assertEquals( originalDao.getRemovedAt(), updatedDao.getRemovedAt() );
         Assertions.assertEquals( originalDao.getRemovedBy(), updatedDao.getRemovedBy() );
-
-        latch.await( 10, TimeUnit.SECONDS );
-
         final var requestingUserDisplayName = Optional.ofNullable( requestingUser.getDisplayName() ).orElse( requestingUser.getEmail() );
         if ( UserRoleEnum.OWNER.getValue().equals( userRole ) ){
-            Mockito.verify( emailProducer ).sendEmail( new YourRoleAtAcspHasChangedToOwnerEmailData( targetUser.getEmail(), requestingUserDisplayName, acsp.getName(), signinUrl ), YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_OWNER_MESSAGE_TYPE.getValue() );
+            Mockito.verify(sendEmailFactory).createSendEmail(new YourRoleAtAcspHasChangedToOwnerEmailData(targetUser.getEmail(), requestingUserDisplayName, acsp.getName(), signinUrl), YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_OWNER_MESSAGE_TYPE.getValue());
         } else if ( UserRoleEnum.ADMIN.getValue().equals( userRole ) ){
-            Mockito.verify( emailProducer ).sendEmail( new YourRoleAtAcspHasChangedToAdminEmailData( targetUser.getEmail(), requestingUserDisplayName, acsp.getName(), signinUrl ), YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_ADMIN_MESSAGE_TYPE.getValue() );
+            Mockito.verify(sendEmailFactory).createSendEmail(new YourRoleAtAcspHasChangedToAdminEmailData(targetUser.getEmail(), requestingUserDisplayName, acsp.getName(), signinUrl), YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_ADMIN_MESSAGE_TYPE.getValue());
         } else {
-            Mockito.verify( emailProducer ).sendEmail( new YourRoleAtAcspHasChangedToStandardEmailData( targetUser.getEmail(), requestingUserDisplayName, acsp.getName(), signinUrl ), YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_STANDARD_MESSAGE_TYPE.getValue() );
+            Mockito.verify(sendEmailFactory).createSendEmail(new YourRoleAtAcspHasChangedToStandardEmailData(targetUser.getEmail(), requestingUserDisplayName, acsp.getName(), signinUrl), YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_STANDARD_MESSAGE_TYPE.getValue());
         }
+        Mockito.verify(emailClient, Mockito.times(1)).sendEmail(eq(mockSendEmail), anyString());
     }
 
     private static Stream<Arguments> membershipUpdateRoleFailureScenarios(){

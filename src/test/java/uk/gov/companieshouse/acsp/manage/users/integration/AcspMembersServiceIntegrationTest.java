@@ -6,12 +6,14 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import uk.gov.companieshouse.acsp.manage.users.client.EmailClient;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.InternalServerErrorRuntimeException;
+import uk.gov.companieshouse.acsp.manage.users.factory.SendEmailFactory;
 import uk.gov.companieshouse.acsp.manage.users.model.context.RequestContext;
 import uk.gov.companieshouse.acsp.manage.users.model.context.RequestContextData.RequestContextDataBuilder;
 import uk.gov.companieshouse.acsp.manage.users.mapper.AcspMembershipCollectionMappers;
@@ -26,8 +28,6 @@ import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRole
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
 import uk.gov.companieshouse.api.acsp_manage_users.model.RequestBodyPatch.UserStatusEnum;
 import uk.gov.companieshouse.api.acspprofile.AcspProfile;
-import uk.gov.companieshouse.email_producer.EmailProducer;
-import uk.gov.companieshouse.email_producer.factory.KafkaProducerFactory;
 
 import java.util.List;
 
@@ -48,20 +48,20 @@ class AcspMembersServiceIntegrationTest extends BaseMongoIntegration {
     @Autowired
     private AcspMembersRepository acspMembersRepository;
 
-    @MockBean
+    @MockitoBean
     private AcspMembershipCollectionMappers acspMembershipCollectionMappers;
 
-    @MockBean
+    @MockitoBean
     private UsersService usersService;
 
-    @MockBean
+    @MockitoBean
     private AcspProfileService acspProfileService;
 
-    @MockBean
-    private EmailProducer emailProducer;
+    @MockitoBean
+    private EmailClient emailClient;
 
-    @MockBean
-    private KafkaProducerFactory kafkaProducerFactory;
+    @MockitoBean
+    private SendEmailFactory sendEmailFactory;
 
     private static final TestDataManager testDataManager = TestDataManager.getInstance();
 

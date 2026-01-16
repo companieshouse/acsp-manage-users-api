@@ -1,47 +1,51 @@
 package uk.gov.companieshouse.acsp.manage.users.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import uk.gov.companieshouse.acsp.manage.users.model.email.BaseEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAStandardMemberEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAnAdminMemberEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAnOwnerMemberEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChanged.YourRoleAtAcspHasChangedToAdminEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChanged.YourRoleAtAcspHasChangedToOwnerEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChanged.YourRoleAtAcspHasChangedToStandardEmailData;
+import uk.gov.companieshouse.acsp.manage.users.client.EmailClient;
+import uk.gov.companieshouse.acsp.manage.users.factory.SendEmailFactory;
+import uk.gov.companieshouse.acsp.manage.users.model.email.confirmyouareamember.ConfirmYouAreAStandardMemberEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.confirmyouareamember.ConfirmYouAreAnAdminMemberEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.confirmyouareamember.ConfirmYouAreAnOwnerMemberEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.data.BaseEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.yourroleatacsphaschanged.YourRoleAtAcspHasChangedToAdminEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.yourroleatacsphaschanged.YourRoleAtAcspHasChangedToOwnerEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.yourroleatacsphaschanged.YourRoleAtAcspHasChangedToStandardEmailData;
 import uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
-import uk.gov.companieshouse.email_producer.EmailProducer;
+
 import java.util.Objects;
 
-import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.*;
+import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE;
+import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE;
+import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE;
+import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_ADMIN_MESSAGE_TYPE;
+import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_OWNER_MESSAGE_TYPE;
+import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_STANDARD_MESSAGE_TYPE;
 import static uk.gov.companieshouse.acsp.manage.users.utils.LoggingUtil.LOGGER;
 import static uk.gov.companieshouse.acsp.manage.users.utils.RequestContextUtil.getXRequestId;
 
 @Service
 public class EmailService {
-
+    private final EmailClient emailClient;
+    private final SendEmailFactory sendEmailFactory;
     @Value( "${signin.url}" )
     private String signinUrl;
-
-    private final EmailProducer emailProducer;
-
-    @Autowired
-    public EmailService( final EmailProducer emailProducer ) {
-        this.emailProducer = emailProducer;
+    public EmailService(final EmailClient emailClient, SendEmailFactory sendEmailFactory) {
+        this.emailClient = emailClient;
+        this.sendEmailFactory = sendEmailFactory;
     }
 
     private Mono<Void> sendEmail( final BaseEmailData<?> emailData, final MessageType messageType ){
         final var xRequestId = getXRequestId();
-        return Mono.just( emailData )
-                .doOnNext( email -> emailProducer.sendEmail( email, messageType.getValue() ) )
-                .doOnNext( email -> LOGGER.infoContext( xRequestId, email.toNotificationSentLoggingMessage(), null ) )
-                .onErrorMap( throwable -> {
-                    LOGGER.errorContext( xRequestId, new Exception( emailData.toNotificationSendingFailureLoggingMessage() ), null );
+        return Mono.fromCallable(() -> sendEmailFactory.createSendEmail(emailData, messageType.getValue()))
+                .flatMap(sendEmail -> Mono.fromRunnable(() -> emailClient.sendEmail(sendEmail, xRequestId)))
+                .doOnSuccess(unused -> LOGGER.infoContext(xRequestId, emailData.toNotificationSentLoggingMessage(), null))
+                .onErrorMap(throwable -> {
+                    LOGGER.errorContext(xRequestId, new Exception(emailData.toNotificationSendingFailureLoggingMessage()), null);
                     return throwable;
-                } )
+                })
                 .then();
     }
 
