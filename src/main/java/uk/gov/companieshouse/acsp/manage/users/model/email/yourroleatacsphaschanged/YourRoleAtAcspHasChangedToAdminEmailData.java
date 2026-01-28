@@ -1,4 +1,4 @@
-package uk.gov.companieshouse.acsp.manage.users.model.email.YourRoleAtAcspHasChanged;
+package uk.gov.companieshouse.acsp.manage.users.model.email.yourroleatacsphaschanged;
 
 import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.YOUR_ROLE_AT_ACSP_HAS_CHANGED_TO_ADMIN_MESSAGE_TYPE;
 

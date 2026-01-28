@@ -9,17 +9,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import uk.gov.companieshouse.acsp.manage.users.client.EmailClient;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
+import uk.gov.companieshouse.acsp.manage.users.factory.SendEmailFactory;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
-import uk.gov.companieshouse.email_producer.EmailProducer;
-import uk.gov.companieshouse.email_producer.factory.KafkaProducerFactory;
+
 
 import java.util.Arrays;
 
@@ -40,20 +41,20 @@ class UserAcspMembershipControllerIntegrationTest extends BaseMongoIntegration {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private UsersService usersService;
 
-    @MockBean
+    @MockitoBean
     private AcspProfileService acspProfileService;
 
     @Autowired
     private AcspMembersRepository acspMembersRepository;
 
-    @MockBean
-    private EmailProducer emailProducer;
+    @MockitoBean
+    private EmailClient emailClient;
 
-    @MockBean
-    private KafkaProducerFactory kafkaProducerFactory;
+    @MockitoBean
+    private SendEmailFactory sendEmailFactory;
 
     private static final TestDataManager testDataManager = TestDataManager.getInstance();
 

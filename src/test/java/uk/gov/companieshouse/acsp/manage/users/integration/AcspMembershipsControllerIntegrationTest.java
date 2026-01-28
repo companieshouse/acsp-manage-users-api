@@ -1,6 +1,10 @@
 package uk.gov.companieshouse.acsp.manage.users.integration;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -11,16 +15,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import uk.gov.companieshouse.acsp.manage.users.client.EmailClient;
 import uk.gov.companieshouse.acsp.manage.users.common.TestDataManager;
 import uk.gov.companieshouse.acsp.manage.users.exceptions.NotFoundRuntimeException;
+import uk.gov.companieshouse.acsp.manage.users.factory.SendEmailFactory;
 import uk.gov.companieshouse.acsp.manage.users.model.AcspMembersDao;
-import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAStandardMemberEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAnAdminMemberEmailData;
-import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAnOwnerMemberEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.confirmyouareamember.ConfirmYouAreAStandardMemberEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.confirmyouareamember.ConfirmYouAreAnAdminMemberEmailData;
+import uk.gov.companieshouse.acsp.manage.users.model.email.confirmyouareamember.ConfirmYouAreAnOwnerMemberEmailData;
 import uk.gov.companieshouse.acsp.manage.users.repositories.AcspMembersRepository;
 import uk.gov.companieshouse.acsp.manage.users.service.AcspProfileService;
 import uk.gov.companieshouse.acsp.manage.users.service.UsersService;
@@ -28,27 +34,28 @@ import uk.gov.companieshouse.api.accounts.user.model.UsersList;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembership.UserRoleEnum;
 import uk.gov.companieshouse.api.acsp_manage_users.model.AcspMembershipsList;
-import uk.gov.companieshouse.email_producer.EmailProducer;
-import uk.gov.companieshouse.email_producer.factory.KafkaProducerFactory;
+import uk.gov.companieshouse.api.chskafka.SendEmail;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.companieshouse.acsp.manage.users.TestUtils.getMockSendEmail;
 import static uk.gov.companieshouse.acsp.manage.users.common.ParsingUtils.parseResponseTo;
-import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.*;
+import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE;
+import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE;
+import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE;
 
 @AutoConfigureMockMvc
 @SpringBootTest
@@ -62,10 +69,10 @@ class AcspMembershipsControllerIntegrationTest extends BaseMongoIntegration {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private UsersService usersService;
 
-    @MockBean
+    @MockitoBean
     private AcspProfileService acspProfileService;
 
     @Autowired
@@ -73,16 +80,14 @@ class AcspMembershipsControllerIntegrationTest extends BaseMongoIntegration {
 
     private static final TestDataManager testDataManager = TestDataManager.getInstance();
 
-    @MockBean
-    private EmailProducer emailProducer;
+    @MockitoBean
+    private SendEmailFactory sendEmailFactory;
 
-    @MockBean
-    private KafkaProducerFactory kafkaProducerFactory;
+    @MockitoBean
+    private EmailClient emailClient;
 
     @Value( "${signin.url}" )
     private String signinUrl;
-
-    private CountDownLatch latch;
 
     private void mockFetchUserDetailsFor(String... userIds) {
         Arrays.stream( userIds ).forEach( userId -> Mockito.doReturn( testDataManager.fetchUserDtos( userId ).getFirst() ).when( usersService ).fetchUserDetails(userId) );
@@ -93,13 +98,6 @@ class AcspMembershipsControllerIntegrationTest extends BaseMongoIntegration {
                 acspProfileService).fetchAcspProfile( acspNumber ) );
     }
 
-    private void setEmailProducerCountDownLatch( int countdown ){
-        latch = new CountDownLatch( countdown );
-        doAnswer( invocation -> {
-            latch.countDown();
-            return null;
-        } ).when( emailProducer ).sendEmail( any(), any() );
-    }
 
     @Nested
     class GetMembersForAcsp {
@@ -239,8 +237,8 @@ class AcspMembershipsControllerIntegrationTest extends BaseMongoIntegration {
                             .andExpect(status().isOk());
 
             final var acspMembershipsList = parseResponseTo( response, AcspMembershipsList.class );
-            final var userIds = acspMembershipsList.getItems().stream().map( AcspMembership::getUserId ).collect( Collectors.toList() );
-            final var roles = acspMembershipsList.getItems().stream().map( AcspMembership::getUserRole ).map( UserRoleEnum::getValue ).collect( Collectors.toSet() );;
+            final var userIds = acspMembershipsList.getItems().stream().map(AcspMembership::getUserId).toList();
+            final var roles = acspMembershipsList.getItems().stream().map(AcspMembership::getUserRole).map(UserRoleEnum::getValue).collect(Collectors.toSet());
 
             Assertions.assertEquals( expectedCount, acspMembershipsList.getTotalResults() );
             Assertions.assertTrue( userIds.containsAll( expectedUserIds ) );
@@ -683,11 +681,12 @@ class AcspMembershipsControllerIntegrationTest extends BaseMongoIntegration {
         @ParameterizedTest
         @MethodSource( "rolesStream" )
         void addMemberForAcspSendsConfirmYouAreAMemberNotificationsWithoutDisplayName( final UserRoleEnum role ) throws Exception {
+            // 1. Setup Data
             acspMembersRepository.insert( testDataManager.fetchAcspMembersDaos("TS001" ) );
             mockFetchUserDetailsFor( "TSU001", "COMU001" );
             mockFetchAcspProfilesFor("TSA001" );
 
-            setEmailProducerCountDownLatch( 1 );
+            SendEmail mockSendEmail = getMockSendEmail(sendEmailFactory);
 
             mockMvc.perform( post("/acsps/TSA001/memberships")
                             .header("X-Request-Id", "theId123")
@@ -699,17 +698,24 @@ class AcspMembershipsControllerIntegrationTest extends BaseMongoIntegration {
                             .content( String.format( "{\"user_id\":\"COMU001\",\"user_role\":\"%s\"}", role.getValue() ) ) )
                     .andExpect( status().isCreated() );
 
-            latch.await( 10, TimeUnit.SECONDS );
-
             if ( UserRoleEnum.OWNER.equals( role ) ) {
-                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAnOwnerMemberEmailData( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", signinUrl ), CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE.getValue() );
-            } else if ( UserRoleEnum.ADMIN.equals( role ) ) {
-                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAnAdminMemberEmailData( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", signinUrl ), CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue() );
+                Mockito.verify(sendEmailFactory).createSendEmail(
+                        eq(new ConfirmYouAreAnOwnerMemberEmailData("jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", signinUrl)),
+                        eq(CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE.getValue())
+                );
+            } else if (UserRoleEnum.ADMIN.equals(role)) {
+                Mockito.verify(sendEmailFactory).createSendEmail(
+                        eq(new ConfirmYouAreAnAdminMemberEmailData("jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", signinUrl)),
+                        eq(CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue())
+                );
             } else if ( UserRoleEnum.STANDARD.equals( role ) ) {
-                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAStandardMemberEmailData( "jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", signinUrl ), CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE.getValue() );
+                Mockito.verify(sendEmailFactory).createSendEmail(
+                        eq(new ConfirmYouAreAStandardMemberEmailData("jimmy.carr@comedy.com", "buzz.lightyear@toystory.com", "Toy Story", signinUrl)),
+                        eq(CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE.getValue())
+                );
             }
+            Mockito.verify(emailClient, Mockito.times(1)).sendEmail(eq(mockSendEmail), anyString());
         }
-
         @ParameterizedTest
         @MethodSource( "rolesStream" )
         void addMemberForAcspSendsConfirmYouAreAMemberNotificationsWithDisplayName( final UserRoleEnum role ) throws Exception {
@@ -717,7 +723,7 @@ class AcspMembershipsControllerIntegrationTest extends BaseMongoIntegration {
             mockFetchUserDetailsFor( "WITU001", "COMU001" );
             mockFetchAcspProfilesFor("WITA001" );
 
-            setEmailProducerCountDownLatch( 1 );
+            SendEmail mockSendEmail = getMockSendEmail(sendEmailFactory);
 
             mockMvc.perform( post("/acsps/WITA001/memberships")
                             .header("X-Request-Id", "theId123")
@@ -729,16 +735,16 @@ class AcspMembershipsControllerIntegrationTest extends BaseMongoIntegration {
                             .content( String.format( "{\"user_id\":\"COMU001\",\"user_role\":\"%s\"}", role.getValue() ) ) )
                     .andExpect( status().isCreated() );
 
-            latch.await( 10, TimeUnit.SECONDS );
-
             if ( UserRoleEnum.OWNER.equals( role ) ) {
-                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAnOwnerMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl ), CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE.getValue() );
+                Mockito.verify(sendEmailFactory).createSendEmail(eq(new ConfirmYouAreAnOwnerMemberEmailData("jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl)), eq(CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE.getValue()));
             } else if ( UserRoleEnum.ADMIN.equals( role ) ) {
-                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAnAdminMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl ), CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue() );
+                Mockito.verify(sendEmailFactory).createSendEmail(eq(new ConfirmYouAreAnAdminMemberEmailData("jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl)), eq(CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue()));
             } else if ( UserRoleEnum.STANDARD.equals( role ) ) {
-                Mockito.verify( emailProducer ).sendEmail( new ConfirmYouAreAStandardMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl ), CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE.getValue() );
+                Mockito.verify(sendEmailFactory).createSendEmail(eq(new ConfirmYouAreAStandardMemberEmailData("jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl)), eq(CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE.getValue()));
             }
 
+            // Verify the client interaction
+            Mockito.verify(emailClient, Mockito.times(1)).sendEmail(eq(mockSendEmail), anyString());
         }
 
         @ParameterizedTest
@@ -759,13 +765,13 @@ class AcspMembershipsControllerIntegrationTest extends BaseMongoIntegration {
                     .andExpect( status().isCreated() );
 
             if ( UserRoleEnum.OWNER.equals( role ) ) {
-                Mockito.verify( emailProducer, times( 0 ) ).sendEmail( new ConfirmYouAreAnOwnerMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl ), CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE.getValue() );
+                Mockito.verify(sendEmailFactory, times(0)).createSendEmail(new ConfirmYouAreAnOwnerMemberEmailData("jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl), CONFIRM_YOU_ARE_AN_OWNER_MEMBER_MESSAGE_TYPE.getValue());
             } else if ( UserRoleEnum.ADMIN.equals( role ) ) {
-                Mockito.verify( emailProducer, times( 0 ) ).sendEmail( new ConfirmYouAreAnAdminMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl ), CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue() );
+                Mockito.verify(sendEmailFactory, times(0)).createSendEmail(new ConfirmYouAreAnAdminMemberEmailData("jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl), CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE.getValue());
             } else if ( UserRoleEnum.STANDARD.equals( role ) ) {
-                Mockito.verify( emailProducer, times( 0 ) ).sendEmail( new ConfirmYouAreAStandardMemberEmailData( "jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl ), CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE.getValue() );
+                Mockito.verify(sendEmailFactory, times(0)).createSendEmail(new ConfirmYouAreAStandardMemberEmailData("jimmy.carr@comedy.com", "Geralt of Rivia", "Witcher", signinUrl), CONFIRM_YOU_ARE_A_STANDARD_MEMBER_MESSAGE_TYPE.getValue());
             }
-
+            Mockito.verify(emailClient, Mockito.times(0)).sendEmail(any(), anyString());
         }
 
     }

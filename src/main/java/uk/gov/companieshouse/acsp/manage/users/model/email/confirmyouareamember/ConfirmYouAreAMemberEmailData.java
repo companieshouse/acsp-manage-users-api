@@ -1,8 +1,8 @@
-package uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember;
+package uk.gov.companieshouse.acsp.manage.users.model.email.confirmyouareamember;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import uk.gov.companieshouse.acsp.manage.users.model.email.BaseEmailData;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import uk.gov.companieshouse.acsp.manage.users.model.email.data.BaseEmailData;
 
 public abstract class ConfirmYouAreAMemberEmailData extends BaseEmailData<ConfirmYouAreAMemberEmailData> {
 

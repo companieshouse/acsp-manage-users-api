@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>uk.gov.companieshouse</groupId>
@@ -14,38 +14,30 @@
     <description>A service for managing associations between users and ACSPs.</description>
     <properties>
         <java.version>21</java.version>
-        <spring-boot.version>3.5.5</spring-boot.version>
-        <spring-framework.version>6.2.11</spring-framework.version>
-        <spring-security.version>6.5.4</spring-security.version>
+        <spring-boot.version>3.5.10</spring-boot.version>
         <maven.compiler.release>${java.version}</maven.compiler.release>
-        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>3.5.1</maven-surefire-plugin.version>
-        <structured-logging.version>3.0.40</structured-logging.version>
-        <log4j-version>2.24.2</log4j-version>
-        <rest-service-common-library-version>2.0.6</rest-service-common-library-version>
-        <private-api-sdk-java.version>4.0.352</private-api-sdk-java.version>
-        <api-sdk-manager-java-library.version>3.0.10</api-sdk-manager-java-library.version>
-        <api-security-java-version>2.0.8</api-security-java-version>
-        <org.mapstruct.version>1.6.2</org.mapstruct.version>
+        <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
+        <structured-logging.version>3.0.47</structured-logging.version>
+        <rest-service-common-library-version>2.0.9</rest-service-common-library-version>
+        <private-api-sdk-java.version>4.0.445</private-api-sdk-java.version>
+        <api-sdk-manager-java-library.version>3.0.15</api-sdk-manager-java-library.version>
+        <api-security-java-version>2.0.19</api-security-java-version>
+        <org.mapstruct.version>1.6.3</org.mapstruct.version>
         <junit.version>4.13.2</junit.version>
-        <commons-compress.version>1.27.1</commons-compress.version>
-        <google-http-client.version>1.45.0</google-http-client.version>
-        <api-helper-java.version>3.0.2</api-helper-java.version>
-        <test-containers.version>1.21.3</test-containers.version>
-        <email-producer-java.version>3.0.4</email-producer-java.version>
-        <kafka-clients.version>3.1.0</kafka-clients.version>
-        <logback-classic.version>1.5.16</logback-classic.version>
-        <tomcat.version>11.0.14</tomcat.version>
-
-        <sonar-maven-plugin.version>4.0.0.4121</sonar-maven-plugin.version>
+        <api-helper-java.version>3.0.3</api-helper-java.version>
+        <test-containers.version>2.0.3</test-containers.version>
+        <mongodb-testcontainers.version>1.21.4</mongodb-testcontainers.version>
+        <sonar-maven-plugin.version>5.5.0.6356</sonar-maven-plugin.version>
         <sonar.token>${CODE_ANALYSIS_TOKEN}</sonar.token>
         <sonar.login></sonar.login>
         <sonar.password></sonar.password>
         <sonar.projectName>acsp-manage-users-api</sonar.projectName>
         <sonar.projectKey>uk.gov.companieshouse:acsp-manage-users-api</sonar.projectKey>
         <sonar.java.binaries>${project.basedir}/target,${project.basedir}/target/*</sonar.java.binaries>
-
-
+        <jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
+        <jib-maven-plugin.version>3.5.1</jib-maven-plugin.version>
+        <commons-lang3.version>3.20.0</commons-lang3.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -59,21 +51,10 @@
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-framework-bom</artifactId>
-                <version>${spring-framework.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>org.springframework.security</groupId>
                 <artifactId>spring-security-bom</artifactId>
-                <version>${spring-security.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-compress</artifactId>
-                <version>1.28.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -91,15 +72,10 @@
                     <artifactId>log4j-slf4j-impl</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-web</artifactId>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-api</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -109,32 +85,27 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/ch.qos.logback/logback-core -->
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-core</artifactId>
-            <version>${logback-classic.version}</version>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/ch.qos.logback/logback-classic -->
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>${logback-classic.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>uk.gov.companieshouse</groupId>
             <artifactId>structured-logging</artifactId>
             <version>${structured-logging.version}</version>
+            <!-- The following  exclusions prevents vulnerabilities in the structured-logging -->
+            <!-- These should be able to be removed when this is updated -->
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-simple</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-lang3</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.msgpack</groupId>
+                    <artifactId>msgpack-core</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
-
         <dependency>
             <groupId>uk.gov.companieshouse</groupId>
             <artifactId>rest-service-common-library</artifactId>
@@ -149,17 +120,6 @@
                     <artifactId>tomcat-embed-websocket</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-core</artifactId>
-            <version>${tomcat.version}</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-websocket -->
-        <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-websocket</artifactId>
-            <version>${tomcat.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -177,50 +137,17 @@
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-reactive-httpclient</artifactId>
         </dependency>
-        <!-- Force Spring Framework to version fixed version rather than having it being handled by Spring Boot-->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-core</artifactId>
-            <version>${spring-framework.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
-            <version>${spring-framework.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-beans</artifactId>
-            <version>${spring-framework.version}</version>
-        </dependency>
-
-        <!-- Test dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.codehaus.plexus/plexus-utils -->
-        <dependency>
-            <groupId>org.codehaus.plexus</groupId>
-            <artifactId>plexus-utils</artifactId>
-            <version>4.0.2</version>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-compress</artifactId>
-            <version>${commons-compress.version}</version>
-        </dependency>
         <dependency>
             <groupId>uk.gov.companieshouse</groupId>
             <artifactId>private-api-sdk-java</artifactId>
             <version>${private-api-sdk-java.version}</version>
+            <!-- The following  exclusions prevents vulnerabilities in the private-api-sdk-java  -->
+            <!-- These should be able to be removed when this is updated -->
             <exclusions>
                 <exclusion>
                     <groupId>javax.annotation</groupId>
@@ -230,17 +157,20 @@
                     <groupId>commons-beanutils</groupId>
                     <artifactId>commons-beanutils</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-lang3</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-api</artifactId>
+                </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>commons-beanutils</groupId>
-            <artifactId>commons-beanutils</artifactId>
-            <version>1.11.0</version>
         </dependency>
         <dependency>
             <groupId>jakarta.annotation</groupId>
             <artifactId>jakarta.annotation-api</artifactId>
-            <version>1.3.5</version>
+            <version>${jakarta.annotation-api.version}</version>
         </dependency>
         <dependency>
             <groupId>uk.gov.companieshouse</groupId>
@@ -251,16 +181,17 @@
             <groupId>uk.gov.companieshouse</groupId>
             <artifactId>api-security-java</artifactId>
             <version>${api-security-java-version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-lang3</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
             <version>${org.mapstruct.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.http-client</groupId>
-            <artifactId>google-http-client</artifactId>
-            <version>${google-http-client.version}</version>
         </dependency>
         <dependency>
             <groupId>uk.gov.companieshouse</groupId>
@@ -276,91 +207,37 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>mongodb</artifactId>
-            <version>${test-containers.version}</version>
+            <version>${mongodb-testcontainers.version}</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>uk.gov.companieshouse</groupId>
-            <artifactId>email-producer-java</artifactId>
-            <version>${email-producer-java.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.kafka</groupId>
-                    <artifactId>kafka-clients</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.eclipse.jetty</groupId>
-                    <artifactId>jetty-webapp</artifactId>
-                </exclusion>
-
-                <!-- The following 2 exclusions prevents vulnerabilities in the email-producer-java on version 3.0.4 -->
-                <!-- These should be able to be removed when this is updated -->
-                <exclusion>
-                    <groupId>org.eclipse.jetty.http2</groupId>
-                    <artifactId>http2-server</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.eclipse.jetty.http2</groupId>
-                    <artifactId>http2-common</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty.ee10</groupId>
-            <artifactId>jetty-ee10-webapp</artifactId>
-            <version>12.0.22</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka-clients</artifactId>
-            <version>${kafka-clients.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.xerial.snappy</groupId>
-                    <artifactId>snappy-java</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.xerial.snappy</groupId>
-            <artifactId>snappy-java</artifactId>
-            <version>1.1.10.7</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <!-- Force Spring Security modules to version fixed version rather than having it being handled by Spring Boot-->
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-core</artifactId>
-            <version>${spring-security.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-web</artifactId>
-            <version>${spring-security.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-config</artifactId>
-            <version>${spring-security.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-crypto</artifactId>
-            <version>${spring-security.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-test</artifactId>
-            <version>${spring-security.version}</version>
-            <scope>test</scope>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons-lang3.version}</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
-
     <build>
         <plugins>
             <plugin>
@@ -368,8 +245,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring-boot.version}</version>
                 <configuration>
-                    <mainClass>uk.gov.companieshouse.acsp.manage.users.AcspManageUsersServiceApplication
-                    </mainClass>
+                    <mainClass>uk.gov.companieshouse.acsp.manage.users.AcspManageUsersServiceApplication</mainClass>
                 </configuration>
                 <executions>
                     <execution>
@@ -382,7 +258,7 @@
             <plugin>
                 <groupId>com.google.cloud.tools</groupId>
                 <artifactId>jib-maven-plugin</artifactId>
-                <version>3.4.0</version>
+                <version>${jib-maven-plugin.version}</version>
                 <configuration>
                     <from>
                         <image>416670754337.dkr.ecr.eu-west-2.amazonaws.com/ci-corretto-build-21</image>
@@ -427,5 +303,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

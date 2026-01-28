@@ -1,8 +1,6 @@
-package uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember;
+package uk.gov.companieshouse.acsp.manage.users.model.email.confirmyouareamember;
 
 import static uk.gov.companieshouse.acsp.manage.users.model.enums.MessageType.CONFIRM_YOU_ARE_AN_ADMIN_MEMBER_MESSAGE_TYPE;
-
-import uk.gov.companieshouse.acsp.manage.users.model.email.ConfirmYouAreAMember.ConfirmYouAreAMemberEmailData;
 
 public class ConfirmYouAreAnAdminMemberEmailData extends ConfirmYouAreAMemberEmailData {
 
